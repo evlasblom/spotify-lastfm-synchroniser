@@ -13,9 +13,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSyncAlt } from '@fortawesome/free-solid-svg-icons'
 
 import ProfileCard from '../components/ProfileCard'
-
-const state_key = 'lastify.spotify_auth_state';
-const token_key = 'lastify.spotify_auth_token';
+import * as constants from '../constants'
 
 /**
  * Generates a random string containing numbers and letters
@@ -116,7 +114,8 @@ function Step(props) {
 
 function AuthPage(props) {
   const {state, access_token} = useHashParams()
-  const [initial_state, setInitialState] = useLocalStorage(state_key, null)
+  const [stored_state, setStoredState] = useLocalStorage(constants.state_key, null)
+  const [stored_token, setStoredToken] = useLocalStorage(constants.token_key, null)
   const [username, setUsername] = useState(null)
 
   // 1. spotify authentication
@@ -125,18 +124,22 @@ function AuthPage(props) {
   if (!access_token) {
     return (
       <Step title="Authorize via Spotify">
-        <LoginSpotify setValue={setInitialState}/>
+        <LoginSpotify setValue={setStoredState}/>
       </Step>
     )
   }
 
   // show error if authentication somehow failed
-  else if (state == null || state !== initial_state) {
+  if (state == null || state !== stored_state) {
     return (
       <Alert variant="danger">
         There was an error during authentication, please try again.
       </Alert>
     )
+  }
+
+  if (!stored_token) {
+    setStoredToken(access_token)
   }
 
   // 2. last.fm authentication
