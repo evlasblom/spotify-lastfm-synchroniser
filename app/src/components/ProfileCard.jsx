@@ -30,7 +30,7 @@ function ProfileCard(props) {
   // check if loading
   if (loading) {
     return (
-      <div style={{ width: '18rem', height: '30rem' }}>
+      <div style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
           <Spinner animation="border" variant="info"/>
       </div>
     )
@@ -40,7 +40,7 @@ function ProfileCard(props) {
   // note: error status 401 is unauthorized
   else if (error) {
     return (
-      <div style={{ width: '18rem', height: '30rem' }}>
+      <div style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
         <Alert variant="danger" className="pt-auto">{error.message}.</Alert>
       </div>
     )
@@ -48,7 +48,7 @@ function ProfileCard(props) {
 
   // otherwise success
   return (
-    <Card style={{ width: '18rem', height: '30rem' }}>
+    <Card style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
       <Card.Img variant="top" src={profile.url} />
       <Card.Body>
         <Card.Title>{profile.name}</Card.Title>

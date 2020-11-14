@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom'
 
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
@@ -66,7 +67,7 @@ function LoginSpotify(props) {
   return (
     <Form onSubmit={onSubmit} className="d-flex flex-column justify-content-center align-content-center">
       
-      <Button variant="primary" type="submit">Authorize via Spotify</Button>
+      <Button variant="primary" type="submit">Continue</Button>
     
     </Form>
   )
@@ -88,15 +89,28 @@ function LoginLastfm(props) {
       <Form.Group controlId="validationUsername">
         <Form.Control
           type="text"
-          placeholder="Username on Last.fm"
+          placeholder="Username"
           text={username}
           onChange={(e) => setUsername(e.currentTarget.value)}
         />
       </Form.Group>
 
-      <Button variant="primary" type="submit" >Select username Last.fm</Button>
+      <Button variant="primary" type="submit" >Continue</Button>
 
     </Form>
+  )
+}
+
+function Step(props) {
+
+  return(
+    <>
+      <h2>{props.title}</h2>
+      {props.subtitle ? <i>{props.subtitle}</i> : ""}
+      <br></br>
+      <br></br>
+      {props.children}
+    </>
   )
 }
 
@@ -110,7 +124,9 @@ function AuthPage(props) {
   // show login if not authenticated
   if (!access_token) {
     return (
-      <LoginSpotify setValue={setInitialState}/>
+      <Step title="Authorize via Spotify">
+        <LoginSpotify setValue={setInitialState}/>
+      </Step>
     )
   }
 
@@ -128,7 +144,9 @@ function AuthPage(props) {
   // show login if not authenticated
   if (!username) {
     return (
-      <LoginLastfm setValue={setUsername}/>
+      <Step title="Authorize via Last.fm" subtitle="No password needed">
+        <LoginLastfm setValue={setUsername}/>
+      </Step>
     )
   }
 
@@ -137,17 +155,21 @@ function AuthPage(props) {
   // 3. confirm
   
   return (
-    <div className="d-flex flex-row justify-content-center align-items-center">
-      <ProfileCard 
-          target="Spotify"
-          request={() => spotifyApi.requestProfileSpotify(access_token)}
-          convert={spotifyApi.convertProfileSpotify} />
-      <div className="m-4"><h2><FontAwesomeIcon icon={faSyncAlt} /></h2></div>
-      <ProfileCard 
-          target="Last.fm"
-          request={() => lastfmApi.requestProfileLastFm(username, access_key)}
-          convert={lastfmApi.convertProfileLastFM} />
-    </div>
+    <Step title="Confirm">
+      <div className="d-flex flex-row justify-content-center align-items-center">
+        <ProfileCard 
+            className="m-2"
+            target="Spotify"
+            request={() => spotifyApi.requestProfileSpotify(access_token)}
+            convert={spotifyApi.convertProfileSpotify} />
+        <Link to="/app"className="display-4"><FontAwesomeIcon icon={faSyncAlt} /></Link>
+        <ProfileCard 
+            className="m-2"
+            target="Last.fm"
+            request={() => lastfmApi.requestProfileLastFm(username, access_key)}
+            convert={lastfmApi.convertProfileLastFM} />
+      </div>
+    </Step>
   )
 }
 
