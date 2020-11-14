@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-export function requestProfileLastFm(access_key) {
-  let user = 'metaalerik'
+export function requestProfileLastFm(user, access_key) {
   let url = ''
   url += '?method=user.getinfo'
   url += '&user=' + user

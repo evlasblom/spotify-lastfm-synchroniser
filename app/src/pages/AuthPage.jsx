@@ -54,51 +54,83 @@ function authSpotifyImplicit(state) {
 
 function LoginSpotify(props) {
 
+  const setValue = props.setValue
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const generated = generateRandomString(16);
+    setValue(generated); // set initial state in local storage
+    authSpotifyImplicit(generated); // pass initial state to spotify
+  }
+
   return (
-    <Button 
-        variant="primary" 
-        onClick={props.onClick}>
-      Login to Spotify
-    </Button>
+    <Form onSubmit={onSubmit} className="d-flex flex-column justify-content-center align-content-center">
+      
+      <Button variant="primary" type="submit">Authorize via Spotify</Button>
+    
+    </Form>
   )
 }
 
 function LoginLastfm(props) {
+  const [username, setUsername] = useState("")
+
+  const setValue = props.setValue;
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    setValue(username);
+  }
 
   return (
-    <Button 
-        variant="primary" 
-        onClick={props.onClick}>
-      Login to Spotify
-    </Button>
+    <Form onSubmit={onSubmit} className="d-flex flex-column justify-content-center align-content-center">
+
+      <Form.Group controlId="validationUsername">
+        <Form.Control
+          type="text"
+          placeholder="Username on Last.fm"
+          text={username}
+          onChange={(e) => setUsername(e.currentTarget.value)}
+        />
+      </Form.Group>
+
+      <Button variant="primary" type="submit" >Select username Last.fm</Button>
+
+    </Form>
   )
 }
 
 function AuthPage(props) {
   const {state, access_token} = useHashParams()
   const [initial_state, setInitialState] = useLocalStorage(state_key, null)
+  const [username, setUsername] = useState(null)
 
   // 1. spotify authentication
 
   // show login if not authenticated
   if (!access_token) {
     return (
-      <LoginSpotify 
-          onClick={(e) => { 
-            const generated = generateRandomString(16);
-            setInitialState(generated); // set initial state in local storage
-            authSpotifyImplicit(generated); // pass initial state to spotify
-          }}/>
+      <LoginSpotify setValue={setInitialState}/>
     )
   }
+
   // show error if authentication somehow failed
   else if (state == null || state !== initial_state) {
     return (
-      <Alert variant="danger">There was an error during authentication, please try again.</Alert>
+      <Alert variant="danger">
+        There was an error during authentication, please try again.
+      </Alert>
     )
   }
 
   // 2. last.fm authentication
+
+  // show login if not authenticated
+  if (!username) {
+    return (
+      <LoginLastfm setValue={setUsername}/>
+    )
+  }
 
   const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY
 
@@ -113,7 +145,7 @@ function AuthPage(props) {
       <div className="m-4"><h2><FontAwesomeIcon icon={faSyncAlt} /></h2></div>
       <ProfileCard 
           target="Last.fm"
-          request={() => lastfmApi.requestProfileLastFm(access_key)}
+          request={() => lastfmApi.requestProfileLastFm(username, access_key)}
           convert={lastfmApi.convertProfileLastFM} />
     </div>
   )

@@ -11,7 +11,7 @@ function ProfileCard(props) {
   const [error, setError] = useState("")
   const request = props.request;
   const convert = props.convert;
-  const returnError = props.onError;
+  const returnError = props.onError ? props.onError : (error) => console.error(error);
 
   // API call
   useEffect(() => {
@@ -19,13 +19,11 @@ function ProfileCard(props) {
     .then(response => {
       setProfile(convert(response))
       setLoading(false)
-      console.log(response)
     })
     .catch(error => {
       setLoading(false)
       setError(error)
       returnError(error)
-      console.log(error)
     });
   }, [])
 
