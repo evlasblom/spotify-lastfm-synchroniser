@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-import useAsync from '../hooks/useAsync'
-
 import Alert from 'react-bootstrap/Alert'
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card'
