@@ -1,5 +1,23 @@
 # Todo
 
+## API
+
+Consider switching to one of the following libraries for the Last.fm API:
+
+- https://github.com/feross/last-fm
+- https://github.com/fxb/javascript-last.fm-api
+
+Consider switching to one of the following libraries for the Spotify API:
+
+- https://github.com/JMPerez/spotify-web-api-js
+
+## Authentication
+
+- Display timer when authentication expires.
+- Proper error handling when authentication expires.
+- Move authentication data from local storage to React context?
+- Also authenticate with last.fm to love and unlove tracks?
+
 ## Outdated create-react-app / react-scripts version
 
 This requires a bit more explanation.
