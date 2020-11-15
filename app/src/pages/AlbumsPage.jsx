@@ -29,7 +29,7 @@ function AlbumsPage(props) {
         <ContentList 
           type="albums"
           target="Spotify"
-          request={() => spotifyApi.requestUserAlbums(_access_token, {limit : 50})}
+          request={() => spotifyApi.requestSavedAlbums(_access_token, {limit : 50})}
           convert={spotifyApi.convertAlbums}/>
 
         <ContentList 

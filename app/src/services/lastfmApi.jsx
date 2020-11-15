@@ -3,9 +3,11 @@ import axios from 'axios';
 // ---------- FUNCTIONS -------------------------------------------------- 
 
 function requestTop(method, access_key, opts) {
-  if (['Artists','Albums','Tracks'].indexOf(method) < 0) throw "Invalid method selected.";
-  if (!opts.user) throw "The user option is required.";
-  if (opts.period && ['7day','1month','3month','6month','12month'].indexOf(opts.period) < 0) throw "Invalid period option.";
+  const allowed_methods = ['Artists','Albums','Tracks'];
+  const allowed_periods = ['7day','1month','3month','6month','12month'];
+  if (allowed_methods.indexOf(method) < 0) throw new Error("Invalid method selected.");
+  if (!opts.user) throw new Error("The user option is required.");
+  if (opts.period && allowed_periods.indexOf(opts.period) < 0) throw new Error("Invalid period option.");
   
   let url = ''
   url += '?method=user.getTop' + method
@@ -27,7 +29,7 @@ function requestTop(method, access_key, opts) {
 // ---------- REQUESTS -------------------------------------------------- 
 
 export function requestProfile(access_key, opts) {
-  if (!opts.user) throw "The user option is required.";
+  if (!opts.user) throw new Error("The user option is required.");
 
   let url = ''
   url += '?method=user.getinfo'
@@ -64,7 +66,7 @@ export function convertProfile(response) {
     url: profile.image[2]['#text'],
     name: profile.realname,
     id: profile.name,
-    text: "A " + product + " " + profile.type + " from " + profile.country + ".",
+    text: "A " + product + " " + profile.type + ".",
     href: profile.url
   }
 }

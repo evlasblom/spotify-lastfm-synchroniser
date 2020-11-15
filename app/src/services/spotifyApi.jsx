@@ -2,8 +2,9 @@ import axios from 'axios';
 
 // ---------- FUNCTIONS -------------------------------------------------- 
 
-export function requestUser(method, access_token, opts) {
-  if (['albums','tracks'].indexOf(method) < 0) throw "Invalid method selected.";
+export function requestSaved(method, access_token, opts) {
+  const allowed_methods = ['albums','tracks'];
+  if (allowed_methods.indexOf(method) < 0) throw new Error("Invalid method selected.");
   
   let url = 'me/'
   url += method + '?'
@@ -39,7 +40,7 @@ export function requestProfile(access_token, opts) {
 
 export function requestFollowingArtists(access_token, opts) {
   let url = 'me/following?'
-  url += '&type=' + 'artist'
+  url += '&type=artist'
   if (opts.after) url += '&after=' + opts.after
   if (opts.limit) url += '&limit=' + opts.limit
   const options = {
@@ -54,12 +55,12 @@ export function requestFollowingArtists(access_token, opts) {
   return axios(options)
 }
 
-export function requestUserAlbums(access_token, opts) {
-  return requestUser('albums', access_token, opts)
+export function requestSavedAlbums(access_token, opts) {
+  return requestSaved('albums', access_token, opts)
 }
 
-export function requestUserTracks(access_token, opts) {
-  return requestUser('tracks', access_token, opts)
+export function requestSavedTracks(access_token, opts) {
+  return requestSaved('tracks', access_token, opts)
 }
 
 // ---------- CONVERTERS -------------------------------------------------- 
@@ -70,7 +71,7 @@ export function convertProfile(response) {
     url: profile.images[0].url,
     name: profile.display_name,
     id: profile.id,
-    text: "A " + profile.product + " " + profile.type + " from " + profile.country + ".",
+    text: "A " + profile.product + " " + profile.type + ".",
     href: profile.external_urls.spotify
   }
 }
