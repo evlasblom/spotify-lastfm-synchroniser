@@ -15,6 +15,8 @@ import { faSyncAlt } from '@fortawesome/free-solid-svg-icons'
 import ProfileCard from '../components/ProfileCard'
 import * as constants from '../constants'
 
+// ========== FUNCTIONS ==================================================
+
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -35,7 +37,7 @@ function generateRandomString(length) {
  */
 function authSpotifyImplicit(state) {
   // set the authorization scope
-  const scope = 'user-read-private user-read-email';
+  const scope = 'user-read-private user-read-email user-follow-read user-library-read';
 
   // create the authorization url
   let url = 'https://accounts.spotify.com/authorize';
@@ -112,10 +114,13 @@ function Step(props) {
   )
 }
 
+// ========== MAIN ==================================================
+
 function AuthPage(props) {
+  const [_state, _setState] = useLocalStorage(constants.state_key, null)
+  const [_access_token, _setAccessToken] = useLocalStorage(constants.token_key, null)
+  const [_username, _setUsername] = useLocalStorage(constants.user_key, null)
   const {state, access_token} = useHashParams()
-  const [stored_state, setStoredState] = useLocalStorage(constants.state_key, null)
-  const [stored_token, setStoredToken] = useLocalStorage(constants.token_key, null)
   const [username, setUsername] = useState(null)
 
   // 1. spotify authentication
@@ -123,14 +128,14 @@ function AuthPage(props) {
   // show login if not authenticated
   if (!access_token) {
     return (
-      <Step title="Authorize via Spotify">
-        <LoginSpotify setValue={setStoredState}/>
+      <Step title="Authenticate via Spotify">
+        <LoginSpotify setValue={_setState}/>
       </Step>
     )
   }
 
   // show error if authentication somehow failed
-  if (state == null || state !== stored_state) {
+  if (state == null || state !== _state) {
     return (
       <Alert variant="danger">
         There was an error during authentication, please try again.
@@ -138,8 +143,8 @@ function AuthPage(props) {
     )
   }
 
-  if (!stored_token) {
-    setStoredToken(access_token)
+  if (_access_token !== access_token) {
+    _setAccessToken(access_token)
   }
 
   // 2. last.fm authentication
@@ -147,10 +152,14 @@ function AuthPage(props) {
   // show login if not authenticated
   if (!username) {
     return (
-      <Step title="Authorize via Last.fm" subtitle="No password needed">
+      <Step title="Authenticate via Last.fm" subtitle="No password needed">
         <LoginLastfm setValue={setUsername}/>
       </Step>
     )
+  }
+
+  if (_username !== username) {
+    _setUsername(username)
   }
 
   const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY
@@ -159,18 +168,22 @@ function AuthPage(props) {
   
   return (
     <Step title="Confirm">
-      <div className="d-flex flex-row justify-content-center align-items-center">
+      <div className="d-flex flex-row flex-wrap justify-content-center align-items-center">
+
         <ProfileCard 
-            className="m-2"
-            target="Spotify"
-            request={() => spotifyApi.requestProfileSpotify(access_token)}
-            convert={spotifyApi.convertProfileSpotify} />
-        <Link to="/app"className="display-4"><FontAwesomeIcon icon={faSyncAlt} /></Link>
+          className="m-2"
+          target="Spotify"
+          request={() => spotifyApi.requestProfile(access_token)}
+          convert={spotifyApi.convertProfile} />
+        
+        <Link to="/artists" className="display-4"><FontAwesomeIcon icon={faSyncAlt} /></Link>
+        
         <ProfileCard 
-            className="m-2"
-            target="Last.fm"
-            request={() => lastfmApi.requestProfileLastFm(username, access_key)}
-            convert={lastfmApi.convertProfileLastFM} />
+          className="m-2"
+          target="Last.fm"
+          request={() => lastfmApi.requestProfile(access_key, {user : username})}
+          convert={lastfmApi.convertProfile} />
+
       </div>
     </Step>
   )

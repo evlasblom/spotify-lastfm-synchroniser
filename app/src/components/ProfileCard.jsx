@@ -10,7 +10,7 @@ function ProfileCard(props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const request = props.request;
-  const convert = props.convert;
+  const convert = props.convert ? props.convert : (response) => response;
   const returnError = props.onError ? props.onError : (error) => console.error(error);
 
   // API call
