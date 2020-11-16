@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import qs from 'qs';
 
 /**
  * React hook for using parameters from the hash of the URL.
@@ -6,13 +7,7 @@ import { useState } from 'react';
  */
 function useHashParams() {
   const [params, ] = useState(() => {
-    let hashParams = {};
-    let e, r = /([^&;=]+)=?([^&;]*)/g;
-    let q = window.location.hash.substring(1);
-    while ( e = r.exec(q)) {
-      hashParams[e[1]] = decodeURIComponent(e[2]);
-    }
-    return hashParams;
+    return qs.parse(window.location.hash.substring(1))
   })
   return params;
 }
