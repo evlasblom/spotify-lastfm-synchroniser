@@ -36,8 +36,6 @@ function _baseApi(access_key, params) {
     json: true
   };
 
-  console.log(config.baseURL + config.url)
-
   return axios(config);
 }
 

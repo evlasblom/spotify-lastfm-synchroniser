@@ -16,6 +16,7 @@ function _baseApi(access_token, method, params) {
     baseURL: 'https://api.spotify.com/v1/',
     method: 'GET',
     timeout: 4000,
+    json: true,
     headers: {
       'Authorization': 'Bearer ' + access_token
     }
