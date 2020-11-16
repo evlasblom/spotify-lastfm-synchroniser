@@ -173,16 +173,16 @@ function AuthPage(props) {
         <ProfileCard 
           className="m-2"
           target="Spotify"
-          request={() => spotifyApi.requestProfile(access_token)}
-          convert={spotifyApi.convertProfile} />
+          request={() => spotifyApi.getProfile(access_token)}
+          parse={(response) => spotifyApi.parseProfile(response.data)} />
         
         <Link to="/artists" className="display-4"><FontAwesomeIcon icon={faSyncAlt} /></Link>
         
         <ProfileCard 
           className="m-2"
           target="Last.fm"
-          request={() => lastfmApi.requestProfile(access_key, {user : username})}
-          convert={lastfmApi.convertProfile} />
+          request={() => lastfmApi.getProfile(access_key, {user : username})}
+          parse={(response) => lastfmApi.parseProfile(response.data.user)} />
 
       </div>
     </Step>

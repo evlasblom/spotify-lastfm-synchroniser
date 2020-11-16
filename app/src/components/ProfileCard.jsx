@@ -10,15 +10,18 @@ function ProfileCard(props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const request = props.request;
-  const convert = props.convert ? props.convert : (response) => response;
+  const parse = props.parse ? props.parse : (response) => response;
   const returnError = props.onError ? props.onError : (error) => console.error(error);
+  const returnResponse = props.onResponse ? props.onResponse : (response) => console.log(response);
+  const target = props.target
 
   // API call
   useEffect(() => {
     request()
     .then(response => {
-      setProfile(convert(response))
+      setProfile(parse(response))
       setLoading(false)
+      returnResponse(response)
     })
     .catch(error => {
       setLoading(false)
@@ -46,20 +49,22 @@ function ProfileCard(props) {
     )
   }
 
+  console.log(profile)
+
   // otherwise success
   return (
     <Card style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
-      <Card.Img variant="top" src={profile.url} />
+      <Card.Img variant="top" src={profile.image} />
       <Card.Body>
         <Card.Title>{profile.name}</Card.Title>
         <Card.Subtitle className="mb-2 text-muted">ID: {profile.id}</Card.Subtitle>
         <Card.Text>
-          {profile.text}
+          A {profile.product} {profile.type}.
         </Card.Text>
         <Button className
           variant="success" 
-          href={profile.href}
-          target="_blank">View on {props.target}</Button>
+          href={profile.url}
+          target="_blank">View on {target}</Button>
       </Card.Body>
     </Card>
   )

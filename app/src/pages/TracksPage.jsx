@@ -29,14 +29,14 @@ function TracksPage(props) {
         <ContentList 
           type="tracks"
           target="Spotify"
-          request={() => spotifyApi.requestSavedTracks(_access_token, {limit : 50})}
-          convert={spotifyApi.convertTracks}/>
+          request={() => spotifyApi.getSavedTracks(_access_token, {limit : 50})}
+          parse={(response) => spotifyApi.parseTracks(response.data.items)}/>
 
         <ContentList 
           type="tracks"
           target="Last.fm"
-          request={() => lastfmApi.requestTopTracks(access_key, {user : _username})}
-          convert={lastfmApi.convertTracks}/>
+          request={() => lastfmApi.getTopTracks(access_key, {user : _username})}
+          parse={(response) => lastfmApi.parseTracks(response.data.toptracks.track)}/>
 
       </div>
     </>

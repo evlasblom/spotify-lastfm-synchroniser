@@ -3,93 +3,14 @@ import React, { useState, useEffect } from 'react';
 import Alert from 'react-bootstrap/Alert'
 import Spinner from 'react-bootstrap/Spinner'
 
-function ArtistContent(props) {
-  const artists = props.data;
-
-  return (
-    artists.map(
-      (artist, i) => {
-        return (
-          <div key={i}>
-            {artist.name}
-          </div>
-        )
-      }
-    )
-  )
-}
-
-function AlbumsContentSpotify(props) {
-  const albums = props.data;
-
-  return (
-    albums.map(
-      (album, i) => {
-        return (
-          <div key={i}>
-            {album.album.artists[0].name} -  {album.album.name}
-          </div>
-        )
-      }
-    )
-  )
-}
-
-function AlbumsContentLastFm(props) {
-  const albums = props.data;
-
-  return (
-    albums.map(
-      (album, i) => {
-        return (
-          <div key={i}>
-            {album.artist.name} - {album.name}
-          </div>
-        )
-      }
-    )
-  )
-}
-
-function TracksContentSpotify(props) {
-  const tracks = props.data;
-
-  return (
-    tracks.map(
-      (track, i) => {
-        return (
-          <div key={i}>
-            {track.track.artists[0].name} -  {track.track.name}
-          </div>
-        )
-      }
-    )
-  )
-}
-
-function TracksContentLastFm(props) {
-  const tracks = props.data;
-
-  return (
-    tracks.map(
-      (track, i) => {
-        return (
-          <div key={i}>
-            {track.artist.name} - {track.name}
-          </div>
-        )
-      }
-    )
-  )
-}
-
 function ContentList(props) {
   const [data, setData] = useState({})
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [error, setError] = useState(false)
   const request = props.request;
-  const convert = props.convert ? props.convert : (response) => response;
+  const parse = props.parse ? props.parse : (response) => response;
   const returnError = props.onError ? props.onError : (error) => console.error(error);
+  const returnResponse = props.onResponse ? props.onResponse : (response) => console.log(response);
   const type = props.type ? props.type : "artists"
   const target = props.target
 
@@ -97,10 +18,9 @@ function ContentList(props) {
   useEffect(() => {
     request()
     .then(response => {
-      // DEBUG
-      console.log(response)
-      setData(convert(response))
+      setData(parse(response))
       setLoading(false)
+      returnResponse(response)
     })
     .catch(error => {
       setLoading(false)
@@ -112,7 +32,7 @@ function ContentList(props) {
   // check if loading
   if (loading) {
     return (
-      <div style={{width: '20rem'}} className="bg-light m-2 p-2">
+      <div style={{width: '20rem'}} className="m-2 p-2">
         <Spinner animation="border" variant="info"/>
       </div>
     )
@@ -122,52 +42,15 @@ function ContentList(props) {
   // note: error status 401 is unauthorized
   else if (error) {
     return (
-      <div style={{width: '20rem'}} className="bg-light m-2 p-2">
+      <div style={{width: '20rem'}} className="m-2 p-2">
         <Alert variant="danger" className="pt-auto">{error.message}.</Alert>
       </div>
     )
   }
 
-  let table
-  if (!loading && !error && data) {
-    switch (type) {
-      case "artists":
-        table = <ArtistContent data={data}/>
-        break;
-      
-      case "albums":
-        switch (target) {
-          case "Spotify":
-            table = <AlbumsContentSpotify data={data}/>
-            break;
-          
-          case "Last.fm":
-            table = <AlbumsContentLastFm data={data}/>
-            break;
-      
-          default:
-            break;
-        }
-        break;
-      
-      case "tracks":
-        switch (target) {
-          case "Spotify":
-            table = <TracksContentSpotify data={data}/>
-            break;
-          
-          case "Last.fm":
-            table = <TracksContentLastFm data={data}/>
-            break;
-      
-          default:
-            break;
-        }
+  console.log(data)
   
-      default:
-        break;
-    }
-  }
+  let table
 
   // otherwise success
   return (

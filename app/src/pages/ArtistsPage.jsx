@@ -29,14 +29,14 @@ function ArtistsPage(props) {
         <ContentList 
           type="artists"
           target="Spotify"
-          request={() => spotifyApi.requestFollowingArtists(_access_token, {limit : 20})}
-          convert={spotifyApi.convertArtists}/>
+          request={() => spotifyApi.getFollowingArtists(_access_token, {limit : 20})}
+          parse={(response) => spotifyApi.parseArtists(response.data.artists.items)}/>
 
         <ContentList 
           type="artists"
           target="Last.fm"
-          request={() => lastfmApi.requestTopArtists(access_key, {user : _username, limit: 20})}
-          convert={lastfmApi.convertArtists}/>
+          request={() => lastfmApi.getTopArtists(access_key, {user : _username, limit: 20})}
+          parse={(response) => lastfmApi.parseArtists(response.data.topartists.artist)}/>
 
       </div>
     </>
