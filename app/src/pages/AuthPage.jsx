@@ -32,7 +32,9 @@ function generateRandomString(length) {
  */
 function authSpotifyImplicit(state) {
   // set the authorization scope
-  const scope = 'user-read-private user-read-email user-follow-read user-library-read';
+  const read_scope = 'user-read-private user-read-email user-follow-read user-library-read';
+  const write_scope = 'user-follow-modify user-library-modify'
+  const scope = read_scope + ' ' + write_scope;
 
   // create the authorization url
   let url = 'https://accounts.spotify.com/authorize';

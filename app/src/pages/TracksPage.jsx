@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAsync } from 'react-async-hook'
-
-import Alert from 'react-bootstrap/Alert'
-import Spinner from 'react-bootstrap/Spinner'
 
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 import useLocalStorage from '../hooks/useLocalStorage'
 
+import Alert from 'react-bootstrap/Alert'
+import Spinner from 'react-bootstrap/Spinner'
+
+import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
+
+// ========== CONSTANTS ==================================================
+
+const initial_form = {period: 'overall', number: 20, playcount: 25 };
+
+const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
 // ========== FUNCTIONS ==================================================
 
@@ -29,6 +36,7 @@ function TracksList(props) {
   const error = props.error;
   const tracks = props.data;
   const target = props.target;
+  const limit = props.playcount ? props.playcount : 0;
 
   // check if loading
   if (loading) {
@@ -55,8 +63,9 @@ function TracksList(props) {
       <br></br>
       <br></br>
       {tracks.map((track, i) => {
-        return (<p key={i}>
-          {track.name}
+        return (<p key={i} className={track.playcount < limit ? "text-muted" : ""}>
+          {i + 1}. {track.name}
+          {track.playcount ? (" - " + track.playcount) : ""}
           <br></br>
           <i>{track.artist[0].name}</i>
           </p>)
@@ -71,28 +80,34 @@ function AlbumsPage(props) {
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);
 
-  const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY
+  const [form, setForm] = useState(initial_form);
 
   const asyncTracksSpotify = useAsync(
-    () => getTracksSpotify(access_token, {}), [access_token]);
+    () => getTracksSpotify(access_token, {}), []);
   const asyncTracksLastFm = useAsync(
-    () => getTracksLastFm(access_key, {user: username}), [username]);
+    () => getTracksLastFm(access_key, createOpts()), [form.period, form.number]);
+
+  const createOpts = () => { return {user: username, period: form.period, limit: form.number}};
 
   return (
     <>
       <h2>Albums</h2>
+      <br></br>
+      <SelectionForm onSubmit={setForm} initial={initial_form} />
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <TracksList 
           target="Spotify"
+          playcount={form.playcount}
           loading={asyncTracksSpotify.loading}
           error={asyncTracksSpotify.error}
           data={asyncTracksSpotify.result} />
         
         <TracksList 
           target="Last.fm"
+          playcount={form.playcount}
           loading={asyncTracksLastFm.loading}
           error={asyncTracksLastFm.error}
           data={asyncTracksLastFm.result} />
