@@ -12,13 +12,13 @@ import * as constants from '../constants'
 
 // ========== FUNCTIONS ==================================================
 
-const getTracksSpotify = async (access_token) => {
-  let response = await spotifyApi.getSavedTracks(access_token, {});
+const getTracksSpotify = async (access_token, opts) => {
+  let response = await spotifyApi.getSavedTracks(access_token, opts);
   return spotifyApi.parseTracks(response.data.items);
 }
 
-const getTracksLastFm = async (access_key, username) => {
-  let response = await lastfmApi.getTopTracks(access_key, {user : username});
+const getTracksLastFm = async (access_key, opts) => {
+  let response = await lastfmApi.getTopTracks(access_key, opts);
   return lastfmApi.parseTracks(response.data.toptracks.track);
 }
 
@@ -73,8 +73,10 @@ function AlbumsPage(props) {
 
   const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY
 
-  const asyncTracksSpotify = useAsync(getTracksSpotify, [access_token]);
-  const asyncTracksLastFm = useAsync(getTracksLastFm, [access_key, username]);
+  const asyncTracksSpotify = useAsync(
+    () => getTracksSpotify(access_token, {}), [access_token]);
+  const asyncTracksLastFm = useAsync(
+    () => getTracksLastFm(access_key, {user: username}), [username]);
 
   return (
     <>

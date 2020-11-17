@@ -12,13 +12,13 @@ import * as constants from '../constants'
 
 // ========== FUNCTIONS ==================================================
 
-const getAlbumsSpotify = async (access_token) => {
-  let response = await spotifyApi.getSavedAlbums(access_token, {});
+const getAlbumsSpotify = async (access_token, opts) => {
+  let response = await spotifyApi.getSavedAlbums(access_token, opts);
   return spotifyApi.parseAlbums(response.data.items);
 }
 
-const getAlbumsLastFm = async (access_key, username) => {
-  let response = await lastfmApi.getTopAlbums(access_key, {user : username});
+const getAlbumsLastFm = async (access_key, opts) => {
+  let response = await lastfmApi.getTopAlbums(access_key, opts);
   return lastfmApi.parseAlbums(response.data.topalbums.album);
 }
 
@@ -47,7 +47,7 @@ function AlbumsList(props) {
       </div>
     )
   }
-  
+
   // otherwise success
   return (
     <div style={{ width: '25rem', margin: '2rem'}}>
@@ -73,8 +73,10 @@ function AlbumsPage(props) {
 
   const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY
 
-  const asyncAlbumsSpotify = useAsync(getAlbumsSpotify, [access_token]);
-  const asyncAlbumsLastFm = useAsync(getAlbumsLastFm, [access_key, username]);
+  const asyncAlbumsSpotify = useAsync(
+    () => getAlbumsSpotify(access_token, {}), [access_token]);
+  const asyncAlbumsLastFm = useAsync(
+    () => getAlbumsLastFm(access_key, {user: username}), [username]);
 
   return (
     <>

@@ -10,13 +10,13 @@ import * as constants from '../constants'
 
 // ========== FUNCTIONS ==================================================
 
-const getProfileSpotify = async (access_token) => {
-  let response = await spotifyApi.getProfile(access_token);
+const getProfileSpotify = async (access_token, opts) => {
+  let response = await spotifyApi.getProfile(access_token, opts);
   return spotifyApi.parseProfile(response.data);
 }
 
-const getProfileLastFm = async (access_key, username) => {
-  let response = await lastfmApi.getProfile(access_key, {user : username});
+const getProfileLastFm = async (access_key, opts) => {
+  let response = await lastfmApi.getProfile(access_key, opts);
   return lastfmApi.parseProfile(response.data.user);
 }
 
@@ -32,8 +32,10 @@ function ProfilePage(props) {
 
   const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY
 
-  const asyncProfileSpotify = useAsync(getProfileSpotify, [access_token]);
-  const asyncProfileLastFm = useAsync(getProfileLastFm, [access_key, username]);
+  const asyncProfileSpotify = useAsync(
+    () => getProfileSpotify(access_token, {}), [access_token]);
+  const asyncProfileLastFm = useAsync(
+    () => getProfileLastFm(access_key, {user: username}), [username]);
 
   return (
     <>
