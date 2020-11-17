@@ -1,6 +1,6 @@
 import axios from 'axios';
 import qs from 'qs';
-import { ApiError } from '../exceptions'
+import { ApiException } from '../exceptions'
 
 // ---------- CONSTANTS -------------------------------------------------- 
 
@@ -9,7 +9,7 @@ const ALLOWED_METHODS = ['me', 'me/following', 'me/albums', 'me/tracks'];
 // ---------- BASE -------------------------------------------------- 
 
 function _getApi(access_token, method, params) {
-  if (!ALLOWED_METHODS.includes(method)) throw new ApiError("Invalid argument selected: method.");
+  if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
     url: method + '?' + qs.stringify(params),
@@ -26,7 +26,7 @@ function _getApi(access_token, method, params) {
 }
 
 function _putApi(access_token, method, params) {
-  if (!ALLOWED_METHODS.includes(method)) throw new ApiError("Invalid argument selected: method.");
+  if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
     url: method,
@@ -44,7 +44,7 @@ function _putApi(access_token, method, params) {
 }
 
 function _deleteApi(access_token, method, params) {
-  if (!ALLOWED_METHODS.includes(method)) throw new ApiError("Invalid argument selected: method.");
+  if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
     url: method,
@@ -68,7 +68,7 @@ export function getProfile(access_token, opts) {
 }
 
 export function getFollowingArtists(access_token, opts) { 
-  if (!opts) throw new ApiError("Missing required argument: opts.")
+  if (!opts) throw new ApiException("Missing required argument: opts");
 
   const params = {
     type: 'artist',
@@ -80,8 +80,8 @@ export function getFollowingArtists(access_token, opts) {
 }
 
 export function getSavedAlbums(access_token, opts) {
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (opts.market && opts.market.length !== 2) throw new ApiError("Invalid option selected: market.")
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (opts.market && opts.market.length !== 2) throw new ApiException("Invalid option selected: market");
 
   const params = {
     type: 'albums',
@@ -94,8 +94,8 @@ export function getSavedAlbums(access_token, opts) {
 }
 
 export function getSavedTracks(access_token, opts) {
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (opts.market && opts.market.length !== 2) throw new ApiError("Invalid option selected: market.")
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (opts.market && opts.market.length !== 2) throw new ApiException("Invalid option selected: market");
 
   const params = {
     type: 'tracks',
@@ -108,8 +108,8 @@ export function getSavedTracks(access_token, opts) {
 }
 
 export function setFollowingArtists(access_token, opts) { 
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (!opts.ids) throw new ApiError("Missing required option: ids.");
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
     type: 'artist',
@@ -120,8 +120,8 @@ export function setFollowingArtists(access_token, opts) {
 }
 
 export function setSavedAlbums(access_token, opts) { 
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (!opts.ids) throw new ApiError("Missing required option: ids.");
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
     ids: opts.ids, // max 50
@@ -131,8 +131,8 @@ export function setSavedAlbums(access_token, opts) {
 }
 
 export function setSavedTracks(access_token, opts) { 
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (!opts.ids) throw new ApiError("Missing required option: ids.");
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
     ids: opts.ids, // max 50
@@ -142,8 +142,8 @@ export function setSavedTracks(access_token, opts) {
 }
 
 export function removeFollowingArtists(access_token, opts) { 
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (!opts.ids) throw new ApiError("Missing required option: ids.");
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
     type: 'artist',
@@ -154,8 +154,8 @@ export function removeFollowingArtists(access_token, opts) {
 }
 
 export function removeSavedAlbums(access_token, opts) { 
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (!opts.ids) throw new ApiError("Missing required option: ids.");
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
     ids: opts.ids, // max 50
@@ -165,8 +165,8 @@ export function removeSavedAlbums(access_token, opts) {
 }
 
 export function removeSavedTracks(access_token, opts) { 
-  if (!opts) throw new ApiError("Missing required argument: opts.")
-  if (!opts.ids) throw new ApiError("Missing required option: ids.");
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
     ids: opts.ids, // max 50

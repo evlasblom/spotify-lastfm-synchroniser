@@ -50,12 +50,10 @@ function authSpotifyImplicit(state) {
 
 function LoginSpotify(props) {
 
-  const setValue = props.setValue
-
   const onSubmit = (e) => {
     e.preventDefault();
     const generated = generateRandomString(16);
-    setValue(generated); // set initial state in local storage
+    props.onSubmit(generated); // set initial state in local storage
     authSpotifyImplicit(generated); // pass initial state to spotify
   }
 
@@ -71,11 +69,9 @@ function LoginSpotify(props) {
 function LoginLastfm(props) {
   const [username, setUsername] = useState("")
 
-  const setValue = props.setValue;
-
   const onSubmit = (e) => {
     e.preventDefault();
-    setValue(username);
+    props.onSubmit(username);
   }
 
   return (
@@ -115,6 +111,7 @@ function AuthPage(props) {
   const [_state, _setState] = useLocalStorage(constants.state_key, null)
   const [_access_token, _setAccessToken] = useLocalStorage(constants.token_key, null)
   const [_username, _setUsername] = useLocalStorage(constants.user_key, null)
+  
   const {state, access_token} = useHashParams()
   const [username, setUsername] = useState(null)
 
@@ -124,7 +121,7 @@ function AuthPage(props) {
   if (!access_token) {
     return (
       <Step title="Authenticate via Spotify">
-        <LoginSpotify setValue={_setState}/>
+        <LoginSpotify onSubmit={_setState}/>
       </Step>
     )
   }
@@ -148,7 +145,7 @@ function AuthPage(props) {
   if (!username) {
     return (
       <Step title="Authenticate via Last.fm" subtitle="No password needed">
-        <LoginLastfm setValue={setUsername}/>
+        <LoginLastfm onSubmit={setUsername}/>
       </Step>
     )
   }
