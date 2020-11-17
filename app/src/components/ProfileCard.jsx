@@ -1,9 +1,9 @@
 import React from 'react';
 
-import Alert from 'react-bootstrap/Alert'
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card'
-import Spinner from 'react-bootstrap/Spinner'
+import Error from '../components/Error'
+import Loading from '../components/Loading'
 
 function ProfileCard(props) {
   const loading = props.loading;
@@ -13,20 +13,12 @@ function ProfileCard(props) {
 
   // check if loading
   if (loading) {
-    return (
-      <div style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2">
-          <Spinner animation="border" variant="info"/>
-      </div>
-    )
+    return <Loading style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2" />
   }
 
   // check if error
   else if (error) {
-    return (
-      <div style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2">
-        <Alert variant="danger" className="pt-auto">{error.message}.</Alert>
-      </div>
-    )
+    return <Error style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2" error={error} />
   }
 
   // otherwise success
