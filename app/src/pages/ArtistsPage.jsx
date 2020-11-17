@@ -33,7 +33,7 @@ function ArtistsList(props) {
   // check if loading
   if (loading) {
     return (
-      <div style={{ width: '25rem', margin: '2rem'}}>
+      <div style={{ width: '25rem'}} className="mr-2, ml-2">
           <Spinner animation="border" variant="info"/>
       </div>
     )
@@ -42,7 +42,7 @@ function ArtistsList(props) {
   // check if error
   else if (error) {
     return (
-      <div style={{ width: '25rem', margin: '2rem'}}>
+      <div style={{ width: '25rem'}} className="mr-2, ml-2">
         <Alert variant="danger" className="pt-auto">{error.message}.</Alert>
       </div>
     )
@@ -50,12 +50,17 @@ function ArtistsList(props) {
 
   // otherwise success
   return (
-    <div style={{ width: '25rem', margin: '2rem'}}>
+    <div style={{ width: '25rem'}} className="mr-2, ml-2">
       <b>{target}</b>
       <br></br>
       <br></br>
       {artists.map((artist, i) => {
-        return <p key={i}>{artist.name}</p>
+        return (
+          <p key={i}>
+            {artist.name} 
+            {artist.playcount ? (" - " + artist.playcount) : ""}
+          </p>
+        )
       })}
     </div>
   )
@@ -82,14 +87,12 @@ function ArtistsPage(props) {
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <ArtistsList 
-          className="m-2"
           target="Spotify"
           loading={asyncArtistsSpotify.loading}
           error={asyncArtistsSpotify.error}
           data={asyncArtistsSpotify.result} />
         
         <ArtistsList 
-          className="m-2"
           target="Last.fm"
           loading={asyncArtistsLastFm.loading}
           error={asyncArtistsLastFm.error}

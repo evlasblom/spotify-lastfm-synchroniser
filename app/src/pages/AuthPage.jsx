@@ -160,7 +160,7 @@ function AuthPage(props) {
   // 3. redirect
   
   return (
-    <Redirect to="/profile" />    
+    <Redirect to="/user" />    
   )
 }
 

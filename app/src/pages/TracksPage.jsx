@@ -33,7 +33,7 @@ function TracksList(props) {
   // check if loading
   if (loading) {
     return (
-      <div style={{ width: '25rem', margin: '2rem'}}>
+    <div style={{ width: '25rem'}} className="mr-2, ml-2">
           <Spinner animation="border" variant="info"/>
       </div>
     )
@@ -42,7 +42,7 @@ function TracksList(props) {
   // check if error
   else if (error) {
     return (
-      <div style={{ width: '25rem', margin: '2rem'}}>
+    <div style={{ width: '25rem'}} className="mr-2, ml-2">
         <Alert variant="danger" className="pt-auto">{error.message}.</Alert>
       </div>
     )
@@ -50,7 +50,7 @@ function TracksList(props) {
   
   // otherwise success
   return (
-    <div style={{ width: '25rem', margin: '2rem'}}>
+    <div style={{ width: '25rem'}} className="mr-2, ml-2">
       <b>{target}</b>
       <br></br>
       <br></br>
@@ -86,14 +86,12 @@ function AlbumsPage(props) {
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <TracksList 
-          className="m-2"
           target="Spotify"
           loading={asyncTracksSpotify.loading}
           error={asyncTracksSpotify.error}
           data={asyncTracksSpotify.result} />
         
         <TracksList 
-          className="m-2"
           target="Last.fm"
           loading={asyncTracksLastFm.loading}
           error={asyncTracksLastFm.error}

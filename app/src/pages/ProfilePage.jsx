@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'
 import { useAsync } from 'react-async-hook'
 
 import * as spotifyApi from '../services/spotifyApi'
@@ -39,20 +40,19 @@ function ProfilePage(props) {
 
   return (
     <>
-      <h2>Profile</h2>
+      <h2>User</h2>
+      <Link to="/auth"><i>reauthenticate</i></Link>
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center align-items-center">
 
         <ProfileCard 
-          className="m-2"
           target="Spotify"
           loading={asyncProfileSpotify.loading}
           error={asyncProfileSpotify.error}
           data={asyncProfileSpotify.result} />
         
         <ProfileCard 
-          className="m-2"
           target="Last.fm"
           loading={asyncProfileLastFm.loading}
           error={asyncProfileLastFm.error}

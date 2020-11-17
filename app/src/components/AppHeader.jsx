@@ -23,11 +23,11 @@ function Navigation(props) {
   return (
     <Navbar bg="dark" variant="dark" className="mb-2">
       <Nav className="mr-auto ml-auto">
-        <Nav.Item>
+        {/* <Nav.Item>
           <Nav.Link href="/auth">Authenticate</Nav.Link>
-        </Nav.Item>
+        </Nav.Item> */}
         <Nav.Item>
-          <Nav.Link href="/profile">Profile</Nav.Link>
+          <Nav.Link href="/user" disabled={!auth} >User</Nav.Link>
         </Nav.Item>
         <Nav.Item>
           <Nav.Link href="/artists" disabled={!auth} >Artists</Nav.Link>

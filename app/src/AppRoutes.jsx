@@ -29,7 +29,7 @@ function AppRoutes(props) {
         </Route>
 
         {/* app */}
-        <Route exact path="/profile">
+        <Route exact path="/user">
           <ProfilePage />
         </Route>
         <Route exact path="/artists">

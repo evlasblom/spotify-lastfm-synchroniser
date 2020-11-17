@@ -14,7 +14,7 @@ function ProfileCard(props) {
   // check if loading
   if (loading) {
     return (
-      <div style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
+      <div style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2">
           <Spinner animation="border" variant="info"/>
       </div>
     )
@@ -23,7 +23,7 @@ function ProfileCard(props) {
   // check if error
   else if (error) {
     return (
-      <div style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
+      <div style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2">
         <Alert variant="danger" className="pt-auto">{error.message}.</Alert>
       </div>
     )
@@ -31,7 +31,7 @@ function ProfileCard(props) {
 
   // otherwise success
   return (
-    <Card style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
+    <Card style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2">
       <Card.Img variant="top" src={profile.image} />
       <Card.Body>
         <Card.Title>{profile.name}</Card.Title>
