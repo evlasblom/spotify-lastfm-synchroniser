@@ -34,6 +34,8 @@ export function getProfile(access_token, opts) {
 }
 
 export function getFollowingArtists(access_token, opts) { 
+  if (!opts) throw new ApiError("Missing required argument: opts.")
+  
   const params = {
     type: 'artist',
     after: opts.after,
@@ -44,6 +46,7 @@ export function getFollowingArtists(access_token, opts) {
 }
 
 export function getSavedAlbums(access_token, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
   if (opts.market && opts.market.length !== 2) throw new ApiError("Invalid option selected: market.")
 
   const params = {
@@ -57,6 +60,7 @@ export function getSavedAlbums(access_token, opts) {
 }
 
 export function getSavedTracks(access_token, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
   if (opts.market && opts.market.length !== 2) throw new ApiError("Invalid option selected: market.")
 
   const params = {

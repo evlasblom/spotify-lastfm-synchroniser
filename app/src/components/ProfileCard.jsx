@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 import Alert from 'react-bootstrap/Alert'
 import Button from 'react-bootstrap/Button';
@@ -6,29 +6,10 @@ import Card from 'react-bootstrap/Card'
 import Spinner from 'react-bootstrap/Spinner'
 
 function ProfileCard(props) {
-  const [profile, setProfile] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const request = props.request;
-  const parse = props.parse ? props.parse : (response) => response;
-  const returnError = props.onError ? props.onError : (error) => console.error(error);
-  const returnResponse = props.onResponse ? props.onResponse : (response) => console.log(response);
-  const target = props.target
-
-  // API call
-  useEffect(() => {
-    request()
-    .then(response => {
-      setProfile(parse(response))
-      setLoading(false)
-      returnResponse(response)
-    })
-    .catch(error => {
-      setLoading(false)
-      setError(error)
-      returnError(error)
-    });
-  }, [])
+  const loading = props.loading;
+  const error = props.error;
+  const profile = props.data;
+  const target = props.target;
 
   // check if loading
   if (loading) {
@@ -40,7 +21,6 @@ function ProfileCard(props) {
   }
 
   // check if error
-  // note: error status 401 is unauthorized
   else if (error) {
     return (
       <div style={{ width: '18rem', height: '30rem', margin: '2rem'}}>
@@ -48,8 +28,6 @@ function ProfileCard(props) {
       </div>
     )
   }
-
-  console.log(profile)
 
   // otherwise success
   return (

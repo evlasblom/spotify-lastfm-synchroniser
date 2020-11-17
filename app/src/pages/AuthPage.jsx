@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'
+import { Redirect } from 'react-router-dom'
 
-import * as spotifyApi from '../services/spotifyApi'
-import * as lastfmApi from '../services/lastfmApi'
 import useHashParams from '../hooks/useHashParams'
 import useLocalStorage from '../hooks/useLocalStorage'
 
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert'
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSyncAlt } from '@fortawesome/free-solid-svg-icons'
 
-import ProfileCard from '../components/ProfileCard'
 import * as constants from '../constants'
 
 // ========== FUNCTIONS ==================================================
@@ -162,30 +157,10 @@ function AuthPage(props) {
     _setUsername(username)
   }
 
-  const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY
-
-  // 3. confirm
+  // 3. redirect
   
   return (
-    <Step title="Confirm">
-      <div className="d-flex flex-row flex-wrap justify-content-center align-items-center">
-
-        <ProfileCard 
-          className="m-2"
-          target="Spotify"
-          request={() => spotifyApi.getProfile(access_token)}
-          parse={(response) => spotifyApi.parseProfile(response.data)} />
-        
-        <Link to="/artists" className="display-4"><FontAwesomeIcon icon={faSyncAlt} /></Link>
-        
-        <ProfileCard 
-          className="m-2"
-          target="Last.fm"
-          request={() => lastfmApi.getProfile(access_key, {user : username})}
-          parse={(response) => lastfmApi.parseProfile(response.data.user)} />
-
-      </div>
-    </Step>
+    <Redirect to="/profile" />    
   )
 }
 

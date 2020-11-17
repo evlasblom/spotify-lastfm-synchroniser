@@ -7,6 +7,7 @@ import {
   } from "react-router-dom";
 
 import AuthPage from './pages/AuthPage'
+import ProfilePage from './pages/ProfilePage'
 import ArtistsPage from './pages/ArtistsPage'
 import AlbumsPage from './pages/AlbumsPage'
 import TracksPage from './pages/TracksPage'
@@ -28,6 +29,9 @@ function AppRoutes(props) {
         </Route>
 
         {/* app */}
+        <Route exact path="/profile">
+          <ProfilePage />
+        </Route>
         <Route exact path="/artists">
           <ArtistsPage />
         </Route>

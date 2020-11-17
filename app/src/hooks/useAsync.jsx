@@ -7,17 +7,17 @@ import { useState, useEffect, useCallback } from 'react';
  * @param {boolean} immediate Execute immediately or not.
  * @return An array with the execution function, the status, the value and the error.
  */
-const useAsync = (asyncFunction, immediate = true) => {
+function useAsync(asyncFunction, immediate = true) {
   const [status, setStatus] = useState('idle');
   const [value, setValue] = useState(null);
   const [error, setError] = useState(null);
 
   // The execute function wraps asyncFunction and
-  // handles setting state for pending, value, and error.
+  // handles setting state for loading, value, and error.
   // useCallback ensures the below useEffect is not called
   // on every render, but only if asyncFunction changes.
   const execute = useCallback(() => {
-    setStatus('pending');
+    setStatus('loading');
     setValue(null);
     setError(null);
 
@@ -41,7 +41,7 @@ const useAsync = (asyncFunction, immediate = true) => {
     }
   }, [execute, immediate]);
 
-  return { execute, status, value, error };
+  return { status, error, value, execute };
 };
 
 export default useAsync;

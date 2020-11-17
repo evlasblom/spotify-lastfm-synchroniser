@@ -27,6 +27,9 @@ function Navigation(props) {
           <Nav.Link href="/auth">Authenticate</Nav.Link>
         </Nav.Item>
         <Nav.Item>
+          <Nav.Link href="/profile">Profile</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
           <Nav.Link href="/artists" disabled={!auth} >Artists</Nav.Link>
         </Nav.Item>
         <Nav.Item>

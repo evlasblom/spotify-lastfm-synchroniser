@@ -42,6 +42,7 @@ function _baseApi(access_key, params) {
 // ---------- API -------------------------------------------------- 
 
 export function getProfile(access_key, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
   if (!opts.user) throw new ApiError("Missing required option: user.");
 
   const params = {
@@ -53,6 +54,7 @@ export function getProfile(access_key, opts) {
 }
 
 export function getTopArtists(access_key, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
   if (!opts.user) throw new ApiError("Missing required option: user.");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiError("Invalid option selected: period.");
 
@@ -68,6 +70,7 @@ export function getTopArtists(access_key, opts) {
 }
 
 export function getTopAlbums(access_key, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
   if (!opts.user) throw new ApiError("Missing required option: user.");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiError("Invalid option selected: period.");
 
@@ -83,6 +86,7 @@ export function getTopAlbums(access_key, opts) {
 }
 
 export function getTopTracks(access_key, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
   if (!opts.user) throw new ApiError("Missing required option: user.");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiError("Invalid option selected: period.");
 
@@ -127,7 +131,7 @@ export function parseArtists(artists) {
         type: 'artist',
         id: artist.mbid,
         name: artist.name,
-        playcount: artist.playcount || Number(artist.playcount), // optional
+        playcount: artist.playcount && Number(artist.playcount), // optional
         url: artist.url
       }
     })
@@ -141,7 +145,7 @@ export function parseAlbums(albums) {
         type: 'album',
         id: album.mbid,
         name: album.name,
-        artist: album.artist.name || album.artist,
+        artist: parseArtists([album.artist]),
         playcount: album.playcount && Number(album.playcount), // optional
         url: album.url
       }
@@ -156,7 +160,7 @@ export function parseTracks(tracks) {
         type: 'track',
         id: track.mbid,
         name: track.name,
-        artist: track.artist.name || track.artist,
+        artist: parseArtists([track.artist]),
         playcount: track.playcount && Number(track.playcount), // optional
         duration: track.duration && Number(track.duration), // optional
         url: track.url
