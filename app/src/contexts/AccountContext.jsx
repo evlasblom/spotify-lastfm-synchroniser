@@ -3,6 +3,8 @@ import React, { useReducer, useEffect } from 'react'
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
+// NOTE: this file is not (yet) used.
+
 const getProfileSpotify = async (access_token, opts) => {
   let response = await spotifyApi.getProfile(access_token, opts);
   return spotifyApi.parseProfile(response.data);
