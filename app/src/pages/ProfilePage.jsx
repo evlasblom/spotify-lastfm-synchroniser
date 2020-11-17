@@ -41,7 +41,7 @@ function ProfilePage(props) {
   return (
     <>
       <h2>User</h2>
-      <Link to="/auth"><i>reauthenticate</i></Link>
+      Click <Link to="/auth">here</Link> to reauthenticate.
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center align-items-center">

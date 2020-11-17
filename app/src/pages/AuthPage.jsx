@@ -99,7 +99,7 @@ function Step(props) {
   return(
     <>
       <h2>{props.title}</h2>
-      {props.subtitle ? <i>{props.subtitle}</i> : ""}
+      {props.subtitle ? props.subtitle : ""}
       <br></br>
       <br></br>
       {props.children}
@@ -146,7 +146,7 @@ function AuthPage(props) {
   // show login if not authenticated
   if (!username) {
     return (
-      <Step title="Authenticate via Last.fm" subtitle="No password needed">
+      <Step title="Authenticate via Last.fm" subtitle="No password needed.">
         <LoginLastfm onSubmit={setUsername}/>
       </Step>
     )

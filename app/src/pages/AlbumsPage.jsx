@@ -5,9 +5,8 @@ import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 import useLocalStorage from '../hooks/useLocalStorage'
 
-import Alert from 'react-bootstrap/Alert'
-import Spinner from 'react-bootstrap/Spinner'
-
+import Error from '../components/Error'
+import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
 
@@ -40,25 +39,17 @@ function AlbumsList(props) {
 
   // check if loading
   if (loading) {
-    return (
-    <div style={{ width: '25rem'}} className="mr-2, ml-2">
-          <Spinner animation="border" variant="info"/>
-      </div>
-    )
+    return <Loading style={{ width: '25rem'}} className="mr-2 ml-2" />
   }
 
   // check if error
   else if (error) {
-    return (
-    <div style={{ width: '25rem'}} className="mr-2, ml-2">
-        <Alert variant="danger" className="pt-auto">{error.message}.</Alert>
-      </div>
-    )
+    return <Error style={{ width: '25rem'}} className="mr-2 ml-2" error={error} />
   }
 
   // otherwise success
   return (
-    <div style={{ width: '25rem'}} className="mr-2, ml-2">
+    <div style={{ width: '25rem'}} className="mr-2 ml-2">
       <b>{target}</b>
       <br></br>
       <br></br>
