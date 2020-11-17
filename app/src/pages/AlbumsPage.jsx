@@ -5,6 +5,7 @@ import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 import useLocalStorage from '../hooks/useLocalStorage'
 
+import ActionForm from '../components/ActionForm'
 import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
@@ -13,6 +14,8 @@ import * as constants from '../constants'
 // ========== CONSTANTS ==================================================
 
 const initial_form = {period: 'overall', number: 20, playcount: 100 };
+
+const initial_action = 'add';
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
@@ -54,11 +57,13 @@ function AlbumsList(props) {
       <br></br>
       <br></br>
       {albums.map((album, i) => {
-        return (<p key={i} className={album.playcount < limit ? "text-muted" : ""}>
-          {i + 1}. {album.name}
-          {album.playcount ? (" - " + album.playcount) : ""}
-          <br></br>
-          <i>{album.artist[0].name}</i>
+        const class_name = album.playcount < limit ? "text-muted" : ""
+        return (
+          <p key={i} className={class_name}>
+            {i + 1}. {album.name}
+            {album.playcount ? (" - " + album.playcount) : ""}
+            <br></br>
+            <i>{album.artist[0].name}</i>
           </p>)
       })}
     </div>
@@ -72,10 +77,11 @@ function AlbumsPage(props) {
   const [username, ] = useLocalStorage(constants.user_key, null);
 
   const [form, setForm] = useState(initial_form);
+  const [action, setAction] = useState(initial_action);
 
-  const asyncAlbumsSpotify = useAsync(
+  const albumsSpotify = useAsync(
     () => getAlbumsSpotify(access_token, {}), []);
-  const asyncAlbumsLastFm = useAsync(
+  const albumsLastFm = useAsync(
     () => getAlbumsLastFm(access_key, createOpts()), [form.period, form.number]);
 
   const createOpts = () => { return {user: username, period: form.period, limit: form.number}};
@@ -86,22 +92,24 @@ function AlbumsPage(props) {
       <br></br>
       <SelectionForm onSubmit={setForm} initial={initial_form} />
       <br></br>
+      <ActionForm onSubmit={setAction} initial={initial_action} />
+      <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <AlbumsList 
           target="Spotify"
           playcount={form.playcount}
-          loading={asyncAlbumsSpotify.loading}
-          error={asyncAlbumsSpotify.error}
-          data={asyncAlbumsSpotify.result} />
+          loading={albumsSpotify.loading}
+          error={albumsSpotify.error}
+          data={albumsSpotify.result} />
         
         <AlbumsList 
           target="Last.fm"
           playcount={form.playcount}
-          loading={asyncAlbumsLastFm.loading}
-          error={asyncAlbumsLastFm.error}
-          data={asyncAlbumsLastFm.result} />
+          loading={albumsLastFm.loading}
+          error={albumsLastFm.error}
+          data={albumsLastFm.result} />
 
       </div>
     </>

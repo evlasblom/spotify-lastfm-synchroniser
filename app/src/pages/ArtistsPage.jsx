@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAsync } from 'react-async-hook'
 
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 import useLocalStorage from '../hooks/useLocalStorage'
 
+import ActionForm from '../components/ActionForm'
 import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
@@ -13,6 +14,8 @@ import * as constants from '../constants'
 // ========== CONSTANTS ==================================================
 
 const initial_form = {period: 'overall', number: 20, playcount: 250 };
+
+const initial_action = 'add';
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
@@ -54,8 +57,9 @@ function ArtistsList(props) {
       <br></br>
       <br></br>
       {artists.map((artist, i) => {
+        const class_name = artist.playcount < limit ? "text-muted" : ""
         return (
-          <p key={i} className={artist.playcount < limit ? "text-muted" : ""}>
+          <p key={i} className={class_name}>
             {i + 1}. {artist.name} 
             {artist.playcount ? (" - " + artist.playcount) : ""}
           </p>
@@ -72,10 +76,11 @@ function ArtistsPage(props) {
   const [username, ] = useLocalStorage(constants.user_key, null);
 
   const [form, setForm] = useState(initial_form);
+  const [action, setAction] = useState(initial_action);
 
-  const asyncArtistsSpotify = useAsync(
+  const artistsSpotify = useAsync(
     () => getArtistsSpotify(access_token, {}), []);
-  const asyncArtistsLastFm = useAsync(
+  const artistsLastFm = useAsync(
     () => getArtistsLastFm(access_key, createOpts()), [form.period, form.number]);
       
   const createOpts = () => { return {user: username, period: form.period, limit: form.number}};
@@ -86,22 +91,24 @@ function ArtistsPage(props) {
       <br></br>
       <SelectionForm onSubmit={setForm} initial={initial_form} />
       <br></br>
+      <ActionForm onSubmit={setAction} initial={initial_action} />
+      <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <ArtistsList 
           target="Spotify"
           playcount={form.playcount}
-          loading={asyncArtistsSpotify.loading}
-          error={asyncArtistsSpotify.error}
-          data={asyncArtistsSpotify.result} />
+          loading={artistsSpotify.loading}
+          error={artistsSpotify.error}
+          data={artistsSpotify.result} />
         
         <ArtistsList 
           target="Last.fm"
           playcount={form.playcount}
-          loading={asyncArtistsLastFm.loading}
-          error={asyncArtistsLastFm.error}
-          data={asyncArtistsLastFm.result} />
+          loading={artistsLastFm.loading}
+          error={artistsLastFm.error}
+          data={artistsLastFm.result} />
 
       </div>
     </>

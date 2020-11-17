@@ -36,7 +36,7 @@ function SelectionForm(props) {
 
   return (
     <div className="bg-light">
-      <Form onSubmit={onSubmit} inline className="justify-content-center">
+      <Form onSubmit={onSubmit} inline className="justify-content-end">
         <Form.Label className="m-2">Period</Form.Label>
         <Form.Control 
             as="select" 
@@ -66,7 +66,7 @@ function SelectionForm(props) {
           onChange={(e) => dispatch({type: "PLAYCOUNT", payload: e.currentTarget.value})}
           className="m-2" />
 
-        <Button variant="primary" type="submit" className="m-2">
+        <Button variant="primary" type="submit" style={{width: "8rem"}} className="m-2">
           Select
         </Button>
       </Form>
