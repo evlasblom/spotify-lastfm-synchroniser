@@ -20,7 +20,7 @@ const IMAGE_SORT_WEIGHTS = {
 
 // ---------- BASE -------------------------------------------------- 
 
-function _baseApi(access_key, params) {
+function _getApi(access_key, params) {
   if (!ALLOWED_METHODS.includes(params.method)) throw new ApiError("Invalid option selected: method.");
   
   const base = {
@@ -39,6 +39,29 @@ function _baseApi(access_key, params) {
   return axios(config);
 }
 
+// Note: untested
+function _postApi(session_key, access_key, method_signature, params) {
+  if (!ALLOWED_METHODS.includes(params.method)) throw new ApiError("Invalid option selected: method.");
+  
+  const base = {
+    sk: session_key,
+    api_key: access_key,
+    api_sig: method_signature
+  };
+
+  const config = {
+    url: '',
+    baseURL: 'https://ws.audioscrobbler.com/2.0/',
+    method: 'GET',
+    timeout: 4000,
+    json: true,
+    data: {...params, ...base}
+  };
+
+  return axios(config);
+}
+
+
 // ---------- API -------------------------------------------------- 
 
 export function getProfile(access_key, opts) {
@@ -50,7 +73,7 @@ export function getProfile(access_key, opts) {
     user: opts.user,
   }
 
-  return _baseApi(access_key, params);
+  return _getApi(access_key, params);
 }
 
 export function getTopArtists(access_key, opts) {
@@ -66,7 +89,7 @@ export function getTopArtists(access_key, opts) {
     page: opts.page
   }
 
-  return _baseApi(access_key, params);
+  return _getApi(access_key, params);
 }
 
 export function getTopAlbums(access_key, opts) {
@@ -82,7 +105,7 @@ export function getTopAlbums(access_key, opts) {
     page: opts.page
   }
 
-  return _baseApi(access_key, params);
+  return _getApi(access_key, params);
 }
 
 export function getTopTracks(access_key, opts) {
@@ -98,7 +121,37 @@ export function getTopTracks(access_key, opts) {
     page: opts.page
   }
 
-  return _baseApi(access_key, params);
+  return _getApi(access_key, params);
+}
+
+// Note: untested
+export function setTopTrack(session_key, access_key, method_signature, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
+  if (!opts.track) throw new ApiError("Missing required option: track.");
+  if (!opts.artist) throw new ApiError("Missing required option: artist.");
+
+  const params = {
+    method: 'track.love',
+    track: opts.track,
+    artist: opts.artist,
+  }
+
+  return _postApi(session_key, access_key, method_signature, params);
+}
+
+// Note: untested
+export function deleteTopTrack(session_key, access_key, method_signature, opts) {
+  if (!opts) throw new ApiError("Missing required argument: opts.")
+  if (!opts.track) throw new ApiError("Missing required option: track.");
+  if (!opts.artist) throw new ApiError("Missing required option: artist.");
+
+  const params = {
+    method: 'track.unlove',
+    track: opts.track,
+    artist: opts.artist,
+  }
+
+  return _postApi(session_key, access_key, method_signature, params);
 }
 
 // ---------- PARSERS -------------------------------------------------- 
