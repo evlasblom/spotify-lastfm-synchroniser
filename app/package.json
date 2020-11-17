@@ -16,7 +16,9 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "firebase-tools": "^8.16.2"
+  },
   "scripts": {
     "start": "react-scripts start node -r dotenv/config src/index.js",
     "build": "react-scripts build",
