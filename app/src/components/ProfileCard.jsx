@@ -13,17 +13,17 @@ function ProfileCard(props) {
 
   // check if loading
   if (loading) {
-    return <Loading style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2" />
+    return <Loading style={{ width: '18rem', height: '30rem'}} className="m-2" />
   }
 
   // check if error
   else if (error) {
-    return <Error style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2" error={error} />
+    return <Error style={{ width: '18rem', height: '30rem'}} className="m-2" error={error} />
   }
 
   // otherwise success
   return (
-    <Card style={{ width: '18rem', height: '30rem'}} className="mr-2 ml-2">
+    <Card style={{ width: '18rem', height: '30rem'}} className="m-2">
       <Card.Img variant="top" src={profile.image} />
       <Card.Body>
         <Card.Title>{profile.name}</Card.Title>
