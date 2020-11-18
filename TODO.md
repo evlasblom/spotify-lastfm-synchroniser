@@ -1,16 +1,5 @@
 # Todo
 
-## API
-
-Consider switching to one of the following libraries for the Last.fm API:
-
-- https://github.com/feross/last-fm
-- https://github.com/fxb/javascript-last.fm-api
-
-Consider switching to one of the following libraries for the Spotify API:
-
-- https://github.com/JMPerez/spotify-web-api-js
-
 ## Authentication
 
 - Display timer when authentication expires.
