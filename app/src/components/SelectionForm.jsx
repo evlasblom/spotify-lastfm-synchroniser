@@ -35,8 +35,8 @@ function SelectionForm(props) {
   }
 
   return (
-    <div className="bg-light">
-      <Form onSubmit={onSubmit} inline className="justify-content-end">
+    <div>
+      <Form onSubmit={onSubmit} inline className="justify-content-end rounded rounded-pill bg-light p-2">
         <Form.Label className="m-2">Period</Form.Label>
         <Form.Control 
             as="select" 

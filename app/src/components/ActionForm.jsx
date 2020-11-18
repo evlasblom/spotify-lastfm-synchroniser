@@ -10,14 +10,14 @@ function ActionForm(props) {
     props.onClear();
   }
 
-  const onUpdate = (e) => {
+  const onImport = (e) => {
     e.preventDefault();
-    props.onUpdate();
+    props.onImport();
   }
 
   return (
     <>
-    <div className="bg-light">
+    <div>
       <Form onSubmit={onClear} inline className="justify-content-end">
         <Button variant="danger" type="submit" style={{width: "8rem"}} className="m-2">
           Clear
@@ -25,10 +25,10 @@ function ActionForm(props) {
       </Form>
     </div>
     <br></br>
-    <div className="bg-light">
-      <Form onSubmit={onUpdate} inline className="justify-content-end">
+    <div>
+      <Form onSubmit={onImport} inline className="justify-content-end">
         <Button variant="success" type="submit" style={{width: "8rem"}} className="m-2">
-          Update
+          Import
         </Button>
       </Form>
     </div>
