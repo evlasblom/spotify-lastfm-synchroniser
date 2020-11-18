@@ -1,38 +1,38 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 
 function ActionForm(props) {
-  const [state, setState] = useState(props.initial);
-  const actions = ['add', 'replace'];
   
-  const onSubmit = (e) => {
+  const onClear = (e) => {
     e.preventDefault();
-    props.onSubmit(state);
+    props.onClear();
+  }
+
+  const onUpdate = (e) => {
+    e.preventDefault();
+    props.onUpdate();
   }
 
   return (
+    <>
     <div className="bg-light">
-      <Form onSubmit={onSubmit} inline className="justify-content-end">
-        <Form.Label className="m-2">Action</Form.Label>
-        <Form.Control 
-            as="select" 
-            defaultValue={0} 
-            onChange={(e) => setState(e.currentTarget.value)}
-            className="m-2" >
-          {
-            actions.map((period) => {
-              return <option key={period} value={period}>{period}</option>
-            })
-          }
-        </Form.Control>
-
-        <Button variant="primary" type="submit" style={{width: "8rem"}} className="m-2">
-          Sync
+      <Form onSubmit={onClear} inline className="justify-content-end">
+        <Button variant="danger" type="submit" style={{width: "8rem"}} className="m-2">
+          Clear
         </Button>
       </Form>
     </div>
+    <br></br>
+    <div className="bg-light">
+      <Form onSubmit={onUpdate} inline className="justify-content-end">
+        <Button variant="success" type="submit" style={{width: "8rem"}} className="m-2">
+          Update
+        </Button>
+      </Form>
+    </div>
+    </>
   )
 }
 

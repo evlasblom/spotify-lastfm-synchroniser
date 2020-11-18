@@ -15,8 +15,6 @@ import * as constants from '../constants'
 
 const initial_form = {period: 'overall', number: 20, playcount: 250 };
 
-const initial_action = 'add';
-
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
 // ========== FUNCTIONS ==================================================
@@ -31,6 +29,22 @@ const getArtistsLastFm = async (access_key, opts) => {
   return lastfmApi.parseArtists(response.data.topartists.artist);
 }
 
+function compareArtists(one, two) {
+  return one && two && one.name === two.name
+}
+
+function comparePlaycount(artist, limit) {
+  return artist && artist.playcount < limit
+}
+
+function compareWith(otherArray) {
+  return function(current) {
+    return otherArray.filter(function(other) {
+      return compareArtists(other, current)
+    }).length === 0;
+  }
+}
+
 // ========== COMPONENTS ==================================================
 
 function ArtistsList(props) {
@@ -39,6 +53,7 @@ function ArtistsList(props) {
   const artists = props.data;
   const target = props.target;
   const limit = props.playcount ? props.playcount : 0;
+  const exclusive = props.exclusive;
 
   // check if loading
   if (loading) {
@@ -51,13 +66,16 @@ function ArtistsList(props) {
   }
 
   // otherwise success
+  let j = 0;
   return (
     <div style={{ width: '25rem'}} className="mr-2 ml-2">
       <b>{target}</b>
       <br></br>
       <br></br>
       {artists.map((artist, i) => {
-        const class_name = artist.playcount < limit ? "text-muted" : ""
+        let class_name = ""
+        if (compareArtists(artist, exclusive[j])) { j++; class_name = props.exclusiveClass}
+        if (comparePlaycount(artist, limit)) class_name = "text-muted";
         return (
           <p key={i} className={class_name}>
             {i + 1}. {artist.name} 
@@ -76,13 +94,23 @@ function ArtistsPage(props) {
   const [username, ] = useLocalStorage(constants.user_key, null);
 
   const [form, setForm] = useState(initial_form);
-  const [action, setAction] = useState(initial_action);
 
   const artistsSpotify = useAsync(
     () => getArtistsSpotify(access_token, {}), []);
   const artistsLastFm = useAsync(
     () => getArtistsLastFm(access_key, createOpts()), [form.period, form.number]);
+
+  const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
+  const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
       
+  useEffect(() => {
+    if (!artistsSpotify.result || !artistsLastFm.result) return
+    let onlyOnSpotify = artistsSpotify.result.filter(compareWith(artistsLastFm.result));
+    setOnlyOnSpotify(onlyOnSpotify); // this list may removed from spotify
+    let onlyOnLastFm = artistsLastFm.result.filter(compareWith(artistsSpotify.result));
+    setOnlyOnLastFm(onlyOnLastFm); // this list may be added to spotify
+  }, [artistsSpotify.result, artistsLastFm.result])
+
   const createOpts = () => { return {user: username, period: form.period, limit: form.number}};
 
   return (
@@ -91,7 +119,7 @@ function ArtistsPage(props) {
       <br></br>
       <SelectionForm onSubmit={setForm} initial={initial_form} />
       <br></br>
-      <ActionForm onSubmit={setAction} initial={initial_action} />
+      <ActionForm onClear={console.log} onUpdate={console.log} />
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
@@ -101,14 +129,18 @@ function ArtistsPage(props) {
           playcount={form.playcount}
           loading={artistsSpotify.loading}
           error={artistsSpotify.error}
-          data={artistsSpotify.result} />
+          data={artistsSpotify.result}
+          exclusive={onlyOnSpotify}
+          exclusiveClass="text-danger" />
         
         <ArtistsList 
           target="Last.fm"
           playcount={form.playcount}
           loading={artistsLastFm.loading}
           error={artistsLastFm.error}
-          data={artistsLastFm.result} />
+          data={artistsLastFm.result} 
+          exclusive={onlyOnLastFm}
+          exclusiveClass="text-success" />
 
       </div>
     </>
