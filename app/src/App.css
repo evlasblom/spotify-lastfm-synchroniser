@@ -6,6 +6,7 @@
   animation: App-logo-spin infinite 20s linear;
   height: 80px;
   padding: 5px;
+  transition: 0.2s;
 }
 
 .App-header {
@@ -14,6 +15,7 @@
   padding: 20px;
   margin-bottom: 0px;
   color: white;
+  transition: 0.2s;
 }
 
 .App-content {

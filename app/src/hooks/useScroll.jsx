@@ -5,15 +5,15 @@ function useScroll() {
   const [bodyOffset, setBodyOffset] = useState(
     document.body.getBoundingClientRect()
   );
-  const [scrollY, setScrollY] = useState(bodyOffset.top);
-  const [scrollX, setScrollX] = useState(bodyOffset.left);
-  const [scrollDirection, setScrollDirection] = useState();
+  const [y, setY] = useState(bodyOffset.top);
+  const [x, setX] = useState(bodyOffset.left);
+  const [direction, setDirection] = useState();
 
   const listener = e => {
     setBodyOffset(document.body.getBoundingClientRect());
-    setScrollY(-bodyOffset.top);
-    setScrollX(bodyOffset.left);
-    setScrollDirection(lastScrollTop > -bodyOffset.top ? "down" : "up");
+    setY(-bodyOffset.top);
+    setX(bodyOffset.left);
+    setDirection(lastScrollTop > -bodyOffset.top ? "down" : "up");
     setLastScrollTop(-bodyOffset.top);
   };
 
@@ -25,9 +25,9 @@ function useScroll() {
   });
 
   return {
-    scrollY,
-    scrollX,
-    scrollDirection
+    y,
+    x,
+    direction
   };
 }
 
