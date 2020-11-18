@@ -30,7 +30,7 @@ const getTracksLastFm = async (access_key, opts) => {
 }
 
 function compareTracks(one, two) {
-  return one && two && one.name === two.name && one.artist[0].name == two.artist[0].name
+  return one && two && one.name === two.name && one.artist[0].name === two.artist[0].name
 }
 
 function comparePlaycount(track, limit) {
@@ -120,7 +120,7 @@ function AlbumsPage(props) {
       <br></br>
       <SelectionForm onSubmit={setForm} initial={initial_form} />
       <br></br>
-      <ActionForm onClear={console.log} onUpdate={console.log} />
+      <ActionForm onClear={console.log} onImport={console.log} />
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
