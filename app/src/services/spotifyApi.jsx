@@ -46,6 +46,7 @@ export function getProfile(access_token, opts) {
 
 export function getFollowingArtists(access_token, opts) { 
   if (!opts) throw new ApiException("Missing required argument: opts");
+  if (opts.limit && opts.limit.length > 50) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     type: 'artist',
@@ -59,6 +60,7 @@ export function getFollowingArtists(access_token, opts) {
 export function getSavedAlbums(access_token, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (opts.market && opts.market.length !== 2) throw new ApiException("Invalid option selected: market");
+  if (opts.limit && opts.limit.length > 50) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     type: 'albums',
@@ -73,6 +75,7 @@ export function getSavedAlbums(access_token, opts) {
 export function getSavedTracks(access_token, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (opts.market && opts.market.length !== 2) throw new ApiException("Invalid option selected: market");
+  if (opts.limit && opts.limit.length > 50) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     type: 'tracks',
@@ -87,6 +90,7 @@ export function getSavedTracks(access_token, opts) {
 export function setFollowingArtists(access_token, opts) { 
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.ids) throw new ApiException("Missing required option: ids");
+  if (opts.ids.length > 50) throw new ApiException("Option exceeds max size: ids");
 
   const params = {
     type: 'artist',
@@ -99,6 +103,7 @@ export function setFollowingArtists(access_token, opts) {
 export function setSavedAlbums(access_token, opts) { 
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.ids) throw new ApiException("Missing required option: ids");
+  if (opts.ids.length > 50) throw new ApiException("Option exceeds max size: ids");
 
   const params = {
     ids: opts.ids.join(","), // max 50
@@ -110,6 +115,7 @@ export function setSavedAlbums(access_token, opts) {
 export function setSavedTracks(access_token, opts) { 
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.ids) throw new ApiException("Missing required option: ids");
+  if (opts.ids.length > 50) throw new ApiException("Option exceeds max size: ids");
 
   const params = {
     ids: opts.ids.join(","), // max 50
@@ -121,6 +127,7 @@ export function setSavedTracks(access_token, opts) {
 export function removeFollowingArtists(access_token, opts) { 
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.ids) throw new ApiException("Missing required option: ids");
+  if (opts.ids.length > 50) throw new ApiException("Option exceeds max size: ids");
 
   const params = {
     type: 'artist',
@@ -133,6 +140,7 @@ export function removeFollowingArtists(access_token, opts) {
 export function removeSavedAlbums(access_token, opts) { 
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.ids) throw new ApiException("Missing required option: ids");
+  if (opts.ids.length > 50) throw new ApiException("Option exceeds max size: ids");
 
   const params = {
     ids: opts.ids.join(","), // max 50
@@ -144,6 +152,7 @@ export function removeSavedAlbums(access_token, opts) {
 export function removeSavedTracks(access_token, opts) { 
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.ids) throw new ApiException("Missing required option: ids");
+  if (opts.ids.length > 50) throw new ApiException("Option exceeds max size: ids");
 
   const params = {
     ids: opts.ids.join(","), // max 50
@@ -157,6 +166,7 @@ export function search(access_token, opts) {
   if (!opts.type) throw new ApiException("Missing required option: type");
   if (!opts.q) throw new ApiException("Missing required option: q");
   if (opts.market && opts.market.length !== 2) throw new ApiException("Invalid option selected: market");
+  if (opts.limit && opts.limit.length > 50) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     type: opts.type,

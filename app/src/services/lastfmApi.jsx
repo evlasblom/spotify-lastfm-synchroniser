@@ -80,6 +80,7 @@ export function getTopArtists(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.user) throw new ApiException("Missing required option: user");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiException("Invalid option selected: period");
+  if (opts.limit && opts.limit > 1000) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     method: 'user.getTopArtists',
@@ -96,6 +97,7 @@ export function getTopAlbums(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.user) throw new ApiException("Missing required option: user");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiException("Invalid option selected: period");
+  if (opts.limit && opts.limit > 1000) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     method: 'user.getTopAlbums',
@@ -112,6 +114,7 @@ export function getTopTracks(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.user) throw new ApiException("Missing required option: user");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiException("Invalid option selected: period");
+  if (opts.limit && opts.limit > 1000) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     method: 'user.getTopTracks',
