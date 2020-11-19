@@ -73,7 +73,7 @@ const reducer = (state, action) => {
           user: { id: action.payload.id }
         }
       }
-    case 'UPDATE':
+    case 'FINALIZE':
       return {
         ...state,
         ...action.payload
@@ -114,6 +114,7 @@ export const AccountProvider = ({ children }) => {
   // const [_spotifyAuth, _setSpotifyAuth] = useLocalStorage(constants.spotify_key, null)
   // const [_lastFmAuth, _setLastFmAuth] = useLocalStorage(constants.lastm_key, null)
 
+  // Async calls to fetch the profiles, in order to verify if authentication succeeded
   const profileSpotify = useAsync(
     () => getProfileSpotify(state.spotify.access_token), [state.spotify.access_token]
   )
@@ -121,9 +122,10 @@ export const AccountProvider = ({ children }) => {
     () => getProfileLastFm(state.lastfm.access_key, state.lastfm.user.id), [state.lastfm.user.id]
   )
 
+  // Side effect if async calls succeeded, to finalize the whole context
   useEffect(() => {
     if (!profileSpotify.result || !profileLastFm.result) return;
-    dispatch({action: 'UPDATE', payload: {
+    dispatch({action: 'FINALIZE', payload: {
       spotify: {
         ...profileSpotify.result.spotify,
         authenticated: profileSpotify.result && !profileSpotify.error,
@@ -137,6 +139,7 @@ export const AccountProvider = ({ children }) => {
     }})
   }, [profileSpotify.result, profileLastFm.result])
 
+  // Side effect if authentication expires
   useEffect(() => {
     if (expiresSpotify < 0) return;
     const timeout = expiresSpotify - 5; // just to be on the safe side
@@ -151,7 +154,7 @@ export const AccountProvider = ({ children }) => {
     return () => clearTimeout(timer);
   }, [expiresLastFm])
 
-  // this method will be triggered from the auth page
+  // This method will be triggered from the auth page
   const setSpotify = (access_token, id, expires) => {
     // first set authentication expiration
     setExpiresSpotify(expires);
@@ -159,9 +162,10 @@ export const AccountProvider = ({ children }) => {
     dispatch({action: 'SPOTIFY_AUTH', payload: {access_token: access_token, id: id}})
     // and manually trigger fetching the profile
     profileSpotify.execute();
-    // the resulting response will automatically trigger the above side effect
+    // the resulting response will automatically trigger the earlier side effect
   }
 
+  // This method will be triggered from the auth page
   const setLastFm = (access_key, id, expires) => {
     // first set authentication expiration
     setExpiresLastFm(expires);
@@ -169,7 +173,7 @@ export const AccountProvider = ({ children }) => {
     dispatch({action: 'LASTFM_AUTH', payload: {access_key: access_key, id: id}})
     // and manually trigger fetching the profile
     profileLastFm.execute();
-    // the resulting response will automatically trigger the above side effect
+    // the resulting response will automatically trigger the earlier side effect
   }
 
   return (
