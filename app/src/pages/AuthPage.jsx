@@ -40,7 +40,7 @@ function authSpotifyImplicit(state) {
   let url = 'https://accounts.spotify.com/authorize';
   url += '?response_type=token';
   url += '&client_id=' + encodeURIComponent(process.env.REACT_APP_SPOTIFY_CLIENT_ID);
-  url += '&redirect_uri=' + encodeURIComponent(process.env.REACT_APP_SPOTIFY_REDIRECT_URI);
+  url += '&redirect_uri=' + encodeURIComponent(window.location.origin + window.location.pathname);
   url += '&scope=' + encodeURIComponent(scope);
   url += '&state=' + encodeURIComponent(state);
 
