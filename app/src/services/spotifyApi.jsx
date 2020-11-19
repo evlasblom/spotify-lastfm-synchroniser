@@ -4,17 +4,17 @@ import { ApiException } from '../exceptions'
 
 // ---------- CONSTANTS -------------------------------------------------- 
 
-const ALLOWED_METHODS = ['me', 'me/following', 'me/albums', 'me/tracks'];
+const ALLOWED_METHODS = ['me', 'me/following', 'me/albums', 'me/tracks', 'search'];
 
 // ---------- BASE -------------------------------------------------- 
 
-function _getApi(access_token, method, params) {
-  if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
+function _baseApi(access_token, restMethod, apiMethod, params) {
+  if (!ALLOWED_METHODS.includes(apiMethod)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
-    url: method + '?' + qs.stringify(params),
+    url: apiMethod + '?' + qs.stringify(params),
     baseURL: 'https://api.spotify.com/v1/',
-    method: 'GET',
+    method: restMethod,
     timeout: 4000,
     json: true,
     headers: {
@@ -23,40 +23,19 @@ function _getApi(access_token, method, params) {
   };
 
   return axios(config)
+}
+
+function _getApi(access_token, method, params) {
+  return _baseApi(access_token, 'GET', method, params)
 }
 
 function _putApi(access_token, method, params) {
-  if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
+  return _baseApi(access_token, 'PUT', method, params)
 
-  const config = {
-    url: method + '?' + qs.stringify(params),
-    baseURL: 'https://api.spotify.com/v1/',
-    method: 'PUT',
-    timeout: 4000,
-    json: true,
-    headers: {
-      'Authorization': 'Bearer ' + access_token
-    }
-  };
-
-  return axios(config)
 }
 
 function _deleteApi(access_token, method, params) {
-  if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
-
-  const config = {
-    url: method + '?' + qs.stringify(params),
-    baseURL: 'https://api.spotify.com/v1/',
-    method: 'DELETE',
-    timeout: 4000,
-    json: true,
-    headers: {
-      'Authorization': 'Bearer ' + access_token
-    }
-  };
-
-  return axios(config)
+  return _baseApi(access_token, 'DELETE', method, params)
 }
 
 // ---------- API -------------------------------------------------- 
@@ -171,6 +150,36 @@ export function removeSavedTracks(access_token, opts) {
   }
 
   return _deleteApi(access_token, 'me/tracks', params)
+}
+
+export function search(access_token, opts) {
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.type) throw new ApiException("Missing required option: type");
+  if (!opts.q) throw new ApiException("Missing required option: q");
+  if (opts.market && opts.market.length !== 2) throw new ApiException("Invalid option selected: market");
+
+  const params = {
+    type: opts.type,
+    q: opts.q,
+    offset: opts.offset,
+    limit: opts.limit, // min 1 max 50 default 20
+    market: opts.market,
+    include_external: opts.include_external
+  }
+
+  return _getApi(access_token, 'search', params)
+}
+
+export function searchArtist(access_token, opts) {
+  return search(access_token, {...opts, type: 'artist'})
+}
+
+export function searchAlbum(access_token, opts) {
+  return search(access_token, {...opts, type: 'album'})
+}
+
+export function searchTrack(access_token, opts) {
+  return search(access_token, {...opts, type: 'track'})
 }
 
 // ---------- PARSERS -------------------------------------------------- 
