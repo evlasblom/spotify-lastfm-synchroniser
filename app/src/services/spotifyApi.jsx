@@ -29,12 +29,11 @@ function _putApi(access_token, method, params) {
   if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
-    url: method,
+    url: method + '?' + qs.stringify(params),
     baseURL: 'https://api.spotify.com/v1/',
     method: 'PUT',
     timeout: 4000,
     json: true,
-    data: params,
     headers: {
       'Authorization': 'Bearer ' + access_token
     }
@@ -47,12 +46,11 @@ function _deleteApi(access_token, method, params) {
   if (!ALLOWED_METHODS.includes(method)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
-    url: method,
+    url: method + '?' + qs.stringify(params),
     baseURL: 'https://api.spotify.com/v1/',
     method: 'DELETE',
     timeout: 4000,
     json: true,
-    data: params,
     headers: {
       'Authorization': 'Bearer ' + access_token
     }
