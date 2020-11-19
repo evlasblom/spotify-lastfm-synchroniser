@@ -39,21 +39,16 @@ const importTracksSpotify = async (access_token, tracks) => {
   let ids = [];
   // get the spotify ids by performing a search
   for (const track of tracks) {
-    let query = 'artist:"' + track.artist[0].name + '" track:"' + track.name + '"'; // <--- improve query
+    let query = 'artist:"' + track.artist[0].name + '" track:"' + track.name + '"';
     let response = await spotifyApi.searchTrack(access_token, { q: query});
     let results = spotifyApi.parseTracks(response.data.tracks.items);
-    for (const result of results) {
-      if (compareTracks(result, track)) {
-        ids.push(result.id);
-        break;
-      }
-      else {
-        // what do do if no exact match was found?
-        // this could be due to different spelling, for example
-        console.log("Could not find track " + query);
-      }
+    // lets assume the top result is always correct
+    if (results) {
+      ids.push(results[0].id);
     }
-    ids.push(results[0].id);
+    else {
+      console.log("Could not find track " + query);
+    }
   }
   // save matched tracks
   return await spotifyApi.setSavedTracks(access_token, {ids: ids});
@@ -109,6 +104,7 @@ function AlbumsPage(props) {
   const [username, ] = useLocalStorage(constants.user_key, null);
 
   const [selection, setSelection] = useState(initial_selection);
+  const [computing, setComputing] = useState(false);
 
   const tracksSpotify = useAsync(
     () => getTracksSpotify(access_token, {}), []);
@@ -120,16 +116,22 @@ function AlbumsPage(props) {
       
   useEffect(() => {
     if (!tracksSpotify.result || !tracksLastFm.result) return
-    // cross-compare spotify tracks with filtered lastfm tracks
-    let onlyOnSpotify = 
-      tracksSpotify.result.filter(filterExclusiveTracks(tracksLastFm.result.filter(filterOnPlaycount(selection.playcount))));
-    // save exclusive list
-    setOnlyOnSpotify(onlyOnSpotify);
-    // cross-compare lastm fm tracks with spotify tracks and filter
-    let onlyOnLastFm = 
-      tracksLastFm.result.filter(filterExclusiveTracks(tracksSpotify.result)).filter(filterOnPlaycount(selection.playcount));
-    // save exclusive list
-    setOnlyOnLastFm(onlyOnLastFm);
+    setComputing(true);
+    async function computeExclusive() {
+      // cross-compare spotify tracks with filtered lastfm tracks
+      let onlyOnSpotify = 
+        tracksSpotify.result.filter(filterExclusiveTracks(tracksLastFm.result.filter(filterOnPlaycount(selection.playcount))));
+      // save exclusive list
+      setOnlyOnSpotify(onlyOnSpotify);
+      // cross-compare lastm fm tracks with spotify tracks and filter
+      let onlyOnLastFm = 
+        tracksLastFm.result.filter(filterExclusiveTracks(tracksSpotify.result)).filter(filterOnPlaycount(selection.playcount));
+      // save exclusive list
+      setOnlyOnLastFm(onlyOnLastFm);
+      // reset computing state
+      setComputing(false);
+    }
+    computeExclusive();
   }, [tracksSpotify.result, tracksLastFm.result, selection.playcount])
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
@@ -142,18 +144,22 @@ function AlbumsPage(props) {
       <br></br>
       <ActionForm 
         text="Clear" 
-        modal="This will clear all tracks from Spotify that is not in your current top track selection on Lastfm."
+        modal="This will clear all tracks from Spotify that are not in your current top track selection on Last.fm."
         variant="danger" 
         onSubmit={() => clearTracksSpotify(access_token, onlyOnSpotify)}
         onResult={tracksSpotify.execute} />
       <br></br>
       <ActionForm 
         text="Import" 
-        modal="This will import all tracks to Spotify that is in your current top track selection on Lastfm."
+        modal="This will import all tracks into Spotify that are in your current top track selection on Last.fm."
         variant="success" 
         onSubmit={() => importTracksSpotify(access_token, onlyOnLastFm)}
         onResult={tracksSpotify.execute} />
       <br></br>
+      <br></br>
+      <div style={{height: "2rem"}}>
+        {computing ? "Computing differences..." : ""}
+      </div>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
 

@@ -42,18 +42,13 @@ const importAristsSpotify = async (access_token, artists) => {
     let query = '"' + artist.name + '"';
     let response = await spotifyApi.searchArtist(access_token, { q: query});
     let results = spotifyApi.parseArtists(response.data.artists.items);
-    for (const result of results) {
-      if (compareArtists(result, artist)) {
-        ids.push(result.id);
-        break;
-      }
-      else {
-        // what do do if no exact match was found?
-        // this could be due to different spelling, for example
-        console.log("Could not find artist " + query);
-      }
+    // lets assume the top result is always correct
+    if (results) {
+      ids.push(results[0].id);
     }
-    ids.push(results[0].id);
+    else {
+      console.log("Could not find artist " + query);
+    }
   }
   // follow matched artists
   return await spotifyApi.setFollowingArtists(access_token, {ids: ids});
@@ -109,6 +104,7 @@ function ArtistsPage(props) {
   const [username, ] = useLocalStorage(constants.user_key, null);
 
   const [selection, setSelection] = useState(initial_selection);
+  const [computing, setComputing] = useState(false);
 
   const artistsSpotify = useAsync(
     () => getArtistsSpotify(access_token, {}), []);
@@ -120,16 +116,22 @@ function ArtistsPage(props) {
       
   useEffect(() => {
     if (!artistsSpotify.result || !artistsLastFm.result) return
-    // cross-compare spotify artists with filtered lastfm artists
-    let onlyOnSpotify = 
+    setComputing(true);
+    async function computeExclusive() {
+      // cross-compare spotify artists with filtered lastfm artists
+      let onlyOnSpotify = 
       artistsSpotify.result.filter(filterExclusiveArtists(artistsLastFm.result.filter(filterOnPlaycount(selection.playcount))));
-    // save exclusive list
-    setOnlyOnSpotify(onlyOnSpotify);
-    // cross-compare lastm fm artists with spotify artists and filter
-    let onlyOnLastFm = 
-      artistsLastFm.result.filter(filterExclusiveArtists(artistsSpotify.result)).filter(filterOnPlaycount(selection.playcount));
-    // save exclusive list
-    setOnlyOnLastFm(onlyOnLastFm);
+      // save exclusive list
+      setOnlyOnSpotify(onlyOnSpotify);
+      // cross-compare lastm fm artists with spotify artists and filter
+      let onlyOnLastFm = 
+        artistsLastFm.result.filter(filterExclusiveArtists(artistsSpotify.result)).filter(filterOnPlaycount(selection.playcount));
+      // save exclusive list
+      setOnlyOnLastFm(onlyOnLastFm);
+      // reset computing state
+      setComputing(false);
+    }
+    computeExclusive();
   }, [artistsSpotify.result, artistsLastFm.result, selection.playcount])
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
@@ -142,18 +144,22 @@ function ArtistsPage(props) {
       <br></br>
       <ActionForm 
         text="Clear" 
-        modal="This will clear all artists from Spotify that is not in your current top artist selection on Lastfm."
+        modal="This will clear all artists from Spotify that are not in your current top artist selection on Last.fm."
         variant="danger" 
         onSubmit={() => clearAristsSpotify(access_token, onlyOnSpotify)}
         onResult={artistsSpotify.execute} />
       <br></br>
       <ActionForm 
         text="Import" 
-        modal="This will import all artists to Spotify that is in your current top artist selection on Lastfm."
+        modal="This will import all artists into Spotify that are in your current top artist selection on Last.fm."
         variant="success" 
         onSubmit={() => importAristsSpotify(access_token, onlyOnLastFm)}
         onResult={artistsSpotify.execute} />
       <br></br>
+      <br></br>
+      <div style={{height: "2rem"}}>
+        {computing ? "Computing differences..." : ""}
+      </div>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
 

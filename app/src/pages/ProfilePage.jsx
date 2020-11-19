@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom'
 import { useAsync } from 'react-async-hook'
 
 import * as spotifyApi from '../services/spotifyApi'
@@ -41,7 +40,6 @@ function ProfilePage(props) {
   return (
     <>
       <h2>User</h2>
-      Click <Link to="/auth">here</Link> to reauthenticate.
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center align-items-center">
