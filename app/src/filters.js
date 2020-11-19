@@ -1,3 +1,5 @@
+import * as ss from 'string-similarity'
+
 // filter factories
 function createExclusiveFilter(compareFunction) {
   return function(otherArray) {
@@ -23,15 +25,15 @@ export function filterOnPlaycount(limit) {
 }
 
 // comparison functions
-// @TODO: use fuzzy comparisons!
+// use a similarity function to somewhat account for different spellings
 export function compareArtists(one, two) {
-  return one && two && one.name.toLowerCase() === two.name.toLowerCase()
+  return one && two && ss.compareTwoStrings(one.name, two.name) >= 0.75
 }
 
 export function compareAlbums(one, two) {
-  return one && two && one.name.toLowerCase() === two.name.toLowerCase() && compareArtists(one.artist[0], two.artist[0])
+  return one && two && ss.compareTwoStrings(one.name, two.name) >= 0.75 && compareArtists(one.artist[0], two.artist[0])
 }
 
 export function compareTracks(one, two) {
-  return one && two && one.name.toLowerCase() === two.name.toLowerCase() && compareArtists(one.artist[0], two.artist[0])
+  return one && two && ss.compareTwoStrings(one.name, two.name) >= 0.75 && compareArtists(one.artist[0], two.artist[0])
 }
