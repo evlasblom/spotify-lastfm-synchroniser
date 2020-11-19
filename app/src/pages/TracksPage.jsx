@@ -10,6 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
+import { filterOnPlaycount, filterExclusiveTracks, compareTracks } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -29,20 +30,33 @@ const getTracksLastFm = async (access_key, opts) => {
   return lastfmApi.parseTracks(response.data.toptracks.track);
 }
 
-function compareTracks(one, two) {
-  return one && two && one.name === two.name && one.artist[0].name === two.artist[0].name
+const clearTracksSpotify = async (access_token, tracks) => {
+  let ids = tracks.map(track => track.id);
+  return await spotifyApi.removeSavedTracks(access_token, {ids: ids});
 }
 
-function comparePlaycount(track, limit) {
-  return track && track.playcount < limit
-}
-
-function compareWith(otherArray) {
-  return function(current) {
-    return otherArray.filter(function(other) {
-      return compareTracks(other, current)
-    }).length === 0;
+const importTracksSpotify = async (access_token, tracks) => {
+  let ids = [];
+  // get the spotify ids by performing a search
+  for (const track of tracks) {
+    let query = 'artist:"' + track.artist[0].name + '" track:"' + track.name + '"'; // <--- improve query
+    let response = await spotifyApi.searchTrack(access_token, { q: query});
+    let results = spotifyApi.parseTracks(response.data.tracks.items);
+    for (const result of results) {
+      if (compareTracks(result, track)) {
+        ids.push(result.id);
+        break;
+      }
+      else {
+        // what do do if no exact match was found?
+        // this could be due to different spelling, for example
+        console.log("Could not find track " + query);
+      }
+    }
+    ids.push(results[0].id);
   }
+  // save matched tracks
+  return await spotifyApi.setSavedTracks(access_token, {ids: ids});
 }
 
 // ========== COMPONENTS ==================================================
@@ -75,7 +89,7 @@ function TracksList(props) {
       {tracks.map((track, i) => {
         let class_name = ""
         if (compareTracks(track, exclusive[j])) { j++; class_name = props.exclusiveClass}
-        if (comparePlaycount(track, limit)) class_name = "text-muted";
+        if (!filterOnPlaycount(limit)(track)) class_name = "text-muted";
         return (
           <p key={i} className={class_name}>
             {i + 1}. {track.name}
@@ -106,21 +120,39 @@ function AlbumsPage(props) {
       
   useEffect(() => {
     if (!tracksSpotify.result || !tracksLastFm.result) return
-    let onlyOnSpotify = tracksSpotify.result.filter(compareWith(tracksLastFm.result));
-    setOnlyOnSpotify(onlyOnSpotify); // this list may removed from spotify
-    let onlyOnLastFm = tracksLastFm.result.filter(compareWith(tracksSpotify.result));
-    setOnlyOnLastFm(onlyOnLastFm); // this list may be added to spotify
-  }, [tracksSpotify.result, tracksLastFm.result])
+    // cross-compare spotify tracks with filtered lastfm tracks
+    let onlyOnSpotify = 
+      tracksSpotify.result.filter(filterExclusiveTracks(tracksLastFm.result.filter(filterOnPlaycount(selection.playcount))));
+    // save exclusive list
+    setOnlyOnSpotify(onlyOnSpotify);
+    // cross-compare lastm fm tracks with spotify tracks and filter
+    let onlyOnLastFm = 
+      tracksLastFm.result.filter(filterExclusiveTracks(tracksSpotify.result)).filter(filterOnPlaycount(selection.playcount));
+    // save exclusive list
+    setOnlyOnLastFm(onlyOnLastFm);
+  }, [tracksSpotify.result, tracksLastFm.result, selection.playcount])
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
 
   return (
     <>
-      <h2>Albums</h2>
+      <h2>Tracks</h2>
       <br></br>
       <SelectionForm onSubmit={setSelection} initial={initial_selection} />
       <br></br>
-      <ActionForm onClear={console.log} onImport={console.log} />
+      <ActionForm 
+        text="Clear" 
+        modal="This will clear all tracks from Spotify that is not in your current top track selection on Lastfm."
+        variant="danger" 
+        onSubmit={() => clearTracksSpotify(access_token, onlyOnSpotify)}
+        onResult={tracksSpotify.execute} />
+      <br></br>
+      <ActionForm 
+        text="Import" 
+        modal="This will import all tracks to Spotify that is in your current top track selection on Lastfm."
+        variant="success" 
+        onSubmit={() => importTracksSpotify(access_token, onlyOnLastFm)}
+        onResult={tracksSpotify.execute} />
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">

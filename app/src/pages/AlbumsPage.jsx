@@ -10,6 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
+import { filterOnPlaycount, filterExclusiveAlbums, compareAlbums } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -29,20 +30,33 @@ const getAlbumsLastFm = async (access_key, opts) => {
   return lastfmApi.parseAlbums(response.data.topalbums.album);
 }
 
-function compareAlbums(one, two) {
-  return one && two && one.name === two.name && one.artist[0].name === two.artist[0].name
+const clearAlbumsSpotify = async (access_token, albums) => {
+  let ids = albums.map(artist => artist.id);
+  return await spotifyApi.removeSavedAlbums(access_token, {ids: ids});
 }
 
-function comparePlaycount(album, limit) {
-  return album && album.playcount < limit
-}
-
-function compareWith(otherArray) {
-  return function(current) {
-    return otherArray.filter(function(other) {
-      return compareAlbums(other, current)
-    }).length === 0;
+const importAlbumsSpotify = async (access_token, albums) => {
+  let ids = [];
+  // get the spotify ids by performing a search
+  for (const album of albums) {
+    let query = 'artist:"' + album.artist[0].name + '" album:"' + album.name + '"'; // <--- improve query
+    let response = await spotifyApi.searchAlbum(access_token, { q: query});
+    let results = spotifyApi.parseAlbums(response.data.albums.items);
+    for (const result of results) {
+      if (compareAlbums(result, album)) {
+        ids.push(result.id);
+        break;
+      }
+      else {
+        // what do do if no exact match was found?
+        // this could be due to different spelling, for example
+        console.log("Could not find album " + query);
+      }
+    }
+    ids.push(results[0].id);
   }
+  // save matched albums
+  return await spotifyApi.setSavedAlbums(access_token, {ids: ids});
 }
 
 // ========== COMPONENTS ==================================================
@@ -75,7 +89,7 @@ function AlbumsList(props) {
       {albums.map((album, i) => {
         let class_name = ""
         if (compareAlbums(album, exclusive[j])) { j++; class_name = props.exclusiveClass}
-        if (comparePlaycount(album, limit)) class_name = "text-muted";
+        if (!filterOnPlaycount(limit)(album)) class_name = "text-muted";
         return (
           <p key={i} className={class_name}>
             {i + 1}. {album.name}
@@ -106,11 +120,17 @@ function AlbumsPage(props) {
       
   useEffect(() => {
     if (!albumsSpotify.result || !albumsLastFm.result) return
-    let onlyOnSpotify = albumsSpotify.result.filter(compareWith(albumsLastFm.result));
-    setOnlyOnSpotify(onlyOnSpotify); // this list may removed from spotify
-    let onlyOnLastFm = albumsLastFm.result.filter(compareWith(albumsSpotify.result));
-    setOnlyOnLastFm(onlyOnLastFm); // this list may be added to spotify
-  }, [albumsSpotify.result, albumsLastFm.result])
+    // cross-compare spotify albums with filtered lastfm albums
+    let onlyOnSpotify = 
+      albumsSpotify.result.filter(filterExclusiveAlbums(albumsLastFm.result.filter(filterOnPlaycount(selection.playcount))));
+    // save exclusive list
+    setOnlyOnSpotify(onlyOnSpotify);
+    // cross-compare lastm fm albums with spotify albums and filter
+    let onlyOnLastFm = 
+      albumsLastFm.result.filter(filterExclusiveAlbums(albumsSpotify.result)).filter(filterOnPlaycount(selection.playcount));
+    // save exclusive list
+    setOnlyOnLastFm(onlyOnLastFm);
+  }, [albumsSpotify.result, albumsLastFm.result, selection.playcount])
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
 
@@ -121,7 +141,19 @@ function AlbumsPage(props) {
       <br></br>
       <SelectionForm onSubmit={setSelection} initial={initial_selection} />
       <br></br>
-      <ActionForm onClear={console.log} onImport={console.log} />
+      <ActionForm 
+        text="Clear" 
+        modal="This will clear all albums from Spotify that is not in your current top album selection on Lastfm."
+        variant="danger" 
+        onSubmit={() => clearAlbumsSpotify(access_token, onlyOnSpotify)}
+        onResult={albumsSpotify.execute} />
+      <br></br>
+      <ActionForm 
+        text="Import" 
+        modal="This will import all albums to Spotify that is in your current top album selection on Lastfm."
+        variant="success" 
+        onSubmit={() => importAlbumsSpotify(access_token, onlyOnLastFm)}
+        onResult={albumsSpotify.execute} />
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">

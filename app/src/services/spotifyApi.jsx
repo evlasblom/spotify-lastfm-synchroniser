@@ -90,7 +90,7 @@ export function setFollowingArtists(access_token, opts) {
 
   const params = {
     type: 'artist',
-    ids: opts.ids, // max 50
+    ids: opts.ids.join(","), // max 50
   }
 
   return _putApi(access_token, 'me/following', params)
@@ -101,7 +101,7 @@ export function setSavedAlbums(access_token, opts) {
   if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
-    ids: opts.ids, // max 50
+    ids: opts.ids.join(","), // max 50
   }
 
   return _putApi(access_token, 'me/albums', params)
@@ -112,7 +112,7 @@ export function setSavedTracks(access_token, opts) {
   if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
-    ids: opts.ids, // max 50
+    ids: opts.ids.join(","), // max 50
   }
 
   return _putApi(access_token, 'me/tracks', params)
@@ -124,7 +124,7 @@ export function removeFollowingArtists(access_token, opts) {
 
   const params = {
     type: 'artist',
-    ids: opts.ids, // max 50
+    ids: opts.ids.join(","), // max 50
   }
 
   return _deleteApi(access_token, 'me/following', params)
@@ -135,7 +135,7 @@ export function removeSavedAlbums(access_token, opts) {
   if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
-    ids: opts.ids, // max 50
+    ids: opts.ids.join(","), // max 50
   }
 
   return _deleteApi(access_token, 'me/albums', params)
@@ -146,7 +146,7 @@ export function removeSavedTracks(access_token, opts) {
   if (!opts.ids) throw new ApiException("Missing required option: ids");
 
   const params = {
-    ids: opts.ids, // max 50
+    ids: opts.ids.join(","), // max 50
   }
 
   return _deleteApi(access_token, 'me/tracks', params)

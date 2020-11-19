@@ -10,6 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
+import { filterOnPlaycount, filterExclusiveArtists, compareArtists } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -29,20 +30,33 @@ const getArtistsLastFm = async (access_key, opts) => {
   return lastfmApi.parseArtists(response.data.topartists.artist);
 }
 
-function compareArtists(one, two) {
-  return one && two && one.name === two.name
+const clearAristsSpotify = async (access_token, artists) => {
+  let ids = artists.map(artist => artist.id);
+  return await spotifyApi.removeFollowingArtists(access_token, {ids: ids});
 }
 
-function comparePlaycount(artist, limit) {
-  return artist && artist.playcount < limit
-}
-
-function compareWith(otherArray) {
-  return function(current) {
-    return otherArray.filter(function(other) {
-      return compareArtists(other, current)
-    }).length === 0;
+const importAristsSpotify = async (access_token, artists) => {
+  let ids = [];
+  // get the spotify ids by performing a search
+  for (const artist of artists) {
+    let query = '"' + artist.name + '"';
+    let response = await spotifyApi.searchArtist(access_token, { q: query});
+    let results = spotifyApi.parseArtists(response.data.artists.items);
+    for (const result of results) {
+      if (compareArtists(result, artist)) {
+        ids.push(result.id);
+        break;
+      }
+      else {
+        // what do do if no exact match was found?
+        // this could be due to different spelling, for example
+        console.log("Could not find artist " + query);
+      }
+    }
+    ids.push(results[0].id);
   }
+  // follow matched artists
+  return await spotifyApi.setFollowingArtists(access_token, {ids: ids});
 }
 
 // ========== COMPONENTS ==================================================
@@ -75,7 +89,7 @@ function ArtistsList(props) {
       {artists.map((artist, i) => {
         let class_name = ""
         if (compareArtists(artist, exclusive[j])) { j++; class_name = props.exclusiveClass}
-        if (comparePlaycount(artist, limit)) class_name = "text-muted";
+        if (!filterOnPlaycount(limit)(artist)) class_name = "text-muted";
         return (
           <p key={i} className={class_name}>
             {i + 1}. {artist.name} 
@@ -90,6 +104,7 @@ function ArtistsList(props) {
 // ========== MAIN ==================================================
 
 function ArtistsPage(props) {
+  // @TODO: replace local storage with account context
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);
 
@@ -105,11 +120,17 @@ function ArtistsPage(props) {
       
   useEffect(() => {
     if (!artistsSpotify.result || !artistsLastFm.result) return
-    let onlyOnSpotify = artistsSpotify.result.filter(compareWith(artistsLastFm.result));
-    setOnlyOnSpotify(onlyOnSpotify); // this list may removed from spotify
-    let onlyOnLastFm = artistsLastFm.result.filter(compareWith(artistsSpotify.result));
-    setOnlyOnLastFm(onlyOnLastFm); // this list may be added to spotify
-  }, [artistsSpotify.result, artistsLastFm.result])
+    // cross-compare spotify artists with filtered lastfm artists
+    let onlyOnSpotify = 
+      artistsSpotify.result.filter(filterExclusiveArtists(artistsLastFm.result.filter(filterOnPlaycount(selection.playcount))));
+    // save exclusive list
+    setOnlyOnSpotify(onlyOnSpotify);
+    // cross-compare lastm fm artists with spotify artists and filter
+    let onlyOnLastFm = 
+      artistsLastFm.result.filter(filterExclusiveArtists(artistsSpotify.result)).filter(filterOnPlaycount(selection.playcount));
+    // save exclusive list
+    setOnlyOnLastFm(onlyOnLastFm);
+  }, [artistsSpotify.result, artistsLastFm.result, selection.playcount])
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
 
@@ -119,7 +140,19 @@ function ArtistsPage(props) {
       <br></br>
       <SelectionForm onSubmit={setSelection} initial={initial_selection} />
       <br></br>
-      <ActionForm onClear={console.log} onImport={console.log} />
+      <ActionForm 
+        text="Clear" 
+        modal="This will clear all artists from Spotify that is not in your current top artist selection on Lastfm."
+        variant="danger" 
+        onSubmit={() => clearAristsSpotify(access_token, onlyOnSpotify)}
+        onResult={artistsSpotify.execute} />
+      <br></br>
+      <ActionForm 
+        text="Import" 
+        modal="This will import all artists to Spotify that is in your current top artist selection on Lastfm."
+        variant="success" 
+        onSubmit={() => importAristsSpotify(access_token, onlyOnLastFm)}
+        onResult={artistsSpotify.execute} />
       <br></br>
       <br></br>
       <div className="d-flex flex-row flex-wrap justify-content-center">
