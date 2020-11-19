@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import useScroll from './hooks/useScroll'
 
@@ -9,42 +9,30 @@ import './App.css';
 
 function App() {
   const scroll = useScroll();
-  const [, setHeaderStyle] = useState({});
-  const [, setLogoStyle] = useState({});
 
   useEffect(() => {
     if (scroll.direction === "up") {
       if (scroll.y > 50) {
-        // @TODO: before using this, add a debouncer
-        setHeaderStyle({
-          height: "70px",
-          padding: "10px"
-        })
-        setLogoStyle({
-          height: "50px"
-        })
+        // @TODO: 
+        // - before using this, add a debouncer
+        // - set header animation upon scrolling up
       }
     }
     else if (scroll.direction === "down") {
       if (scroll.y < 50) {
-        // @TODO: before using this, add a debouncer
-        setHeaderStyle({
-          height: "120px",
-          padding: "20px"
-        })
-        setLogoStyle({
-          height: "80px"
-        })
+        // @TODO: 
+        // - before using this, add a debouncer
+        // - set header animation upon scrolling down
       }
     }
   }, [scroll.direction, scroll.y])
   
   return (
     <div className="App">
-      <AppHeader />
-      <AppNavigation />
-      <br></br>
-      <AppRoutes />
+        <AppHeader />
+        <AppNavigation />
+        <br></br>
+        <AppRoutes />
     </div>
   );
 }
