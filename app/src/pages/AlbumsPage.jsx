@@ -13,7 +13,7 @@ import * as constants from '../constants'
 
 // ========== CONSTANTS ==================================================
 
-const initial_form = {period: 'overall', number: 20, playcount: 100 };
+const initial_selection = {period: 'overall', number: 20, playcount: 100 };
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
@@ -94,12 +94,12 @@ function AlbumsPage(props) {
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);
 
-  const [form, setForm] = useState(initial_form);
+  const [selection, setSelection] = useState(initial_selection);
 
   const albumsSpotify = useAsync(
     () => getAlbumsSpotify(access_token, {}), []);
   const albumsLastFm = useAsync(
-    () => getAlbumsLastFm(access_key, createOpts()), [form.period, form.number]);
+    () => getAlbumsLastFm(access_key, createOpts()), [selection.period, selection.number]);
 
   const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
   const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
@@ -112,14 +112,14 @@ function AlbumsPage(props) {
     setOnlyOnLastFm(onlyOnLastFm); // this list may be added to spotify
   }, [albumsSpotify.result, albumsLastFm.result])
 
-  const createOpts = () => { return {user: username, period: form.period, limit: form.number}};
+  const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
 
 
   return (
     <>
       <h2>Albums</h2>
       <br></br>
-      <SelectionForm onSubmit={setForm} initial={initial_form} />
+      <SelectionForm onSubmit={setSelection} initial={initial_selection} />
       <br></br>
       <ActionForm onClear={console.log} onImport={console.log} />
       <br></br>
@@ -128,7 +128,7 @@ function AlbumsPage(props) {
 
         <AlbumsList 
           target="Spotify"
-          playcount={form.playcount}
+          playcount={selection.playcount}
           loading={albumsSpotify.loading}
           error={albumsSpotify.error}
           data={albumsSpotify.result}
@@ -137,7 +137,7 @@ function AlbumsPage(props) {
         
         <AlbumsList 
           target="Last.fm"
-          playcount={form.playcount}
+          playcount={selection.playcount}
           loading={albumsLastFm.loading}
           error={albumsLastFm.error}
           data={albumsLastFm.result} 
