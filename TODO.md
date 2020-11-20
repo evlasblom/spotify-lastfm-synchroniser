@@ -1,5 +1,16 @@
 # Todo
 
+## General
+
+- Refactor `ArtistsPage`, `AlbumsPage` and `TracksPage` and separate common pieces into separate components.
+- Then let's just move the `ProfileCard` back into the `ProfilePage`.
+- Add comments to functions.
+- Add `WelcomePage` with link to `AuthPage`.
+- Use window location to highlight current page in `AppNavigation` (no need to use react router).
+- By the way, create our own `useLocation` hook for this and also use on `AuthPage` (no need to use react router).
+- Replace the readme with the updated one.
+- Add authentication addendum for lastfm as well.
+
 ## Authentication
 
 - Display timer when authentication expires.
