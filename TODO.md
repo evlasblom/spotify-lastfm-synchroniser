@@ -20,7 +20,6 @@
 - Replace the app readme with the updated one.
 - Update the main readme with relevant info.
 - Proper error handling for clear and import actions.
-- Proper error handling for last fm authentication as well (add addendum).
 - Improve usability:
   - Extra step before using actions.
   - Extra explanation of how everything works.
