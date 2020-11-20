@@ -1,20 +1,37 @@
 # Todo
 
+## Main
+
+- Check the search queries for the artists albums and tracks for at least 1000 items.
+- Check the clear and import for artists albums and tracks.
+- Add pagination for lastfm?
+- Add pagination for spotify?
+- Add limitations to number of items for both lastfm and spotify?
+- Then test large bulk updates.
+
 ## General
 
-- Refactor `ArtistsPage`, `AlbumsPage` and `TracksPage` and separate common pieces into separate components.
+- Refactor `ArtistsPage`, `AlbumsPage` and `TracksPage` and separate common pieces into separate components?
 - Then let's just move the `ProfileCard` back into the `ProfilePage`.
-- Add comments to functions.
+- Add comments to javascript functions.
 - Add `WelcomePage` with link to `AuthPage`.
 - Use window location to highlight current page in `AppNavigation` (no need to use react router).
 - By the way, create our own `useLocation` hook for this and also use on `AuthPage` (no need to use react router).
-- Replace the readme with the updated one.
-- Add authentication addendum for lastfm as well.
+- Replace the app readme with the updated one.
+- Update the main readme with relevant info.
+- Proper error handling for clear and import actions.
+- Proper error handling for last fm authentication as well (add addendum).
+- Improve usability:
+  - Extra step before using actions.
+  - Extra explanation of how everything works.
+  - Add cookies to store last used selection?
+- Spend a little time making it look better:
+  - Remove headers on each page.
+  - Turn the lists into paginated tables with some styling
 
 ## Authentication
 
-- Display timer when authentication expires.
-- Proper error handling when authentication expires.
+- Display timer when authentication expires?
 - Move authentication data from local storage to React context?
 - Also authenticate with last.fm to love and unlove tracks?
 
