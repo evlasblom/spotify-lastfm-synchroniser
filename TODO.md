@@ -26,6 +26,7 @@
   - Extra explanation of how everything works.
   - Add cookies to store last used selection?
 - Spend a little time making it look better:
+  - Add favicons.
   - Remove headers on each page.
   - Turn the lists into paginated tables with some styling
 
