@@ -22,9 +22,11 @@ function ActionForm(props) {
     if (onSubmit.result && !onSubmit.loading && !onSubmit.error) onResult();
   }, [onSubmit.result, onSubmit.loading, onSubmit.error])
 
+  // note: setting animation to false because of this issue
+  // https://github.com/react-bootstrap/react-bootstrap/issues/5075
   return(
     <div className="d-flex justify-content-end bg-light rounded">
-      <Modal show={show} onHide={handleClose}>
+      <Modal show={show} onHide={handleClose} animation={false}>
         <Modal.Header closeButton>
           <Modal.Title>{props.text}</Modal.Title>
         </Modal.Header>
@@ -40,7 +42,7 @@ function ActionForm(props) {
       </Modal>
 
       <Button variant={props.variant} onClick={handleShow} style={{width: "8rem"}} className="m-2">
-        {onSubmit.loading ? "..." : props.text}
+        {onSubmit.loading ? "Working..." : props.text}
       </Button>
     </div>
   )
