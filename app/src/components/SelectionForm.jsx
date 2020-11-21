@@ -66,7 +66,7 @@ function SelectionForm(props) {
           onChange={(e) => dispatch({type: "PLAYCOUNT", payload: e.currentTarget.value})}
           className="m-2" />
 
-        <Button variant="primary" type="submit" style={{width: "8rem"}} className="m-2">
+        <Button variant="secondary" type="submit" style={{width: "8rem"}} className="m-2">
           Select
         </Button>
       </Form>
