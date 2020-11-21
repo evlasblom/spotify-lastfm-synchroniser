@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useAsync } from 'react-async-hook'
+import React, { useState, useEffect } from 'react';
+import { useAsync, useAsyncCallback } from 'react-async-hook'
 
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
@@ -20,56 +20,59 @@ const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
 // ========== FUNCTIONS ==================================================
 
-const getAlbumsSpotify = async (access_token, opts) => {
+const getSpotify = async (access_token, opts) => {
   let response = await spotifyApi.getSavedAlbums(access_token, opts);
   return spotifyApi.parseAlbums(response.data.items);
 }
 
-const getAlbumsLastFm = async (access_key, opts) => {
+const getLastFm = async (access_key, opts) => {
   let response = await lastfmApi.getTopAlbums(access_key, opts);
   return lastfmApi.parseAlbums(response.data.topalbums.album);
 }
 
-const clearAlbumsSpotify = async (access_token, albums) => {
+const clearSpotify = async (access_token, albums) => {
   let ids = albums.map(album => album.id);
   return await spotifyApi.removeSavedAlbums(access_token, {ids: ids});
 }
 
-const importAlbumsSpotify = async (access_token, albums) => {
+const importSpotify = async (access_token, albums) => {
   let ids = albums.map(album => album.id);
   return await spotifyApi.setSavedAlbums(access_token, {ids: ids});
 }
 
-const searchAlbumsSpotify = async (access_token, albums) => {
+const searchSpotify = async (access_token, albums) => {
   let updated = albums;
-  for (let album of updated) {
-    let query = 'artist:"' + album.artist[0].name + '" album:"' + album.name + '"';
+  for (const album of updated) {
+    let query = '"' + album.artist[0].name + '" "' + album.name + '"';
     let response = await spotifyApi.searchAlbum(access_token, { q: query});
     let results = spotifyApi.parseAlbums(response.data.albums.items);
 
     // copy the spotify id of the search result
-    if (results.length >= 1) {
-      if (compareAlbums(album, results[0])) {
-        album.id = results[0].id;
-      }
-      else {
-        console.log("Could not match album " + album.name + " / " + results[0].name);
+    // @TODO: iterate over search results
+    album.id = undefined;
+    for (const result of results) {
+      if (compareAlbums(album, result)) {
+        album.id = result.id;
+        break;
       }
     }
-    else {
+    if (results.length === 0) {
       console.log("Could not find album " + query);
+    }
+    else if (!album.id) {
+      console.log("Could not match album " + album.name + " / " + results[0].name);
     }
   }
   return updated;
 }
 
-const computeExclusiveAlbums = async (access_token, albumsSpotify, albumsLastFm, playcount) => {
+const computeExclusive = async (access_token, albumsSpotify, albumsLastFm, playcount) => {
   // search for spotify ids and update the filtered lastfm albums
-  const tmpLastfm = await searchAlbumsSpotify(access_token, albumsLastFm.filter(filterOnPlaycount(playcount)));
+  const filteredLastFm = await searchSpotify(access_token, albumsLastFm.filter(filterOnPlaycount(playcount)));
   // cross-compare the ids of the spotify albums with the found spotify ids of the filtered lastfm albums
-  const onlyOnSpotify = albumsSpotify.filter(filterExclusiveId(tmpLastfm));
+  const onlyOnSpotify = albumsSpotify.filter(filterExclusiveId(filteredLastFm));
   // cross-compare the found spotify ids of the filtered lastfm albums with with the ids of the spotify albums
-  const onlyOnLastFm = tmpLastfm.filter(filterExclusiveId(albumsSpotify));
+  const onlyOnLastFm = filteredLastFm.filter(filterExclusiveId(albumsSpotify));
   // return results
   return {
     spotify: onlyOnSpotify,
@@ -127,66 +130,81 @@ function AlbumsPage(props) {
   const [username, ] = useLocalStorage(constants.user_key, null);
 
   const [selection, setSelection] = useState(initial_selection);
-  const [computing, setComputing] = useState(false);
+  
+  const exclusiveAsync = useAsyncCallback(
+    () => computeExclusive(access_token, albumsSpotify.result, albumsLastFm.result, selection.playcount)
+  );
+  const clearSpotifyAsync = useAsyncCallback(
+    () => clearSpotify(access_token, onlyOnSpotify)
+  );
+  const importSpotifyAsync = useAsyncCallback(
+    () => importSpotify(access_token, onlyOnLastFm)
+  );
 
   const albumsSpotify = useAsync(
-    () => getAlbumsSpotify(access_token, {}), []);
+    () => getSpotify(access_token, {}), [clearSpotifyAsync.result, importSpotifyAsync.result]);
   const albumsLastFm = useAsync(
-    () => getAlbumsLastFm(access_key, createOpts()), [selection.period, selection.number]);
+    () => getLastFm(access_key, createOpts()), [selection.period, selection.number]);
 
   const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
   const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
 
+  useEffect(() => {
+    if (exclusiveAsync.result && !exclusiveAsync.loading && !exclusiveAsync.error) {
+      setOnlyOnSpotify(exclusiveAsync.result.spotify);
+      setOnlyOnLastFm(exclusiveAsync.result.lastfm);
+    }
+  }, [exclusiveAsync.result, exclusiveAsync.loading, exclusiveAsync.error])
+
+  useEffect(() => {
+    setOnlyOnSpotify([]);
+  }, [clearSpotifyAsync.result, selection.period, selection.number])
+
+  useEffect(() => {
+    setOnlyOnLastFm([]);
+  }, [importSpotifyAsync.result, selection.period, selection.number])
+
   return (
     <>
       <h2>Albums</h2>
       <br></br>
 
-      <SelectionForm 
-        onSubmit={(val) => {
-          setSelection(val);
-          setOnlyOnSpotify([]); 
-          setOnlyOnLastFm([]); 
-        }}
-        initial={initial_selection} />
+      <SelectionForm onSubmit={setSelection} initial={initial_selection} />
       <br></br>
 
       <ActionForm 
-        text="Compare" 
+        text={exclusiveAsync.loading ? "..." : "Compare"}
         modal="This will cross-compare your Spotify and Last.fm albums. Proceed?"
         variant="primary" 
-        onSubmit={() => {
-          setComputing(true);
-          return computeExclusiveAlbums(access_token, albumsSpotify.result, albumsLastFm.result, selection.playcount)
-        }}
-        onResult={(res) => {
-          setComputing(false);
-          setOnlyOnSpotify(res.spotify); 
-          setOnlyOnLastFm(res.lastfm); 
-        }} />
+        disabled={!albumsSpotify.result || !albumsLastFm.result || albumsSpotify.error || albumsLastFm.error}
+        onSubmit={exclusiveAsync.execute} />
       <br></br>
 
       <ActionForm 
-        text="Clear" 
-        modal="This will clear all albums from Spotify that are not in your current top album selection on Last.fm."
+        text={clearSpotifyAsync.loading ? "..." : "Clear"}
+        modal="This will clear all albums from Spotify that are not in your current top album selection on Last.fm. Are you sure?"
         variant="danger" 
-        onSubmit={() => clearAlbumsSpotify(access_token, onlyOnSpotify)}
-        onResult={(res) => albumsSpotify.execute()} />
+        disabled={onlyOnSpotify.length === 0}
+        onSubmit={clearSpotifyAsync.execute} />
       <br></br>
 
       <ActionForm 
-        text="Import" 
-        modal="This will import all albums into Spotify that are in your current top album selection on Last.fm."
+        text={importSpotifyAsync.loading ? "..." : "Import"}
+        modal="This will import all albums into Spotify that are in your current top album selection on Last.fm. Are you sure?"
         variant="success" 
-        onSubmit={() => importAlbumsSpotify(access_token, onlyOnLastFm)}
-        onResult={(res) => albumsSpotify.execute()} />
-      <br></br>
+        disabled={onlyOnLastFm.length === 0}
+        onSubmit={importSpotifyAsync.execute} />
       <br></br>
 
-      <div style={{height: "2rem"}}>
-        {/* {computing ? "Computing differences..." : ""} */}
+      <div style={{height: "2rem"}} className="bg-light p-1">
+        {albumsSpotify.loading || albumsLastFm.loading ? "Loading data..." : ""}
+        {exclusiveAsync.loading ? "Comparing data..." : ""}
+        {clearSpotifyAsync.loading ? "Clearing data from Spotify..." : ""}
+        {importSpotifyAsync.loading ? "Importing data into Spotify..." : ""}
+
+        {exclusiveAsync.error ? <span className="bg-danger">{exclusiveAsync.error.message}</span> : ""}
       </div>
       <br></br>
 
@@ -195,7 +213,7 @@ function AlbumsPage(props) {
         <AlbumsList 
           target="Spotify"
           playcount={selection.playcount}
-          loading={albumsSpotify.loading || computing}
+          loading={albumsSpotify.loading}
           error={albumsSpotify.error}
           data={albumsSpotify.result}
           exclusive={onlyOnSpotify}
@@ -204,7 +222,7 @@ function AlbumsPage(props) {
         <AlbumsList 
           target="Last.fm"
           playcount={selection.playcount}
-          loading={albumsLastFm.loading || computing}
+          loading={albumsLastFm.loading}
           error={albumsLastFm.error}
           data={albumsLastFm.result} 
           exclusive={onlyOnLastFm}
