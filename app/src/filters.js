@@ -22,7 +22,7 @@ export const filterExclusiveTracks = createExclusiveFilter(compareTracks);
 
 export function filterOnPlaycount(limit) {
   return function(input) {
-    return input && (!input.playcount || input.playcount > limit);    
+    return input && (!input.playcount || input.playcount >= limit);    
   }
 }
 
