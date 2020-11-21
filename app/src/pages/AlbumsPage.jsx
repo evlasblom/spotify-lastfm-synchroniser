@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAsync } from 'react-async-hook'
 
 import * as spotifyApi from '../services/spotifyApi'
@@ -10,7 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
-import { filterOnPlaycount, filterExclusiveAlbums, compareAlbums } from '../filters'
+import { filterOnPlaycount, filterExclusiveId, compareAlbums } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -31,27 +31,50 @@ const getAlbumsLastFm = async (access_key, opts) => {
 }
 
 const clearAlbumsSpotify = async (access_token, albums) => {
-  let ids = albums.map(artist => artist.id);
+  let ids = albums.map(album => album.id);
   return await spotifyApi.removeSavedAlbums(access_token, {ids: ids});
 }
 
 const importAlbumsSpotify = async (access_token, albums) => {
-  let ids = [];
-  // get the spotify ids by performing a search
-  for (const album of albums) {
+  let ids = albums.map(album => album.id);
+  return await spotifyApi.setSavedAlbums(access_token, {ids: ids});
+}
+
+const searchAlbumsSpotify = async (access_token, albums) => {
+  let updated = albums;
+  for (let album of updated) {
     let query = 'artist:"' + album.artist[0].name + '" album:"' + album.name + '"';
     let response = await spotifyApi.searchAlbum(access_token, { q: query});
     let results = spotifyApi.parseAlbums(response.data.albums.items);
-    // lets assume the top result is always correct
-    if (results) {
-      ids.push(results[0].id);
+
+    // copy the spotify id of the search result
+    if (results.length >= 1) {
+      if (compareAlbums(album, results[0])) {
+        album.id = results[0].id;
+      }
+      else {
+        console.log("Could not match album " + album.name + " / " + results[0].name);
+      }
     }
     else {
       console.log("Could not find album " + query);
     }
   }
-  // save matched albums
-  return await spotifyApi.setSavedAlbums(access_token, {ids: ids});
+  return updated;
+}
+
+const computeExclusiveAlbums = async (access_token, albumsSpotify, albumsLastFm, playcount) => {
+  // search for spotify ids and update the filtered lastfm albums
+  const tmpLastfm = await searchAlbumsSpotify(access_token, albumsLastFm.filter(filterOnPlaycount(playcount)));
+  // cross-compare the ids of the spotify albums with the found spotify ids of the filtered lastfm albums
+  const onlyOnSpotify = albumsSpotify.filter(filterExclusiveId(tmpLastfm));
+  // cross-compare the found spotify ids of the filtered lastfm albums with with the ids of the spotify albums
+  const onlyOnLastFm = tmpLastfm.filter(filterExclusiveId(albumsSpotify));
+  // return results
+  return {
+    spotify: onlyOnSpotify,
+    lastfm: onlyOnLastFm
+  };
 }
 
 // ========== COMPONENTS ==================================================
@@ -113,61 +136,66 @@ function AlbumsPage(props) {
 
   const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
   const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
-      
-  useEffect(() => {
-    if (!albumsSpotify.result || !albumsLastFm.result) return
-    setComputing(true);
-    async function computeExclusive() {
-      // cross-compare spotify albums with filtered lastfm albums
-      let onlyOnSpotify = 
-        albumsSpotify.result.filter(filterExclusiveAlbums(albumsLastFm.result.filter(filterOnPlaycount(selection.playcount))));
-      // save exclusive list
-      setOnlyOnSpotify(onlyOnSpotify);
-      // cross-compare lastm fm albums with spotify albums and filter
-      let onlyOnLastFm = 
-        albumsLastFm.result.filter(filterExclusiveAlbums(albumsSpotify.result)).filter(filterOnPlaycount(selection.playcount));
-      // save exclusive list
-      setOnlyOnLastFm(onlyOnLastFm);
-      // reset computing state
-      setComputing(false);
-    }
-    computeExclusive();
-  }, [albumsSpotify.result, albumsLastFm.result, selection.playcount])
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
-
 
   return (
     <>
       <h2>Albums</h2>
       <br></br>
-      <SelectionForm onSubmit={setSelection} initial={initial_selection} />
+
+      <SelectionForm 
+        onSubmit={(val) => {
+          setSelection(val);
+          setOnlyOnSpotify([]); 
+          setOnlyOnLastFm([]); 
+        }}
+        initial={initial_selection} />
       <br></br>
+
+      <ActionForm 
+        text="Compare" 
+        modal="This will cross-compare your Spotify and Last.fm albums. Proceed?"
+        variant="primary" 
+        onSubmit={() => {
+          setComputing(true);
+          return computeExclusiveAlbums(access_token, albumsSpotify.result, albumsLastFm.result, selection.playcount)
+        }}
+        onResult={(res) => {
+          setComputing(false);
+          setOnlyOnSpotify(res.spotify); 
+          setOnlyOnLastFm(res.lastfm); 
+        }} />
+      <br></br>
+
       <ActionForm 
         text="Clear" 
         modal="This will clear all albums from Spotify that are not in your current top album selection on Last.fm."
         variant="danger" 
         onSubmit={() => clearAlbumsSpotify(access_token, onlyOnSpotify)}
-        onResult={albumsSpotify.execute} />
+        onResult={(res) => albumsSpotify.execute()} />
       <br></br>
+
       <ActionForm 
         text="Import" 
         modal="This will import all albums into Spotify that are in your current top album selection on Last.fm."
         variant="success" 
         onSubmit={() => importAlbumsSpotify(access_token, onlyOnLastFm)}
-        onResult={albumsSpotify.execute} />
+        onResult={(res) => albumsSpotify.execute()} />
       <br></br>
       <br></br>
+
       <div style={{height: "2rem"}}>
-        {computing ? "Computing differences..." : ""}
+        {/* {computing ? "Computing differences..." : ""} */}
       </div>
       <br></br>
+
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <AlbumsList 
           target="Spotify"
           playcount={selection.playcount}
-          loading={albumsSpotify.loading}
+          loading={albumsSpotify.loading || computing}
           error={albumsSpotify.error}
           data={albumsSpotify.result}
           exclusive={onlyOnSpotify}
@@ -176,7 +204,7 @@ function AlbumsPage(props) {
         <AlbumsList 
           target="Last.fm"
           playcount={selection.playcount}
-          loading={albumsLastFm.loading}
+          loading={albumsLastFm.loading || computing}
           error={albumsLastFm.error}
           data={albumsLastFm.result} 
           exclusive={onlyOnLastFm}

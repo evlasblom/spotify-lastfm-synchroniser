@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAsync } from 'react-async-hook'
 
 import * as spotifyApi from '../services/spotifyApi'
@@ -10,7 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
-import { filterOnPlaycount, filterExclusiveTracks, compareTracks } from '../filters'
+import { filterOnPlaycount, filterExclusiveId, compareTracks } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -36,22 +36,45 @@ const clearTracksSpotify = async (access_token, tracks) => {
 }
 
 const importTracksSpotify = async (access_token, tracks) => {
-  let ids = [];
-  // get the spotify ids by performing a search
-  for (const track of tracks) {
+  let ids = tracks.map(track => track.id);
+  return await spotifyApi.setSavedTracks(access_token, {ids: ids});
+}
+
+const searchTracksSpotify = async (access_token, tracks) => {
+  let updated = tracks;
+  for (let track of updated) {
     let query = 'artist:"' + track.artist[0].name + '" track:"' + track.name + '"';
     let response = await spotifyApi.searchTrack(access_token, { q: query});
     let results = spotifyApi.parseTracks(response.data.tracks.items);
-    // lets assume the top result is always correct
-    if (results) {
-      ids.push(results[0].id);
+
+    // copy the spotify id of the search result
+    if (results.length >= 1) {
+      if (compareTracks(track, results[0])) {
+        track.id = results[0].id;
+      }
+      else {
+        console.log("Could not match track " + track.name + " / " + results[0].name);
+      }
     }
     else {
       console.log("Could not find track " + query);
     }
   }
-  // save matched tracks
-  return await spotifyApi.setSavedTracks(access_token, {ids: ids});
+  return updated;
+}
+
+const computeExclusiveTracks = async (access_token, tracksSpotify, tracksLastFm, playcount) => {
+  // search for spotify ids and update the filtered lastfm tracks
+  const tmpLastfm = await searchTracksSpotify(access_token, tracksLastFm.filter(filterOnPlaycount(playcount)));
+  // cross-compare the ids of the spotify tracks with the found spotify ids of the filtered lastfm tracks
+  const onlyOnSpotify = tracksSpotify.filter(filterExclusiveId(tmpLastfm));
+  // cross-compare the found spotify ids of the filtered lastfm tracks with with the ids of the spotify tracks
+  const onlyOnLastFm = tmpLastfm.filter(filterExclusiveId(tracksSpotify));
+  // return results
+  return {
+    spotify: onlyOnSpotify,
+    lastfm: onlyOnLastFm
+  };
 }
 
 // ========== COMPONENTS ==================================================
@@ -99,7 +122,7 @@ function TracksList(props) {
 
 // ========== MAIN ==================================================
 
-function AlbumsPage(props) {
+function TracksPage(props) {
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);
 
@@ -114,59 +137,65 @@ function AlbumsPage(props) {
   const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
   const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
       
-  useEffect(() => {
-    if (!tracksSpotify.result || !tracksLastFm.result) return
-    setComputing(true);
-    async function computeExclusive() {
-      // cross-compare spotify tracks with filtered lastfm tracks
-      let onlyOnSpotify = 
-        tracksSpotify.result.filter(filterExclusiveTracks(tracksLastFm.result.filter(filterOnPlaycount(selection.playcount))));
-      // save exclusive list
-      setOnlyOnSpotify(onlyOnSpotify);
-      // cross-compare lastm fm tracks with spotify tracks and filter
-      let onlyOnLastFm = 
-        tracksLastFm.result.filter(filterExclusiveTracks(tracksSpotify.result)).filter(filterOnPlaycount(selection.playcount));
-      // save exclusive list
-      setOnlyOnLastFm(onlyOnLastFm);
-      // reset computing state
-      setComputing(false);
-    }
-    computeExclusive();
-  }, [tracksSpotify.result, tracksLastFm.result, selection.playcount])
-
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
 
   return (
     <>
       <h2>Tracks</h2>
       <br></br>
-      <SelectionForm onSubmit={setSelection} initial={initial_selection} />
+
+      <SelectionForm 
+        onSubmit={(val) => {
+          setSelection(val);
+          setOnlyOnSpotify([]); 
+          setOnlyOnLastFm([]); 
+        }}
+        initial={initial_selection} />
       <br></br>
+
+      <ActionForm 
+        text="Compare" 
+        modal="This will cross-compare your Spotify and Last.fm tracks. Proceed?"
+        variant="primary" 
+        onSubmit={() => {
+          setComputing(true);
+          return computeExclusiveTracks(access_token, tracksSpotify.result, tracksLastFm.result, selection.playcount)
+        }}
+        onResult={(res) => {
+          setComputing(false);
+          setOnlyOnSpotify(res.spotify); 
+          setOnlyOnLastFm(res.lastfm); 
+        }} />
+      <br></br>
+
       <ActionForm 
         text="Clear" 
         modal="This will clear all tracks from Spotify that are not in your current top track selection on Last.fm."
         variant="danger" 
         onSubmit={() => clearTracksSpotify(access_token, onlyOnSpotify)}
-        onResult={tracksSpotify.execute} />
+        onResult={(res) => tracksSpotify.execute()} />
       <br></br>
+
       <ActionForm 
         text="Import" 
         modal="This will import all tracks into Spotify that are in your current top track selection on Last.fm."
         variant="success" 
         onSubmit={() => importTracksSpotify(access_token, onlyOnLastFm)}
-        onResult={tracksSpotify.execute} />
+        onResult={(res) => tracksSpotify.execute()} />
       <br></br>
       <br></br>
+
       <div style={{height: "2rem"}}>
-        {computing ? "Computing differences..." : ""}
+        {/* {computing ? "Computing differences..." : ""} */}
       </div>
       <br></br>
+
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <TracksList 
           target="Spotify"
           playcount={selection.playcount}
-          loading={tracksSpotify.loading}
+          loading={tracksSpotify.loading || computing}
           error={tracksSpotify.error}
           data={tracksSpotify.result}
           exclusive={onlyOnSpotify}
@@ -175,7 +204,7 @@ function AlbumsPage(props) {
         <TracksList 
           target="Last.fm"
           playcount={selection.playcount}
-          loading={tracksLastFm.loading}
+          loading={tracksLastFm.loading || computing}
           error={tracksLastFm.error}
           data={tracksLastFm.result} 
           exclusive={onlyOnLastFm}
@@ -186,4 +215,4 @@ function AlbumsPage(props) {
   )
 }
 
-export default AlbumsPage;
+export default TracksPage;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAsync } from 'react-async-hook'
 
 import * as spotifyApi from '../services/spotifyApi'
@@ -10,7 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
-import { filterOnPlaycount, filterExclusiveArtists, compareArtists } from '../filters'
+import { filterOnPlaycount, filterExclusiveId, compareArtists } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -35,23 +35,46 @@ const clearAristsSpotify = async (access_token, artists) => {
   return await spotifyApi.removeFollowingArtists(access_token, {ids: ids});
 }
 
-const importAristsSpotify = async (access_token, artists) => {
-  let ids = [];
-  // get the spotify ids by performing a search
-  for (const artist of artists) {
+const importArtistsSpotify = async (access_token, artists) => {
+  let ids = artists.map(artist => artist.id);
+  return await spotifyApi.setFollowingArtists(access_token, {ids: ids});
+}
+
+const searchArtistsSpotify = async (access_token, artists) => {
+  let updated = artists;
+  for (let artist of updated) {
     let query = '"' + artist.name + '"';
     let response = await spotifyApi.searchArtist(access_token, { q: query});
     let results = spotifyApi.parseArtists(response.data.artists.items);
-    // lets assume the top result is always correct
-    if (results) {
-      ids.push(results[0].id);
+
+    // copy the spotify id of the search result
+    if (results.length >= 1) {
+      if (compareArtists(artist, results[0])) {
+        artist.id = results[0].id;
+      }
+      else {
+        console.log("Could not match artist " + artist.name + " / " + results[0].name);
+      }
     }
     else {
       console.log("Could not find artist " + query);
     }
   }
-  // follow matched artists
-  return await spotifyApi.setFollowingArtists(access_token, {ids: ids});
+  return updated;
+}
+
+const computeExclusiveArtists = async (access_token, artistsSpotify, artistsLastFm, playcount) => {
+  // search for spotify ids and update the filtered lastfm artists
+  const tmpLastfm = await searchArtistsSpotify(access_token, artistsLastFm.filter(filterOnPlaycount(playcount)));
+  // cross-compare the ids of the spotify artists with the found spotify ids of the filtered lastfm artists
+  const onlyOnSpotify = artistsSpotify.filter(filterExclusiveId(tmpLastfm));
+  // cross-compare the found spotify ids of the filtered lastfm artists with with the ids of the spotify artists
+  const onlyOnLastFm = tmpLastfm.filter(filterExclusiveId(artistsSpotify));
+  // return results
+  return {
+    spotify: onlyOnSpotify,
+    lastfm: onlyOnLastFm
+  };
 }
 
 // ========== COMPONENTS ==================================================
@@ -113,26 +136,6 @@ function ArtistsPage(props) {
 
   const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
   const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
-      
-  useEffect(() => {
-    if (!artistsSpotify.result || !artistsLastFm.result) return
-    setComputing(true);
-    async function computeExclusive() {
-      // cross-compare spotify artists with filtered lastfm artists
-      let onlyOnSpotify = 
-      artistsSpotify.result.filter(filterExclusiveArtists(artistsLastFm.result.filter(filterOnPlaycount(selection.playcount))));
-      // save exclusive list
-      setOnlyOnSpotify(onlyOnSpotify);
-      // cross-compare lastm fm artists with spotify artists and filter
-      let onlyOnLastFm = 
-        artistsLastFm.result.filter(filterExclusiveArtists(artistsSpotify.result)).filter(filterOnPlaycount(selection.playcount));
-      // save exclusive list
-      setOnlyOnLastFm(onlyOnLastFm);
-      // reset computing state
-      setComputing(false);
-    }
-    computeExclusive();
-  }, [artistsSpotify.result, artistsLastFm.result, selection.playcount])
 
   const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
 
@@ -140,33 +143,59 @@ function ArtistsPage(props) {
     <>
       <h2>Artists</h2>
       <br></br>
-      <SelectionForm onSubmit={setSelection} initial={initial_selection} />
+
+      <SelectionForm 
+        onSubmit={(val) => {
+          setSelection(val);
+          setOnlyOnSpotify([]); 
+          setOnlyOnLastFm([]); 
+        }}
+        initial={initial_selection} />
       <br></br>
+
+      <ActionForm 
+        text="Compare" 
+        modal="This will cross-compare your Spotify and Last.fm artists. Proceed?"
+        variant="primary" 
+        onSubmit={() => {
+          setComputing(true);
+          return computeExclusiveArtists(access_token, artistsSpotify.result, artistsLastFm.result, selection.playcount)
+        }}
+        onResult={(res) => {
+          setComputing(false);
+          setOnlyOnSpotify(res.spotify); 
+          setOnlyOnLastFm(res.lastfm); 
+        }} />
+      <br></br>
+
       <ActionForm 
         text="Clear" 
-        modal="This will clear all artists from Spotify that are not in your current top artist selection on Last.fm."
+        modal="This will clear all artists from Spotify that are not in your current top artist selection on Last.fm. Are you sure?"
         variant="danger" 
         onSubmit={() => clearAristsSpotify(access_token, onlyOnSpotify)}
-        onResult={artistsSpotify.execute} />
+        onResult={(res) => artistsSpotify.execute()} />
       <br></br>
+
       <ActionForm 
         text="Import" 
-        modal="This will import all artists into Spotify that are in your current top artist selection on Last.fm."
+        modal="This will import all artists into Spotify that are in your current top artist selection on Last.fm. Are you sure?"
         variant="success" 
-        onSubmit={() => importAristsSpotify(access_token, onlyOnLastFm)}
-        onResult={artistsSpotify.execute} />
+        onSubmit={() => importArtistsSpotify(access_token, onlyOnLastFm)}
+        onResult={(res) => artistsSpotify.execute()} />
       <br></br>
       <br></br>
+
       <div style={{height: "2rem"}}>
-        {computing ? "Computing differences..." : ""}
+        {/* {computing ? "Computing differences..." : ""} */}
       </div>
       <br></br>
+
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         <ArtistsList 
           target="Spotify"
           playcount={selection.playcount}
-          loading={artistsSpotify.loading}
+          loading={artistsSpotify.loading || computing}
           error={artistsSpotify.error}
           data={artistsSpotify.result}
           exclusive={onlyOnSpotify}
@@ -175,7 +204,7 @@ function ArtistsPage(props) {
         <ArtistsList 
           target="Last.fm"
           playcount={selection.playcount}
-          loading={artistsLastFm.loading}
+          loading={artistsLastFm.loading || computing}
           error={artistsLastFm.error}
           data={artistsLastFm.result} 
           exclusive={onlyOnLastFm}

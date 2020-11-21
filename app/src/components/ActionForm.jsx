@@ -8,7 +8,7 @@ function ActionForm(props) {
   const [show, setShow] = useState(false);
   const onSubmit = useAsyncCallback(props.onSubmit);
 
-  const onResult = props.onResult;
+  const onResult = props.onResult ? props.onResult : (res) => {};
   const handleShow = () => setShow(true);
   const handleClose = () => setShow(false);
   const handleSubmit = () => {
@@ -19,7 +19,7 @@ function ActionForm(props) {
   useEffect(() => {
     // note: the warning mentions to include onResult in dependency, but this would
     // trigger more side effects than needed, and we know onResult won't change.
-    if (onSubmit.result && !onSubmit.loading && !onSubmit.error) onResult();
+    if (onSubmit.result && !onSubmit.loading && !onSubmit.error) onResult(onSubmit.result);
   }, [onSubmit.result, onSubmit.loading, onSubmit.error])
 
   // note: setting animation to false because of this issue
@@ -30,7 +30,7 @@ function ActionForm(props) {
         <Modal.Header closeButton>
           <Modal.Title>{props.text}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>{props.modal} Are you sure?</Modal.Body>
+        <Modal.Body>{props.modal}</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
             Cancel
@@ -42,7 +42,7 @@ function ActionForm(props) {
       </Modal>
 
       <Button variant={props.variant} onClick={handleShow} style={{width: "8rem"}} className="m-2">
-        {onSubmit.loading ? "Working..." : props.text}
+        {onSubmit.loading ? "..." : props.text}
       </Button>
     </div>
   )
