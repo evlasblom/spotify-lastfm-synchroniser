@@ -12,6 +12,8 @@ function createExclusiveFilter(compareFunction) {
 }
 
 // filter functions
+export const filterExclusiveId = createExclusiveFilter(compareId);
+
 export const filterExclusiveArtists = createExclusiveFilter(compareArtists);
 
 export const filterExclusiveAlbums = createExclusiveFilter(compareAlbums);
@@ -26,14 +28,23 @@ export function filterOnPlaycount(limit) {
 
 // comparison functions
 // use a similarity function to somewhat account for different spellings
+export function compareId(one, two) {
+  return one && two && one.id === two.id;
+}
+
 export function compareArtists(one, two) {
-  return one && two && ss.compareTwoStrings(one.name, two.name) >= 0.75
+  return one && two && 
+    ss.compareTwoStrings(one.name.toLowerCase(), two.name.toLowerCase()) >= 0.9;
 }
 
 export function compareAlbums(one, two) {
-  return one && two && ss.compareTwoStrings(one.name, two.name) >= 0.75 && compareArtists(one.artist[0], two.artist[0])
+  return one && two 
+    && ss.compareTwoStrings(one.name.toLowerCase(), two.name.toLowerCase()) >= 0.9 
+    && compareArtists(one.artist[0], two.artist[0]);
 }
 
 export function compareTracks(one, two) {
-  return one && two && ss.compareTwoStrings(one.name, two.name) >= 0.75 && compareArtists(one.artist[0], two.artist[0])
+  return one && two 
+    && ss.compareTwoStrings(one.name.toLowerCase(), two.name.toLowerCase()) >= 0.9 
+    && compareArtists(one.artist[0], two.artist[0]);
 }
