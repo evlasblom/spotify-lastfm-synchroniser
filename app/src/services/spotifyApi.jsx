@@ -227,30 +227,36 @@ export function parseArtists(artists) {
 }
 
 // Input: response.data.items
-export function parseAlbums(albums) {
-  return albums
-    .map(album => {
+export function parseAlbums(items) {
+  return items
+    .map(item => {
+      let album;
+      if (item.album) album = item.album; // in library requests the album is nested
+      else album = item; // in search requests get the album directly
       return {
-        type: 'album', // === album.album.type
-        id: album.album.id,
-        name: album.album.name,
-        artist: parseArtists(album.album.artists),
-        url: album.album.external_urls.spotify
+        type: 'album', // === album.type
+        id: album.id,
+        name: album.name,
+        artist: parseArtists(album.artists),
+        url: album.external_urls.spotify
       }
     })
 }
 
 // Input: response.data.items
-export function parseTracks(tracks) {
-  return tracks
-    .map(track => {
+export function parseTracks(items) {
+  return items
+    .map(item => {
+      let track;
+      if (item.track) track = item.track; // in library requests the track is nested
+      else track = item; // in search requests get the track directly
       return {
-        type: 'track', // === track.track.type
-        id: track.track.id,
-        name: track.track.name,
-        artist: parseArtists(track.track.artists),
-        duration: track.track.duration_ms && Number(track.track.duration_ms), // optional
-        url: track.track.external_urls.spotify
+        type: 'track', // === track.type
+        id: track.id,
+        name: track.name,
+        artist: parseArtists(track.artists),
+        duration: track.duration_ms && Number(track.duration_ms), // optional
+        url: track.external_urls.spotify
       }
     })
 }
