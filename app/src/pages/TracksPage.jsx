@@ -10,7 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
-import { filterOnPlaycount, filterExclusiveId, compareTracks } from '../filters'
+import { filterOnPlaycount, filterExclusiveId, compareTracks, normalizeArtistName, normalizeTrackName } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -43,12 +43,11 @@ const importSpotify = async (access_token, tracks) => {
 const searchSpotify = async (access_token, tracks) => {
   let updated = tracks;
   for (const track of updated) {
-    let query = '"' + track.artist[0].name + '" "' + track.name + '"';
+    let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
     let response = await spotifyApi.searchTrack(access_token, { q: query});
     let results = spotifyApi.parseTracks(response.data.tracks.items);
 
     // copy the spotify id of the search result
-    // @TODO: iterate over search results
     track.id = undefined;
     for (const result of results) {
       if (compareTracks(track, result)) {
@@ -203,6 +202,10 @@ function TracksPage(props) {
         {exclusiveAsync.loading ? "Comparing data..." : ""}
         {clearSpotifyAsync.loading ? "Clearing data from Spotify..." : ""}
         {importSpotifyAsync.loading ? "Importing data into Spotify..." : ""}
+
+        {exclusiveAsync.error ? <span className="text-danger">{exclusiveAsync.error.message}</span> : ""}
+        {clearSpotifyAsync.error ? <span className="text-danger">{clearSpotifyAsync.error.message}</span> : ""}
+        {importSpotifyAsync.error ? <span className="text-danger">{importSpotifyAsync.error.message}</span> : ""}
       </div>
       <br></br>
 

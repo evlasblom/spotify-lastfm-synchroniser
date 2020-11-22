@@ -10,7 +10,7 @@ import Error from '../components/Error'
 import Loading from '../components/Loading'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
-import { filterOnPlaycount, filterExclusiveId, compareAlbums } from '../filters'
+import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
 // ========== CONSTANTS ==================================================
 
@@ -43,12 +43,11 @@ const importSpotify = async (access_token, albums) => {
 const searchSpotify = async (access_token, albums) => {
   let updated = albums;
   for (const album of updated) {
-    let query = '"' + album.artist[0].name + '" "' + album.name + '"';
+    let query = '"' + normalizeArtistName(album.artist[0].name) + '" "' + normalizeAlbumName(album.name) + '"';
     let response = await spotifyApi.searchAlbum(access_token, { q: query});
     let results = spotifyApi.parseAlbums(response.data.albums.items);
 
     // copy the spotify id of the search result
-    // @TODO: iterate over search results
     album.id = undefined;
     for (const result of results) {
       if (compareAlbums(album, result)) {
@@ -198,13 +197,15 @@ function AlbumsPage(props) {
         onSubmit={importSpotifyAsync.execute} />
       <br></br>
 
-      <div style={{height: "2rem"}} className="bg-light p-1">
+      <div style={{height: "2rem"}} className="p-1">
         {albumsSpotify.loading || albumsLastFm.loading ? "Loading data..." : ""}
         {exclusiveAsync.loading ? "Comparing data..." : ""}
         {clearSpotifyAsync.loading ? "Clearing data from Spotify..." : ""}
         {importSpotifyAsync.loading ? "Importing data into Spotify..." : ""}
 
-        {exclusiveAsync.error ? <span className="bg-danger">{exclusiveAsync.error.message}</span> : ""}
+        {exclusiveAsync.error ? <span className="text-danger">{exclusiveAsync.error.message}</span> : ""}
+        {clearSpotifyAsync.error ? <span className="text-danger">{clearSpotifyAsync.error.message}</span> : ""}
+        {importSpotifyAsync.error ? <span className="text-danger">{importSpotifyAsync.error.message}</span> : ""}
       </div>
       <br></br>
 
