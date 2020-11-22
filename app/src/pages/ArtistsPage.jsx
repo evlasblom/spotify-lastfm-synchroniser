@@ -1,24 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useAsync, useAsyncCallback } from 'react-async-hook'
+import React from 'react';
 
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
-import useLocalStorage from '../hooks/useLocalStorage'
 
-import ActionForm from '../components/ActionForm'
+import ContentPage from '../components/ContentPage'
 import Error from '../components/Error'
 import Loading from '../components/Loading'
-import SelectionForm from '../components/SelectionForm'
-import * as constants from '../constants'
 import { filterOnPlaycount, filterExclusiveId, compareArtists, normalizeArtistName } from '../filters'
 
-// ========== CONSTANTS ==================================================
-
 const initial_selection = {period: 'overall', number: 20, playcount: 250 };
-
-const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
-
-// ========== FUNCTIONS ==================================================
 
 const getSpotify = async (access_token, opts) => {
   let response = await spotifyApi.getFollowingArtists(access_token, opts);
@@ -81,9 +71,7 @@ const computeExclusive = async (access_token, artistsSpotify, artistsLastFm, pla
   };
 }
 
-// ========== COMPONENTS ==================================================
-
-function ArtistsList(props) {
+export function ArtistsList(props) {
   const loading = props.loading;
   const error = props.error;
   const artists = props.data;
@@ -123,115 +111,18 @@ function ArtistsList(props) {
   )
 }
 
-// ========== MAIN ==================================================
-
 function ArtistsPage(props) {
-  const [access_token, ] = useLocalStorage(constants.token_key, null);
-  const [username, ] = useLocalStorage(constants.user_key, null);
-
-  const [selection, setSelection] = useState(initial_selection);
-  
-  const exclusiveAsync = useAsyncCallback(
-    () => computeExclusive(access_token, artistsSpotify.result, artistsLastFm.result, selection.playcount)
-  );
-  const clearSpotifyAsync = useAsyncCallback(
-    () => clearSpotify(access_token, onlyOnSpotify)
-  );
-  const importSpotifyAsync = useAsyncCallback(
-    () => importSpotify(access_token, onlyOnLastFm)
-  );
-
-  const artistsSpotify = useAsync(
-    () => getSpotify(access_token, {}), [clearSpotifyAsync.result, importSpotifyAsync.result]);
-  const artistsLastFm = useAsync(
-    () => getLastFm(access_key, createOpts()), [selection.period, selection.number]);
-
-  const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
-  const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
-
-  const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
-
-  useEffect(() => {
-    if (exclusiveAsync.result && !exclusiveAsync.loading && !exclusiveAsync.error) {
-      setOnlyOnSpotify(exclusiveAsync.result.spotify);
-      setOnlyOnLastFm(exclusiveAsync.result.lastfm);
-    }
-  }, [exclusiveAsync.result, exclusiveAsync.loading, exclusiveAsync.error])
-
-  useEffect(() => {
-    setOnlyOnSpotify([]);
-  }, [clearSpotifyAsync.result, selection.period, selection.number])
-
-  useEffect(() => {
-    setOnlyOnLastFm([]);
-  }, [importSpotifyAsync.result, selection.period, selection.number])
 
   return (
-    <>
-      <h2>Artists</h2>
-      <br></br>
-
-      <SelectionForm onSubmit={setSelection} initial={initial_selection} />
-      <br></br>
-
-      <ActionForm 
-        text={exclusiveAsync.loading ? "..." : "Compare"}
-        modal="This will cross-compare your Spotify and Last.fm artists. Proceed?"
-        variant="primary" 
-        disabled={!artistsSpotify.result || !artistsLastFm.result || artistsSpotify.error || artistsLastFm.error}
-        onSubmit={exclusiveAsync.execute} />
-      <br></br>
-
-      <ActionForm 
-        text={clearSpotifyAsync.loading ? "..." : "Clear"}
-        modal="This will clear all artists from Spotify that are not in your current top artist selection on Last.fm. Are you sure?"
-        variant="danger" 
-        disabled={onlyOnSpotify.length === 0}
-        onSubmit={clearSpotifyAsync.execute} />
-      <br></br>
-
-      <ActionForm 
-        text={importSpotifyAsync.loading ? "..." : "Import"}
-        modal="This will import all artists into Spotify that are in your current top artist selection on Last.fm. Are you sure?"
-        variant="success" 
-        disabled={onlyOnLastFm.length === 0}
-        onSubmit={importSpotifyAsync.execute} />
-      <br></br>
-
-      <div style={{height: "2rem"}} className="p-1">
-        {artistsSpotify.loading || artistsLastFm.loading ? "Loading data..." : ""}
-        {exclusiveAsync.loading ? "Comparing data..." : ""}
-        {clearSpotifyAsync.loading ? "Clearing data from Spotify..." : ""}
-        {importSpotifyAsync.loading ? "Importing data into Spotify..." : ""}
-
-        {exclusiveAsync.error ? <span className="text-danger">{exclusiveAsync.error.message}</span> : ""}
-        {clearSpotifyAsync.error ? <span className="text-danger">{clearSpotifyAsync.error.message}</span> : ""}
-        {importSpotifyAsync.error ? <span className="text-danger">{importSpotifyAsync.error.message}</span> : ""}
-      </div>
-      <br></br>
-
-      <div className="d-flex flex-row flex-wrap justify-content-center">
-
-        <ArtistsList 
-          target="Spotify"
-          playcount={selection.playcount}
-          loading={artistsSpotify.loading}
-          error={artistsSpotify.error}
-          data={artistsSpotify.result}
-          exclusive={onlyOnSpotify}
-          exclusiveClass="text-danger" />
-        
-        <ArtistsList 
-          target="Last.fm"
-          playcount={selection.playcount}
-          loading={artistsLastFm.loading}
-          error={artistsLastFm.error}
-          data={artistsLastFm.result} 
-          exclusive={onlyOnLastFm}
-          exclusiveClass="text-success" />
-
-      </div>
-    </>
+    <ContentPage 
+      title="Artists"
+      selection={initial_selection} 
+      computeExclusive={computeExclusive}
+      clearSpotify={clearSpotify}
+      importSpotify={importSpotify}
+      getSpotify={getSpotify}
+      getLastFm={getLastFm}
+      list={<ArtistsList />} />
   )
 }
 

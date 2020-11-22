@@ -11,7 +11,6 @@
 
 ## General
 
-- Refactor `ArtistsPage`, `AlbumsPage` and `TracksPage` and separate common pieces into separate components?
 - Then let's just move the `ProfileCard` back into the `ProfilePage`.
 - Add comments to javascript functions.
 - Add `WelcomePage` with link to `AuthPage`.
@@ -21,6 +20,10 @@
 - Update the main readme with relevant info.
 - Proper error handling for clear and import actions.
 - Improve usability:
+  - Buttons and statusses
+    - Disable action buttons on selection
+    - Add status indication text maybe
+  - Add totals to lists.
   - Extra step before using actions.
   - Extra explanation of how everything works.
   - Add cookies to store last used selection?
