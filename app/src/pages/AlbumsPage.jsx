@@ -4,6 +4,7 @@ import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
 import ContentPage from '../components/ContentPage'
+
 import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
 const initial_selection = {period: 'overall', number: 20, playcount: 100 };
@@ -14,8 +15,15 @@ const getSpotify = async (access_token, opts) => {
 }
 
 const getLastFm = async (access_key, opts) => {
-  let response = await lastfmApi.getTopAlbums(access_key, opts);
-  return lastfmApi.parseAlbums(response.data.topalbums.album);
+  let items = [];
+  let page = 0;
+  while (opts.limit > page * lastfmApi.LIMIT_PER_PAGE) {
+    let last_item = Math.min(lastfmApi.LIMIT_PER_PAGE, opts.limit - page * lastfmApi.LIMIT_PER_PAGE)
+    let response = await lastfmApi.getTopAlbums(access_key, {...opts,  limit: lastfmApi.LIMIT_PER_PAGE, page: ++page});
+    items = [...items, ...response.data.topalbums.album.slice(0, last_item)];
+  }
+  let result = lastfmApi.parseAlbums(items);
+  return result
 }
 
 const clearSpotify = async (access_token, albums) => {

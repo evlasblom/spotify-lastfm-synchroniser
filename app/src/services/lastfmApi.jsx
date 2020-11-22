@@ -6,8 +6,10 @@ import { ApiException } from '../exceptions'
 
 // ---------- CONSTANTS -------------------------------------------------- 
 
-const ALLOWED_METHODS = ['user.getinfo', 'user.getTopArtists', 'user.getTopAlbums', 'user.getTopTracks'];
-const ALLOWED_PERIODS = ['overall', '7day', '1month', '3month', '6month', '12month'];
+export const ALLOWED_METHODS = ['user.getinfo', 'user.getTopArtists', 'user.getTopAlbums', 'user.getTopTracks'];
+export const ALLOWED_PERIODS = ['overall', '7day', '1month', '3month', '6month', '12month'];
+
+export const LIMIT_PER_PAGE = 1000;
 
 const IMAGE_SORT_WEIGHTS = {
   '': 1, // missing size is ranked last
@@ -32,7 +34,7 @@ function _getApi(access_key, params) {
     url: '?' + qs.stringify({...params, ...base}),
     baseURL: 'https://ws.audioscrobbler.com/2.0/',
     method: 'GET',
-    timeout: 4000,
+    timeout: 6000,
     json: true
   };
 
@@ -53,7 +55,7 @@ function _postApi(session_key, access_key, method_signature, params) {
     url: '',
     baseURL: 'https://ws.audioscrobbler.com/2.0/',
     method: 'GET',
-    timeout: 4000,
+    timeout: 6000,
     json: true,
     data: {...params, ...base}
   };
@@ -80,7 +82,7 @@ export function getTopArtists(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.user) throw new ApiException("Missing required option: user");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiException("Invalid option selected: period");
-  if (opts.limit && opts.limit > 1000) throw new ApiException("Option exceeds max size: limit");
+  if (opts.limit && opts.limit > LIMIT_PER_PAGE) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     method: 'user.getTopArtists',
@@ -97,7 +99,7 @@ export function getTopAlbums(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.user) throw new ApiException("Missing required option: user");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiException("Invalid option selected: period");
-  if (opts.limit && opts.limit > 1000) throw new ApiException("Option exceeds max size: limit");
+  if (opts.limit && opts.limit > LIMIT_PER_PAGE) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     method: 'user.getTopAlbums',
@@ -114,7 +116,7 @@ export function getTopTracks(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.user) throw new ApiException("Missing required option: user");
   if (opts.period && !ALLOWED_PERIODS.includes(opts.period)) throw new ApiException("Invalid option selected: period");
-  if (opts.limit && opts.limit > 1000) throw new ApiException("Option exceeds max size: limit");
+  if (opts.limit && opts.limit > LIMIT_PER_PAGE) throw new ApiException("Option exceeds max size: limit");
 
   const params = {
     method: 'user.getTopTracks',
