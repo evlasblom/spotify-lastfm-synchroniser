@@ -4,8 +4,6 @@ import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
 import ContentPage from '../components/ContentPage'
-import Error from '../components/Error'
-import Loading from '../components/Loading'
 import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
 const initial_selection = {period: 'overall', number: 20, playcount: 100 };
@@ -70,24 +68,11 @@ const computeExclusive = async (access_token, albumsSpotify, albumsLastFm, playc
 }
 
 function AlbumsList(props) {
-  const loading = props.loading;
-  const error = props.error;
   const albums = props.data;
   const target = props.target;
   const limit = props.playcount ? props.playcount : 0;
   const exclusive = props.exclusive;
 
-  // check if loading
-  if (loading) {
-    return <Loading style={{ width: '25rem'}} className="mr-2 ml-2" />
-  }
-
-  // check if error
-  else if (error) {
-    return <Error style={{ width: '25rem'}} className="mr-2 ml-2" error={error} />
-  }
-
-  // otherwise success
   let j = 0;
   return (
     <div style={{ width: '25rem'}} className="mr-2 ml-2">

@@ -83,11 +83,13 @@ function ContentPage(props) {
       <br></br>
 
       <div style={{height: "2rem"}} className="p-1">
-        {getSpotify.loading || getLastFm.loading ? "Loading data..." : ""}
+        {getSpotify.loading || getLastFm.loading ? "Loading data... " : ""}
         {exclusiveAsync.loading ? "Comparing data..." : ""}
-        {clearSpotifyAsync.loading ? "Clearing data from Spotify..." : ""}
-        {importSpotifyAsync.loading ? "Importing data into Spotify..." : ""}
+        {clearSpotifyAsync.loading ? "Clearing data from Spotify... " : ""}
+        {importSpotifyAsync.loading ? "Importing data into Spotify... " : ""}
 
+        {getSpotify.error ? <span className="text-danger">{getSpotify.error.message}</span> : ""}
+        {getLastFm.error ? <span className="text-danger">{getLastFm.error.message}</span> : ""}
         {exclusiveAsync.error ? <span className="text-danger">{exclusiveAsync.error.message}</span> : ""}
         {clearSpotifyAsync.error ? <span className="text-danger">{clearSpotifyAsync.error.message}</span> : ""}
         {importSpotifyAsync.error ? <span className="text-danger">{importSpotifyAsync.error.message}</span> : ""}
@@ -96,25 +98,25 @@ function ContentPage(props) {
 
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
-        {React.cloneElement(props.list, { 
+        {!getSpotify.loading && !getSpotify.error ?
+        React.cloneElement(props.list, { 
           target: "Spotify",
           playcount: selection.playcount,
-          loading: getSpotify.loading,
-          error: getSpotify.error,
           data: getSpotify.result,
           exclusive: onlyOnSpotify,
           exclusiveClass: "text-danger"
-        })}
+        })
+        : null }
 
-        {React.cloneElement(props.list, { 
+        {!getLastFm.loading && !getLastFm.error ?
+        React.cloneElement(props.list, { 
           target: "Last.fm",
           playcount: selection.playcount,
-          loading: getLastFm.loading,
-          error: getLastFm.error,
           data: getLastFm.result,
           exclusive: onlyOnLastFm,
           exclusiveClass: "text-success"
-        })}
+        })
+        : null }
 
       </div>
     </>
