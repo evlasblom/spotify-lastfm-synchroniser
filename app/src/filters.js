@@ -90,7 +90,6 @@ export function normalizeAlbumName(name) {
 export function normalizeTrackName(name) {
   const regex1 = / \(.+\)$/; // matches " (2020 remastered)" suffixes
   const regex2 = / -.+$/; // matches " - obscure track subtitle" suffixes
-  const regex3 = / pt.? ([1-9])/; // matches " pt #" strings to be replaced by " part #"
   return name
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
