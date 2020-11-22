@@ -122,7 +122,7 @@ function AuthPage(props) {
   // show login if not authenticated
   if (!access_token) {
     return (
-      <Step title="Authenticate via Spotify">
+      <Step title="Authenticate via Spotify" subtitle="Valid for one hour.">
         <LoginSpotify onSubmit={_setState}/>
       </Step>
     )
