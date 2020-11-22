@@ -28,14 +28,19 @@ const importSpotify = async (access_token, tracks) => {
   return await spotifyApi.setSavedTracks(access_token, {ids: ids});
 }
 
-const searchSpotify = async (access_token, tracks) => {
-  let updated = tracks;
-  for (const track of updated) {
-    let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
-    let response = await spotifyApi.searchTrack(access_token, { q: query});
-    let results = spotifyApi.parseTracks(response.data.tracks.items);
+const searchSpotify = async (access_token, track) => {
+  let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
+  let response = await spotifyApi.searchTrack(access_token, { q: query});
+  return spotifyApi.parseTracks(response.data.tracks.items);
+}
 
-    // copy the spotify id of the search result
+// @TODO: move to ContentPage?
+const computeExclusive = async (access_token, tracksSpotify, tracksLastFm, playcount) => {
+  // filter lastfm tracks by playcount
+  let filteredLastFm = tracksLastFm.filter(filterOnPlaycount(playcount));
+  // search for corresponding spotify ids
+  for (const track of filteredLastFm) {
+    let results = await searchSpotify(access_token, track);
     track.id = undefined;
     for (const result of results) {
       if (compareTracks(track, result)) {
@@ -44,18 +49,12 @@ const searchSpotify = async (access_token, tracks) => {
       }
     }
     if (results.length === 0) {
-      console.log("Could not find track " + query);
+      console.log("Could not find track " + track.name);
     }
     else if (!track.id) {
       console.log("Could not match track " + track.name + " / " + results[0].name);
     }
   }
-  return updated;
-}
-
-const computeExclusive = async (access_token, tracksSpotify, tracksLastFm, playcount) => {
-  // search for spotify ids and update the filtered lastfm tracks
-  const filteredLastFm = await searchSpotify(access_token, tracksLastFm.filter(filterOnPlaycount(playcount)));
   // cross-compare the ids of the spotify tracks with the found spotify ids of the filtered lastfm tracks
   const onlyOnSpotify = tracksSpotify.filter(filterExclusiveId(filteredLastFm));
   // cross-compare the found spotify ids of the filtered lastfm tracks with with the ids of the spotify tracks

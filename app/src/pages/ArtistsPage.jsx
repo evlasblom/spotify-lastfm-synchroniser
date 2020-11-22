@@ -30,14 +30,19 @@ const importSpotify = async (access_token, artists) => {
   return await spotifyApi.setFollowingArtists(access_token, {ids: ids});
 }
 
-const searchSpotify = async (access_token, artists) => {
-  let updated = artists;
-  for (const artist of updated) {
+const searchSpotify = async (access_token, artist) => {
     let query = '"' + normalizeArtistName(artist.name) + '"';
     let response = await spotifyApi.searchArtist(access_token, { q: query});
-    let results = spotifyApi.parseArtists(response.data.artists.items);
+  return spotifyApi.parseArtists(response.data.artists.items);
+}
 
-    // copy the spotify id of the search result
+// @TODO: move to ContentPage?
+const computeExclusive = async (access_token, artistsSpotify, artistsLastFm, playcount) => {
+  // filter lastfm artists by playcount
+  let filteredLastFm = artistsLastFm.filter(filterOnPlaycount(playcount));
+  // search for corresponding spotify ids
+  for (const artist of filteredLastFm) {
+    let results = await searchSpotify(access_token, artist);
     artist.id = undefined;
     for (const result of results) {
       if (compareArtists(artist, result)) {
@@ -46,18 +51,12 @@ const searchSpotify = async (access_token, artists) => {
       }
     }
     if (results.length === 0) {
-      console.log("Could not find artist " + query);
+      console.log("Could not find artist " + artist.name);
     }
     else if (!artist.id) {
       console.log("Could not match artist " + artist.name + " / " + results[0].name);
     }
   }
-  return updated;
-}
-
-const computeExclusive = async (access_token, artistsSpotify, artistsLastFm, playcount) => {
-  // search for spotify ids and update the filtered lastfm artists
-  const filteredLastFm = await searchSpotify(access_token, artistsLastFm.filter(filterOnPlaycount(playcount)));
   // cross-compare the ids of the spotify artists with the found spotify ids of the filtered lastfm artists
   const onlyOnSpotify = artistsSpotify.filter(filterExclusiveId(filteredLastFm));
   // cross-compare the found spotify ids of the filtered lastfm artists with with the ids of the spotify artists

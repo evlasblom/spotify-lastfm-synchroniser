@@ -28,14 +28,19 @@ const importSpotify = async (access_token, albums) => {
   return await spotifyApi.setSavedAlbums(access_token, {ids: ids});
 }
 
-const searchSpotify = async (access_token, albums) => {
-  let updated = albums;
-  for (const album of updated) {
-    let query = '"' + normalizeArtistName(album.artist[0].name) + '" "' + normalizeAlbumName(album.name) + '"';
-    let response = await spotifyApi.searchAlbum(access_token, { q: query});
-    let results = spotifyApi.parseAlbums(response.data.albums.items);
+const searchSpotify = async (access_token, album) => {
+  let query = '"' + normalizeArtistName(album.artist[0].name) + '" "' + normalizeAlbumName(album.name) + '"';
+  let response = await spotifyApi.searchAlbum(access_token, { q: query});
+  return spotifyApi.parseAlbums(response.data.albums.items);
+}
 
-    // copy the spotify id of the search result
+// @TODO: move to ContentPage?
+const computeExclusive = async (access_token, albumsSpotify, albumsLastFm, playcount) => {
+  // filter lastfm albums by playcount
+  let filteredLastFm = albumsLastFm.filter(filterOnPlaycount(playcount));
+  // search for corresponding spotify ids
+  for (const album of filteredLastFm) {
+    let results = await searchSpotify(access_token, album);
     album.id = undefined;
     for (const result of results) {
       if (compareAlbums(album, result)) {
@@ -44,18 +49,12 @@ const searchSpotify = async (access_token, albums) => {
       }
     }
     if (results.length === 0) {
-      console.log("Could not find album " + query);
+      console.log("Could not find album " + album.name);
     }
     else if (!album.id) {
       console.log("Could not match album " + album.name + " / " + results[0].name);
     }
   }
-  return updated;
-}
-
-const computeExclusive = async (access_token, albumsSpotify, albumsLastFm, playcount) => {
-  // search for spotify ids and update the filtered lastfm albums
-  const filteredLastFm = await searchSpotify(access_token, albumsLastFm.filter(filterOnPlaycount(playcount)));
   // cross-compare the ids of the spotify albums with the found spotify ids of the filtered lastfm albums
   const onlyOnSpotify = albumsSpotify.filter(filterExclusiveId(filteredLastFm));
   // cross-compare the found spotify ids of the filtered lastfm albums with with the ids of the spotify albums
