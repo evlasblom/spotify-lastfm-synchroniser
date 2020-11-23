@@ -2,11 +2,8 @@
 
 ## Main
 
-- Check the search queries for the artists albums and tracks for at least 1000 items.
-- Check the clear and import for artists albums and tracks.
-- Add pagination for lastfm?
-- Add pagination for spotify?
-- Add limitations to number of items for both lastfm and spotify?
+- Report unfound results to user.
+- Request user input for unsure results.
 - Then test large bulk updates.
 
 ## General

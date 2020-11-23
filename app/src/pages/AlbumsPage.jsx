@@ -12,12 +12,11 @@ const initial_selection = {period: 'overall', number: 20, playcount: 100 };
 const getSpotify = async (access_token, opts) => {
   let items = [];
   let offset = 0;
-  let total = spotifyApi.LIMIT_PER_PAGE;
+  let total = 1;
   while (total > offset) {
-    let options = {...opts, limit: spotifyApi.LIMIT_PER_PAGE, offset: offset};
-    let response = await spotifyApi.getSavedAlbums(access_token, options);
+    let response = await spotifyApi.getSavedAlbums(access_token, {...opts, offset: offset});
     total = response.data.total;
-    offset = offset + spotifyApi.LIMIT_PER_PAGE;
+    offset = offset + opts.limit;
     items = [...items, ...response.data.items];
   }
   return spotifyApi.parseAlbums(items);
@@ -26,10 +25,9 @@ const getSpotify = async (access_token, opts) => {
 const getLastFm = async (access_key, opts) => {
   let items = [];
   let page = 0;
-  while (opts.limit > page * lastfmApi.LIMIT_PER_PAGE) {
-    let index = Math.min(lastfmApi.LIMIT_PER_PAGE, opts.limit - page * lastfmApi.LIMIT_PER_PAGE)
-    let options = {...opts, limit: lastfmApi.LIMIT_PER_PAGE, page: ++page};
-    let response = await lastfmApi.getTopAlbums(access_key, options);
+  while (opts.number > page * opts.limit) {
+    let index = Math.min(opts.limit, opts.number - page * opts.limit)
+    let response = await lastfmApi.getTopAlbums(access_key, {...opts, page: ++page});
     items = [...items, ...response.data.topalbums.album.slice(0, index)];
   }
   return lastfmApi.parseAlbums(items);

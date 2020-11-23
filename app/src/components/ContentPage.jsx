@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAsync, useAsyncCallback } from 'react-async-hook'
 
 import useLocalStorage from '../hooks/useLocalStorage'
+import * as spotifyApi from '../services/spotifyApi'
+import * as lastfmApi from '../services/lastfmApi'
 
 import ActionForm from '../components/ActionForm'
 import SelectionForm from '../components/SelectionForm'
@@ -26,14 +28,19 @@ function ContentPage(props) {
   );
 
   const getSpotify = useAsync(
-    () => props.getSpotify(access_token, {}), [clearSpotifyAsync.result, importSpotifyAsync.result]);
+    () => props.getSpotify(access_token, optsSpotify()), [clearSpotifyAsync.result, importSpotifyAsync.result]);
   const getLastFm = useAsync(
-    () => props.getLastFm(access_key, createOpts()), [selection.period, selection.number]);
+    () => props.getLastFm(access_key, optsLastFm()), [selection.period, selection.number]);
 
   const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
   const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
 
-  const createOpts = () => { return {user: username, period: selection.period, limit: selection.number}};
+  const optsSpotify = () => { 
+    return {limit: spotifyApi.LIMIT_PER_PAGE}
+  };
+  const optsLastFm = () => { 
+    return {user: username, period: selection.period, number: selection.number, limit: lastfmApi.LIMIT_PER_PAGE}
+  };
 
   useEffect(() => {
     if (exclusiveAsync.result && !exclusiveAsync.loading && !exclusiveAsync.error) {

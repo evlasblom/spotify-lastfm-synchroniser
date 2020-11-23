@@ -7,15 +7,14 @@ import ContentPage from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareArtists, normalizeArtistName } from '../filters'
 
-const initial_selection = {period: 'overall', number: 20, playcount: 250 };
+const initial_selection = {period: 'overall', number: 200, playcount: 250 };
 
 const getSpotify = async (access_token, opts) => {
   let items = [];
   let after = undefined;
   while (after !== null) {
-    let options = {...opts, limit: spotifyApi.LIMIT_PER_PAGE, after: after};
-    let response = await spotifyApi.getFollowingArtists(access_token, options);
-    after = response.data.artists.cursors.after;
+    let response = await spotifyApi.getFollowingArtists(access_token, {...opts, after: after});
+    after = response.data.artists.cursors.after; // returns null on last batch
     items = [...items, ...response.data.artists.items];
   }
   return spotifyApi.parseArtists(items);
@@ -24,10 +23,9 @@ const getSpotify = async (access_token, opts) => {
 const getLastFm = async (access_key, opts) => {
   let items = [];
   let page = 0;
-  while (opts.limit > page * lastfmApi.LIMIT_PER_PAGE) {
-    let index = Math.min(lastfmApi.LIMIT_PER_PAGE, opts.limit - page * lastfmApi.LIMIT_PER_PAGE)
-    let options = {...opts, limit: lastfmApi.LIMIT_PER_PAGE, page: ++page};
-    let response = await lastfmApi.getTopArtists(access_key, options);
+  while (opts.number > page * opts.limit) {
+    let index = Math.min(opts.limit, opts.number - page * opts.limit)
+    let response = await lastfmApi.getTopArtists(access_key, {...opts, page: ++page});
     items = [...items, ...response.data.topartists.artist.slice(0, index)];
   }
   return lastfmApi.parseArtists(items);
