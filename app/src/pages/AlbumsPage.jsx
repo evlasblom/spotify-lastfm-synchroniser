@@ -7,9 +7,9 @@ import ContentPage from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
-const initial_selection = {period: 'overall', number: 20, playcount: 100 };
+const initial_selection = {period: 'overall', number: 500, playcount: 75 };
 
-const getSpotify = async (access_token, opts) => {
+const getSpotifyAlbums = async (access_token, opts) => {
   let items = [];
   let offset = 0;
   let total = 1;
@@ -22,7 +22,7 @@ const getSpotify = async (access_token, opts) => {
   return spotifyApi.parseAlbums(items);
 }
 
-const getLastFm = async (access_key, opts) => {
+const getLastFmAlbums = async (access_key, opts) => {
   let items = [];
   let page = 0;
   while (opts.number > page * opts.limit) {
@@ -33,7 +33,7 @@ const getLastFm = async (access_key, opts) => {
   return lastfmApi.parseAlbums(items);
 }
 
-const clearSpotify = async (access_token, albums) => {
+const clearSpotifyAlbums = async (access_token, albums) => {
   let ids = albums.map(album => album.id);
   while (ids.length > 0) {
     let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
@@ -42,7 +42,7 @@ const clearSpotify = async (access_token, albums) => {
   return {};
 }
 
-const importSpotify = async (access_token, albums) => {
+const importSpotifyAlbums = async (access_token, albums) => {
   let ids = albums.map(album => album.id);
   while (ids.length > 0) {
     let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
@@ -51,19 +51,20 @@ const importSpotify = async (access_token, albums) => {
   return {};
 }
 
-const searchSpotify = async (access_token, album) => {
+const searchSpotifyAlbum = async (access_token, album) => {
   let query = '"' + normalizeArtistName(album.artist[0].name) + '" "' + normalizeAlbumName(album.name) + '"';
   let response = await spotifyApi.searchAlbum(access_token, { q: query});
+  if (response.status === 429) console.log(response);
   return spotifyApi.parseAlbums(response.data.albums.items);
 }
 
 // @TODO: move to ContentPage?
-const computeExclusive = async (access_token, albumsSpotify, albumsLastFm, playcount) => {
+const computeExclusiveAlbums = async (access_token, albumsSpotify, albumsLastFm, playcount) => {
   // filter lastfm albums by playcount
   let filteredLastFm = albumsLastFm.filter(filterOnPlaycount(playcount));
   // search for corresponding spotify ids
   for (const album of filteredLastFm) {
-    let results = await searchSpotify(access_token, album);
+    let results = await searchSpotifyAlbum(access_token, album);
     album.id = undefined;
     for (const result of results) {
       if (compareAlbums(album, result)) {
@@ -123,11 +124,11 @@ function AlbumsPage(props) {
     <ContentPage 
       title="Albums"
       selection={initial_selection} 
-      computeExclusive={computeExclusive}
-      clearSpotify={clearSpotify}
-      importSpotify={importSpotify}
-      getSpotify={getSpotify}
-      getLastFm={getLastFm}
+      computeExclusive={computeExclusiveAlbums}
+      clearSpotify={clearSpotifyAlbums}
+      importSpotify={importSpotifyAlbums}
+      getSpotify={getSpotifyAlbums}
+      getLastFm={getLastFmAlbums}
       list={<AlbumsList />} />
   )
 }

@@ -7,9 +7,9 @@ import ContentPage from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareArtists, normalizeArtistName } from '../filters'
 
-const initial_selection = {period: 'overall', number: 200, playcount: 250 };
+const initial_selection = {period: 'overall', number: 500, playcount: 100 };
 
-const getSpotify = async (access_token, opts) => {
+const getSpotifyArtists = async (access_token, opts) => {
   let items = [];
   let after = undefined;
   while (after !== null) {
@@ -20,7 +20,7 @@ const getSpotify = async (access_token, opts) => {
   return spotifyApi.parseArtists(items);
 }
 
-const getLastFm = async (access_key, opts) => {
+const getLastFmArtists = async (access_key, opts) => {
   let items = [];
   let page = 0;
   while (opts.number > page * opts.limit) {
@@ -31,7 +31,7 @@ const getLastFm = async (access_key, opts) => {
   return lastfmApi.parseArtists(items);
 }
 
-const clearSpotify = async (access_token, artists) => {
+const clearSpotifyArtists = async (access_token, artists) => {
   let ids = artists.map(artist => artist.id);
   while (ids.length > 0) {
     let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
@@ -40,7 +40,7 @@ const clearSpotify = async (access_token, artists) => {
   return {};
 }
 
-const importSpotify = async (access_token, artists) => {
+const importSpotifyArtists = async (access_token, artists) => {
   let ids = artists.map(artist => artist.id);
   while (ids.length > 0) {
     let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
@@ -49,19 +49,20 @@ const importSpotify = async (access_token, artists) => {
   return {};
 }
 
-const searchSpotify = async (access_token, artist) => {
+const searchSpotifyArtist = async (access_token, artist) => {
   let query = '"' + normalizeArtistName(artist.name) + '"';
   let response = await spotifyApi.searchArtist(access_token, { q: query});
+  if (response.status === 429) console.log(response);
   return spotifyApi.parseArtists(response.data.artists.items);
 }
 
 // @TODO: move to ContentPage?
-const computeExclusive = async (access_token, artistsSpotify, artistsLastFm, playcount) => {
+const computeExclusiveArtists = async (access_token, artistsSpotify, artistsLastFm, playcount) => {
   // filter lastfm artists by playcount
   let filteredLastFm = artistsLastFm.filter(filterOnPlaycount(playcount));
   // search for corresponding spotify ids
   for (const artist of filteredLastFm) {
-    let results = await searchSpotify(access_token, artist);
+    let results = await searchSpotifyArtist(access_token, artist);
     artist.id = undefined;
     for (const result of results) {
       if (compareArtists(artist, result)) {
@@ -120,11 +121,11 @@ function ArtistsPage(props) {
     <ContentPage 
       title="Artists"
       selection={initial_selection} 
-      computeExclusive={computeExclusive}
-      clearSpotify={clearSpotify}
-      importSpotify={importSpotify}
-      getSpotify={getSpotify}
-      getLastFm={getLastFm}
+      computeExclusive={computeExclusiveArtists}
+      clearSpotify={clearSpotifyArtists}
+      importSpotify={importSpotifyArtists}
+      getSpotify={getSpotifyArtists}
+      getLastFm={getLastFmArtists}
       list={<ArtistsList />} />
   )
 }
