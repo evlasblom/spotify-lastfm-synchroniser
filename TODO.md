@@ -8,20 +8,14 @@
 
 ## General
 
-- Then let's just move the `ProfileCard` back into the `ProfilePage`.
 - Add comments to javascript functions.
+- Placeholders while loading.
 - Add `WelcomePage` with link to `AuthPage`.
-- Use window location to highlight current page in `AppNavigation` (no need to use react router).
-- By the way, create our own `useLocation` hook for this and also use on `AuthPage` (no need to use react router).
-- Replace the app readme with the updated one.
+- Use location in `AuthPage` and to highlight current page in the navigation.
 - Update the main readme with relevant info.
-- Proper error handling for clear and import actions.
 - Improve usability:
-  - Buttons and statusses
-    - Disable action buttons on selection
-    - Add status indication text maybe
   - Add totals to lists.
-  - Extra step before using actions.
+  - Add progress bars to buttons.
   - Extra explanation of how everything works.
   - Add cookies to store last used selection?
 - Spend a little time making it look better:
