@@ -10,20 +10,29 @@ import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistNam
 const initial_selection = {period: 'overall', number: 20, playcount: 100 };
 
 const getSpotify = async (access_token, opts) => {
-  let response = await spotifyApi.getSavedAlbums(access_token, opts);
-  return spotifyApi.parseAlbums(response.data.items);
+  let items = [];
+  let offset = 0;
+  let total = spotifyApi.LIMIT_PER_PAGE;
+  while (total > offset) {
+    let options = {...opts, limit: spotifyApi.LIMIT_PER_PAGE, offset: offset};
+    let response = await spotifyApi.getSavedAlbums(access_token, options);
+    total = response.data.total;
+    offset = offset + spotifyApi.LIMIT_PER_PAGE;
+    items = [...items, ...response.data.items];
+  }
+  return spotifyApi.parseAlbums(items);
 }
 
 const getLastFm = async (access_key, opts) => {
   let items = [];
   let page = 0;
   while (opts.limit > page * lastfmApi.LIMIT_PER_PAGE) {
-    let last_item = Math.min(lastfmApi.LIMIT_PER_PAGE, opts.limit - page * lastfmApi.LIMIT_PER_PAGE)
-    let response = await lastfmApi.getTopAlbums(access_key, {...opts,  limit: lastfmApi.LIMIT_PER_PAGE, page: ++page});
-    items = [...items, ...response.data.topalbums.album.slice(0, last_item)];
+    let index = Math.min(lastfmApi.LIMIT_PER_PAGE, opts.limit - page * lastfmApi.LIMIT_PER_PAGE)
+    let options = {...opts, limit: lastfmApi.LIMIT_PER_PAGE, page: ++page};
+    let response = await lastfmApi.getTopAlbums(access_key, options);
+    items = [...items, ...response.data.topalbums.album.slice(0, index)];
   }
-  let result = lastfmApi.parseAlbums(items);
-  return result
+  return lastfmApi.parseAlbums(items);
 }
 
 const clearSpotify = async (access_token, albums) => {

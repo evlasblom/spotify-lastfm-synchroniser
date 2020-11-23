@@ -10,20 +10,27 @@ import { filterOnPlaycount, filterExclusiveId, compareArtists, normalizeArtistNa
 const initial_selection = {period: 'overall', number: 20, playcount: 250 };
 
 const getSpotify = async (access_token, opts) => {
-  let response = await spotifyApi.getFollowingArtists(access_token, opts);
-  return spotifyApi.parseArtists(response.data.artists.items);
+  let items = [];
+  let after = undefined;
+  while (after !== null) {
+    let options = {...opts, limit: spotifyApi.LIMIT_PER_PAGE, after: after};
+    let response = await spotifyApi.getFollowingArtists(access_token, options);
+    after = response.data.artists.cursors.after;
+    items = [...items, ...response.data.artists.items];
+  }
+  return spotifyApi.parseArtists(items);
 }
 
 const getLastFm = async (access_key, opts) => {
   let items = [];
   let page = 0;
   while (opts.limit > page * lastfmApi.LIMIT_PER_PAGE) {
-    let last_item = Math.min(lastfmApi.LIMIT_PER_PAGE, opts.limit - page * lastfmApi.LIMIT_PER_PAGE)
-    let response = await lastfmApi.getTopArtists(access_key, {...opts,  limit: lastfmApi.LIMIT_PER_PAGE, page: ++page});
-    items = [...items, ...response.data.topartists.artist.slice(0, last_item)];
+    let index = Math.min(lastfmApi.LIMIT_PER_PAGE, opts.limit - page * lastfmApi.LIMIT_PER_PAGE)
+    let options = {...opts, limit: lastfmApi.LIMIT_PER_PAGE, page: ++page};
+    let response = await lastfmApi.getTopArtists(access_key, options);
+    items = [...items, ...response.data.topartists.artist.slice(0, index)];
   }
-  let result = lastfmApi.parseArtists(items);
-  return result
+  return lastfmApi.parseArtists(items);
 }
 
 const clearSpotify = async (access_token, artists) => {
