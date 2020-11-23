@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Redirect } from 'react-router-dom'
+import qs from 'qs';
 
 import useHashParams from '../hooks/useHashParams'
 import useLocalStorage from '../hooks/useLocalStorage'
@@ -11,8 +12,6 @@ import Alert from 'react-bootstrap/Alert'
 
 import * as constants from '../constants'
 
-// ========== FUNCTIONS ==================================================
-
 // @TODO: move authorization functions to spotify api and lastfm api files
 
 /**
@@ -21,48 +20,52 @@ import * as constants from '../constants'
  * @return {string} The generated string
  */
 function generateRandomString(length) {
-  var text = '';
-  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-  for (var i = 0; i < length; i++) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < length; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
 };
 
 /**
- * Authorizes via Spotify using the implicit grant flow
+ * Uses the Spotify implicit grant flow for authorization.
+ * @param {object} opts An object with the redirect parameters.
  */
-function authSpotifyImplicit(redirect, scope, state, show = false) {
-  // create the authorization url
-  let url = 'https://accounts.spotify.com/authorize';
-  url += '?response_type=token';
-  url += '&client_id=' + encodeURIComponent(process.env.REACT_APP_SPOTIFY_CLIENT_ID);
-  url += '&redirect_uri=' + encodeURIComponent(redirect);
-  url += '&scope=' + encodeURIComponent(scope);
-  url += '&state=' + encodeURIComponent(state);
-  url += '&show_dialog=' + encodeURIComponent(show);
-  return url;
-}
+function temporaryUserAuthorization(opts) {
+  const params = {
+    response_type: 'token',
+    ...opts
+  }
 
-// ========== COMPONENTS ==================================================
+  let baseUrl = 'https://accounts.spotify.com/authorize';
+  let url = '?' + qs.stringify(params);
+
+  return baseUrl + url;
+}
 
 function LoginSpotify(props) {
   const location = useLocation();
 
-  // set the authorization scope
-  const read_scope = 'user-read-private user-read-email user-follow-read user-library-read';
-  const write_scope = 'user-follow-modify user-library-modify'
-  const scope = read_scope + ' ' + write_scope;
-  // set redirect uri
-  const redirect = location.origin + location.pathname;
-  // generate random state
   const state = generateRandomString(16);
+
+  const opts = {
+    client_id: process.env.REACT_APP_SPOTIFY_CLIENT_ID,
+    redirect_uri: location.origin + location.pathname,
+    scope: `user-read-private 
+      user-read-email 
+      user-follow-read 
+      user-library-read 
+      user-follow-modify 
+      user-library-modify`,
+    state: state,
+    show_dialog: false,
+  }
 
   const onSubmit = (e) => {
     e.preventDefault();
-    props.onSubmit(state); // set initial state in local storage
-    window.location = authSpotifyImplicit(redirect, scope, state); // pass initial state to spotify
+    props.onSubmit(state);
+    window.location = temporaryUserAuthorization(opts);
   }
 
   return (
@@ -108,14 +111,13 @@ function Step(props) {
   )
 }
 
-// ========== MAIN ==================================================
-
 function AuthPage(props) {
   const [_state, _setState] = useLocalStorage(constants.state_key, null)
   const [_access_token, _setAccessToken] = useLocalStorage(constants.token_key, null)
   const [_username, _setUsername] = useLocalStorage(constants.user_key, null)
   
-  const {state, access_token} = useHashParams()
+  const {state} = useHashParams()
+  const {access_token} = useHashParams()
   const [username, setUsername] = useState(null)
 
   // 1. spotify authentication
