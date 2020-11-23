@@ -59,8 +59,8 @@ function ContentPage(props) {
 
   return (
     <>
-      <h2>{props.title}</h2>
-      <br></br>
+      {/* <h2>{props.title}</h2> */}
+      {/* <br></br> */}
 
       <SelectionForm onSubmit={setSelection} initial={props.selection} />
       <br></br>

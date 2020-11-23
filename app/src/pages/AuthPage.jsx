@@ -3,6 +3,7 @@ import { Redirect } from 'react-router-dom'
 
 import useHashParams from '../hooks/useHashParams'
 import useLocalStorage from '../hooks/useLocalStorage'
+import useLocation from '../hooks/useLocation'
 
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -11,6 +12,8 @@ import Alert from 'react-bootstrap/Alert'
 import * as constants from '../constants'
 
 // ========== FUNCTIONS ==================================================
+
+// @TODO: move authorization functions to spotify api and lastfm api files
 
 /**
  * Generates a random string containing numbers and letters
@@ -30,40 +33,41 @@ function generateRandomString(length) {
 /**
  * Authorizes via Spotify using the implicit grant flow
  */
-function authSpotifyImplicit(state) {
-  // set the authorization scope
-  const read_scope = 'user-read-private user-read-email user-follow-read user-library-read';
-  const write_scope = 'user-follow-modify user-library-modify'
-  const scope = read_scope + ' ' + write_scope;
-
+function authSpotifyImplicit(redirect, scope, state, show = false) {
   // create the authorization url
   let url = 'https://accounts.spotify.com/authorize';
   url += '?response_type=token';
   url += '&client_id=' + encodeURIComponent(process.env.REACT_APP_SPOTIFY_CLIENT_ID);
-  url += '&redirect_uri=' + encodeURIComponent(window.location.origin + window.location.pathname);
+  url += '&redirect_uri=' + encodeURIComponent(redirect);
   url += '&scope=' + encodeURIComponent(scope);
   url += '&state=' + encodeURIComponent(state);
-
-  // and redirect to the spotify authorization page
-  window.location = url;
+  url += '&show_dialog=' + encodeURIComponent(show);
+  return url;
 }
 
 // ========== COMPONENTS ==================================================
 
 function LoginSpotify(props) {
+  const location = useLocation();
+
+  // set the authorization scope
+  const read_scope = 'user-read-private user-read-email user-follow-read user-library-read';
+  const write_scope = 'user-follow-modify user-library-modify'
+  const scope = read_scope + ' ' + write_scope;
+  // set redirect uri
+  const redirect = location.origin + location.pathname;
+  // generate random state
+  const state = generateRandomString(16);
 
   const onSubmit = (e) => {
     e.preventDefault();
-    const generated = generateRandomString(16);
-    props.onSubmit(generated); // set initial state in local storage
-    authSpotifyImplicit(generated); // pass initial state to spotify
+    props.onSubmit(state); // set initial state in local storage
+    window.location = authSpotifyImplicit(redirect, scope, state); // pass initial state to spotify
   }
 
   return (
     <Form onSubmit={onSubmit} className="d-flex flex-column justify-content-center align-content-center">
-      
       <Button variant="primary" type="submit">Continue</Button>
-    
     </Form>
   )
 }
@@ -78,7 +82,6 @@ function LoginLastfm(props) {
 
   return (
     <Form onSubmit={onSubmit} className="d-flex flex-column justify-content-center align-content-center">
-
       <Form.Group controlId="validationUsername">
         <Form.Control
           type="text"
@@ -87,9 +90,7 @@ function LoginLastfm(props) {
           onChange={(e) => setUsername(e.currentTarget.value)}
         />
       </Form.Group>
-
       <Button variant="primary" type="submit" >Continue</Button>
-
     </Form>
   )
 }
@@ -129,7 +130,7 @@ function AuthPage(props) {
   }
 
   // show error if authentication somehow failed
-  if (state == null || state !== _state) {
+  if (!state || state !== _state) {
     return (
       <Alert variant="danger">
         There was an error during authentication, please try again.

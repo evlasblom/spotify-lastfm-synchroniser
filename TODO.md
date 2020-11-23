@@ -11,7 +11,6 @@
 - Add comments to javascript functions.
 - Placeholders while loading.
 - Add `WelcomePage` with link to `AuthPage`.
-- Use location in `AuthPage` and to highlight current page in the navigation.
 - Update the main readme with relevant info.
 - Improve usability:
   - Add totals to lists.

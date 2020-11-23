@@ -55,8 +55,8 @@ function ProfilePage(props) {
 
   return (
     <>
-      <h2>User</h2>
-      <br></br>
+      {/* <h2>User</h2> */}
+      {/* <br></br> */}
       
       <div style={{height: "2rem"}} className="p-1">
         {profileSpotify.loading || profileLastFm.loading ? "Loading data... " : ""}
