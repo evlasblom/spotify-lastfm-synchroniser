@@ -35,12 +35,20 @@ const getLastFm = async (access_key, opts) => {
 
 const clearSpotify = async (access_token, albums) => {
   let ids = albums.map(album => album.id);
-  return await spotifyApi.removeSavedAlbums(access_token, {ids: ids});
+  while (ids.length > 0) {
+    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    await spotifyApi.removeSavedAlbums(access_token, options);
+  }
+  return {};
 }
 
 const importSpotify = async (access_token, albums) => {
   let ids = albums.map(album => album.id);
-  return await spotifyApi.setSavedAlbums(access_token, {ids: ids});
+  while (ids.length > 0) {
+    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    await spotifyApi.setSavedAlbums(access_token, options);
+  }
+  return {};
 }
 
 const searchSpotify = async (access_token, album) => {

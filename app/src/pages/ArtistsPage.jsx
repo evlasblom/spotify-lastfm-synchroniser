@@ -33,19 +33,25 @@ const getLastFm = async (access_key, opts) => {
 
 const clearSpotify = async (access_token, artists) => {
   let ids = artists.map(artist => artist.id);
-  if (ids.length === 0) return {};
-  return await spotifyApi.removeFollowingArtists(access_token, {ids: ids});
+  while (ids.length > 0) {
+    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    await spotifyApi.removeFollowingArtists(access_token, options);
+  }
+  return {};
 }
 
 const importSpotify = async (access_token, artists) => {
   let ids = artists.map(artist => artist.id);
-  if (ids.length === 0) return {};
-  return await spotifyApi.setFollowingArtists(access_token, {ids: ids});
+  while (ids.length > 0) {
+    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    await spotifyApi.setFollowingArtists(access_token, options);
+  }
+  return {};
 }
 
 const searchSpotify = async (access_token, artist) => {
-    let query = '"' + normalizeArtistName(artist.name) + '"';
-    let response = await spotifyApi.searchArtist(access_token, { q: query});
+  let query = '"' + normalizeArtistName(artist.name) + '"';
+  let response = await spotifyApi.searchArtist(access_token, { q: query});
   return spotifyApi.parseArtists(response.data.artists.items);
 }
 
