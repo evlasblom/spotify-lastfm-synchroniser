@@ -17,14 +17,14 @@ function ContentPage(props) {
 
   const [selection, setSelection] = useState(props.selection);
   
-  const exclusiveAsync = useAsyncCallback(
-    () => props.computeExclusive(access_token, getSpotify.result, getLastFm.result)
+  const matchAsync = useAsyncCallback(
+    () => props.match(access_token, getSpotify.result, getLastFm.result)
   );
   const clearSpotifyAsync = useAsyncCallback(
-    () => props.clearSpotify(access_token, onlyOnSpotify)
+    () => props.clearSpotify(access_token, updatedSpotify)
   );
   const importSpotifyAsync = useAsyncCallback(
-    () => props.importSpotify(access_token, onlyOnLastFm)
+    () => props.importSpotify(access_token, updatedLastFm)
   );
 
   const getSpotify = useAsync(
@@ -32,8 +32,8 @@ function ContentPage(props) {
   const getLastFm = useAsync(
     () => props.getLastFm(access_key, optsLastFm()), [selection.period, selection.number, selection.playcount]);
 
-  const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
-  const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
+  const [updatedSpotify, setUpdatedSpotify] = useState(null);
+  const [updatedLastFm, setUpdatedLastFm] = useState(null);
 
   const optsSpotify = () => { 
     return {limit: spotifyApi.LIMIT_PER_PAGE}
@@ -43,18 +43,18 @@ function ContentPage(props) {
   };
 
   useEffect(() => {
-    if (exclusiveAsync.result && !exclusiveAsync.loading && !exclusiveAsync.error) {
-      setOnlyOnSpotify(exclusiveAsync.result.spotify);
-      setOnlyOnLastFm(exclusiveAsync.result.lastfm);
+    if (matchAsync.result && !matchAsync.loading && !matchAsync.error) {
+      setUpdatedSpotify(matchAsync.result.spotify);
+      setUpdatedLastFm(matchAsync.result.lastfm);
     }
-  }, [exclusiveAsync.result, exclusiveAsync.loading, exclusiveAsync.error])
+  }, [matchAsync.result, matchAsync.loading, matchAsync.error])
 
   useEffect(() => {
-    setOnlyOnSpotify([]);
+    setUpdatedSpotify(null);
   }, [clearSpotifyAsync.result, selection.period, selection.number])
 
   useEffect(() => {
-    setOnlyOnLastFm([]);
+    setUpdatedLastFm(null);
   }, [importSpotifyAsync.result, selection.period, selection.number])
 
   return (
@@ -66,18 +66,18 @@ function ContentPage(props) {
       <br></br>
 
       <ActionForm 
-        text={exclusiveAsync.loading ? "..." : "Compare"}
+        text={matchAsync.loading ? "..." : "Compare"}
         modal="This will cross-compare your Spotify and Last.fm data. Proceed?"
         variant="primary" 
         disabled={!getSpotify.result || !getLastFm.result || getSpotify.error || getLastFm.error}
-        onSubmit={exclusiveAsync.execute} />
+        onSubmit={matchAsync.execute} />
       <br></br>
 
       <ActionForm 
         text={clearSpotifyAsync.loading ? "..." : "Clear"}
         modal="This will clear all data from Spotify that are not in your current selection on Last.fm. Are you sure?"
         variant="danger" 
-        disabled={onlyOnSpotify.length === 0}
+        disabled={!updatedSpotify}
         onSubmit={clearSpotifyAsync.execute} />
       <br></br>
 
@@ -85,19 +85,19 @@ function ContentPage(props) {
         text={importSpotifyAsync.loading ? "..." : "Import"}
         modal="This will import all data into Spotify that are in your current selection on Last.fm. Are you sure?"
         variant="success" 
-        disabled={onlyOnLastFm.length === 0}
+        disabled={!updatedLastFm}
         onSubmit={importSpotifyAsync.execute} />
       <br></br>
 
       <div style={{height: "2rem"}} className="p-1">
         {getSpotify.loading || getLastFm.loading ? "Loading data... " : ""}
-        {exclusiveAsync.loading ? "Comparing data..." : ""}
+        {matchAsync.loading ? "Comparing data..." : ""}
         {clearSpotifyAsync.loading ? "Clearing data from Spotify... " : ""}
         {importSpotifyAsync.loading ? "Importing data into Spotify... " : ""}
 
         {getSpotify.error ? <span className="text-danger">{getSpotify.error.message}</span> : ""}
         {getLastFm.error ? <span className="text-danger">{getLastFm.error.message}</span> : ""}
-        {exclusiveAsync.error ? <span className="text-danger">{exclusiveAsync.error.message}</span> : ""}
+        {matchAsync.error ? <span className="text-danger">{matchAsync.error.message}</span> : ""}
         {clearSpotifyAsync.error ? <span className="text-danger">{clearSpotifyAsync.error.message}</span> : ""}
         {importSpotifyAsync.error ? <span className="text-danger">{importSpotifyAsync.error.message}</span> : ""}
       </div>
@@ -108,14 +108,14 @@ function ContentPage(props) {
         {!getSpotify.loading && !getSpotify.error ?
         React.cloneElement(props.list, { 
           title: "Spotify",
-          data: getSpotify.result
+          data: updatedSpotify ? updatedSpotify : getSpotify.result
         })
         : null }
 
         {!getLastFm.loading && !getLastFm.error ?
         React.cloneElement(props.list, { 
           title: "Last.fm",
-          data: getLastFm.result
+          data: updatedLastFm ? updatedLastFm : getLastFm.result
         })
         : null }
 

@@ -19,7 +19,10 @@ const getSpotifyAlbums = async (access_token, opts) => {
     offset = offset + opts.limit;
     items = [...items, ...response.data.items];
   }
-  return spotifyApi.parseAlbums(items);
+  return spotifyApi.parseAlbums(items).map(album => {
+    album.status = { };
+    return album;
+  });
 }
 
 const getLastFmAlbums = async (access_key, opts) => {
@@ -32,7 +35,7 @@ const getLastFmAlbums = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseAlbums(items).map(album => {
-    album.status = {};
+    album.status = { filtered: false };
     if (playcountFilter(album)) {
       album.status.filtered = true;
     }
@@ -66,33 +69,33 @@ const searchSpotifyAlbum = async (access_token, album) => {
 }
 
 // @TODO: move to ContentPage?
-const computeExclusiveAlbums = async (access_token, albumsSpotify, albumsLastFm) => {
-  // search for corresponding spotify ids
-  for (const album of albumsLastFm) {
+const matchAlbums = async (access_token, albumsSpotify, albumsLastFm) => {
+  // add lastfm match status
+  let matchedLastFm = albumsLastFm;
+  for (const album of matchedLastFm) {
     if (album.status && !album.status.filtered) continue;
+    album.status.found = false;
+    album.status.matched = false;
     let results = await searchSpotifyAlbum(access_token, album);
-    album.id = undefined;
     for (const result of results) {
+      album.status.found = true;
       if (compareAlbums(album, result)) {
-        album.id = result.id;
+        album.id = result.id; // overwrite lastfm id with spotify id
+        album.status.matched = true;
         break;
       }
     }
-    if (results.length === 0) {
-      console.log("Could not find album " + album.name);
-    }
-    else if (!album.id) {
-      console.log("Could not match album " + album.name + " / " + results[0].name);
-    }
-  }
+  };
+
   // cross-compare the ids of the spotify albums with the found spotify ids of the filtered lastfm albums
-  const onlyOnSpotify = albumsSpotify.filter(filterExclusiveId(albumsLastFm));
+  // const onlyOnSpotify = albumsSpotify.filter(filterExclusiveId(albumsLastFm));
   // cross-compare the found spotify ids of the filtered lastfm albums with with the ids of the spotify albums
-  const onlyOnLastFm = albumsLastFm.filter(filterExclusiveId(albumsSpotify));
+  // const onlyOnLastFm = albumsLastFm.filter(filterExclusiveId(albumsSpotify));
+
   // return results
   return {
-    spotify: onlyOnSpotify,
-    lastfm: onlyOnLastFm
+    spotify: albumsSpotify,
+    lastfm: matchedLastFm
   };
 }
 
@@ -105,9 +108,14 @@ function AlbumsList(props) {
       <br></br>
       <br></br>
       {albums.map((album, i) => {
-        let classname = album.status && !album.status.filtered ? "text-muted" : ""
+        let style = 
+        album.status && album.status.found === false ? 
+        {textDecorationLine: "line-through", textDecorationStyle: "solid"} :
+        album.status && album.status.matched === false ? 
+        {textDecorationLine: "underline", textDecorationStyle: "wavy"} : {};
+      let classname = album.status && album.status.filtered === false ? "text-muted" : "";
         return (
-          <p key={i} className={classname}>
+          <p key={i} className={classname} style={style}>
             {i + 1}. {album.name}
             {album.playcount ? (" - " + album.playcount) : ""}
             <br></br>
@@ -124,7 +132,7 @@ function AlbumsPage(props) {
     <ContentPage 
       title="Albums"
       selection={initial_selection} 
-      computeExclusive={computeExclusiveAlbums}
+      match={matchAlbums}
       clearSpotify={clearSpotifyAlbums}
       importSpotify={importSpotifyAlbums}
       getSpotify={getSpotifyAlbums}

@@ -19,7 +19,10 @@ const getSpotifyTracks = async (access_token, opts) => {
     offset = offset + opts.limit;
     items = [...items, ...response.data.items];
   }
-  return spotifyApi.parseTracks(items);
+  return spotifyApi.parseTracks(items).map(track => {
+    track.status = { };
+    return track;
+  });
 }
 
 const getLastFmTracks = async (access_key, opts) => {
@@ -32,7 +35,7 @@ const getLastFmTracks = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseTracks(items).map(track => {
-    track.status = {};
+    track.status = { filtered: false };
     if (playcountFilter(track)) {
       track.status.filtered = true;
     }
@@ -66,33 +69,33 @@ const searchSpotifyTrack = async (access_token, track) => {
 }
 
 // @TODO: move to ContentPage?
-const computeExclusiveTracks = async (access_token, tracksSpotify, tracksLastFm) => {
-  // search for corresponding spotify ids
-  for (const track of tracksLastFm) {
+const matchTracks = async (access_token, tracksSpotify, tracksLastFm) => {
+  // add lastfm match status
+  let matchedLastFm = tracksLastFm;
+  for (const track of matchedLastFm) {
     if (track.status && !track.status.filtered) continue;
+    track.status.found = false;
+    track.status.matched = false;
     let results = await searchSpotifyTrack(access_token, track);
-    track.id = undefined;
     for (const result of results) {
+      track.status.found = true;
       if (compareTracks(track, result)) {
-        track.id = result.id;
+        track.id = result.id; // overwrite lastfm id with spotify id
+        track.status.matched = true;
         break;
       }
     }
-    if (results.length === 0) {
-      console.log("Could not find track " + track.name);
-    }
-    else if (!track.id) {
-      console.log("Could not match track " + track.name + " / " + results[0].name);
-    }
-  }
+  };
+
   // cross-compare the ids of the spotify tracks with the found spotify ids of the filtered lastfm tracks
-  const onlyOnSpotify = tracksSpotify.filter(filterExclusiveId(tracksLastFm));
+  // const onlyOnSpotify = tracksSpotify.filter(filterExclusiveId(tracksLastFm));
   // cross-compare the found spotify ids of the filtered lastfm tracks with with the ids of the spotify tracks
-  const onlyOnLastFm = tracksLastFm.filter(filterExclusiveId(tracksSpotify));
+  // const onlyOnLastFm = tracksLastFm.filter(filterExclusiveId(tracksSpotify));
+
   // return results
   return {
-    spotify: onlyOnSpotify,
-    lastfm: onlyOnLastFm
+    spotify: tracksSpotify,
+    lastfm: matchedLastFm
   };
 }
 
@@ -105,9 +108,14 @@ function TracksList(props) {
       <br></br>
       <br></br>
       {tracks.map((track, i) => {
-        let classname = track.status && !track.status.filtered ? "text-muted" : ""
+        let style = 
+        track.status && track.status.found === false ? 
+        {textDecorationLine: "line-through", textDecorationStyle: "solid"} :
+        track.status && track.status.matched === false ? 
+        {textDecorationLine: "underline", textDecorationStyle: "wavy"} : {};
+      let classname = track.status && track.status.filtered === false ? "text-muted" : "";
         return (
-          <p key={i} className={classname}>
+          <p key={i} className={classname} style={style}>
             {i + 1}. {track.name}
             {track.playcount ? (" - " + track.playcount) : ""}
             <br></br>
@@ -124,7 +132,7 @@ function TracksPage(props) {
     <ContentPage 
       title="Tracks"
       selection={initial_selection} 
-      computeExclusive={computeExclusiveTracks}
+      match={matchTracks}
       clearSpotify={clearSpotifyTracks}
       importSpotify={importSpotifyTracks}
       getSpotify={getSpotifyTracks}

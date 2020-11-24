@@ -17,7 +17,10 @@ const getSpotifyArtists = async (access_token, opts) => {
     after = response.data.artists.cursors.after; // returns null on last batch
     items = [...items, ...response.data.artists.items];
   }
-  return spotifyApi.parseArtists(items);
+  return spotifyApi.parseArtists(items).map(artist => {
+    artist.status = { };
+    return artist;
+  });
 }
 
 const getLastFmArtists = async (access_key, opts) => {
@@ -30,7 +33,7 @@ const getLastFmArtists = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseArtists(items).map(artist => {
-    artist.status = {};
+    artist.status = { filtered: false };
     if (playcountFilter(artist)) {
       artist.status.filtered = true;
     }
@@ -64,33 +67,33 @@ const searchSpotifyArtist = async (access_token, artist) => {
 }
 
 // @TODO: move to ContentPage?
-const computeExclusiveArtists = async (access_token, artistsSpotify, artistsLastFm) => {
-  // search for corresponding spotify ids
-  for (const artist of artistsLastFm) {
+const matchArtists = async (access_token, artistsSpotify, artistsLastFm) => {
+  // add lastfm match status
+  let matchedLastFm = artistsLastFm;
+  for (const artist of matchedLastFm) {
     if (artist.status && !artist.status.filtered) continue;
+    artist.status.found = false;
+    artist.status.matched = false;
     let results = await searchSpotifyArtist(access_token, artist);
-    artist.id = undefined;
     for (const result of results) {
+      artist.status.found = true;
       if (compareArtists(artist, result)) {
-        artist.id = result.id;
+        artist.id = result.id; // overwrite lastfm id with spotify id
+        artist.status.matched = true;
         break;
       }
     }
-    if (results.length === 0) {
-      console.log("Could not find artist " + artist.name);
-    }
-    else if (!artist.id) {
-      console.log("Could not match artist " + artist.name + " / " + results[0].name);
-    }
-  }
-  // cross-compare the ids of the spotify artists with the found spotify ids of the filtered lastfm artists
-  const onlyOnSpotify = artistsSpotify.filter(filterExclusiveId(artistsLastFm));
-  // cross-compare the found spotify ids of the filtered lastfm artists with with the ids of the spotify artists
-  const onlyOnLastFm = artistsLastFm.filter(filterExclusiveId(artistsSpotify));
+  };
+
+  // // cross-compare the ids of the spotify artists with the found spotify ids of the filtered lastfm artists
+  // const onlyOnSpotify = artistsSpotify.filter(filterExclusiveId(artistsLastFm));
+  // // cross-compare the found spotify ids of the filtered lastfm artists with with the ids of the spotify artists
+  // const onlyOnLastFm = artistsLastFm.filter(filterExclusiveId(artistsSpotify));
+
   // return results
   return {
-    spotify: onlyOnSpotify,
-    lastfm: onlyOnLastFm
+    spotify: artistsSpotify,
+    lastfm: matchedLastFm
   };
 }
 
@@ -103,9 +106,14 @@ export function ArtistsList(props) {
       <br></br>
       <br></br>
       {artists.map((artist, i) => {
-        let classname = artist.status && !artist.status.filtered ? "text-muted" : ""
+        let style = 
+          artist.status && artist.status.found === false ? 
+          {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'} :
+          artist.status && artist.status.matched === false ? 
+          {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'} : {};
+        let classname = artist.status && artist.status.filtered === false ? "text-muted" : "";
         return (
-          <p key={i} className={classname}>
+          <p key={i} className={classname} style={style}>
             {i + 1}. {artist.name} 
             {artist.playcount ? (" - " + artist.playcount) : ""}
           </p>
@@ -121,7 +129,7 @@ function ArtistsPage(props) {
     <ContentPage 
       title="Artists"
       selection={initial_selection} 
-      computeExclusive={computeExclusiveArtists}
+      match={matchArtists}
       clearSpotify={clearSpotifyArtists}
       importSpotify={importSpotifyArtists}
       getSpotify={getSpotifyArtists}
