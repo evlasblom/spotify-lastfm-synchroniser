@@ -30,7 +30,14 @@ const getLastFmTracks = async (access_key, opts) => {
     let response = await lastfmApi.getTopTracks(access_key, {...opts, page: ++page});
     items = [...items, ...response.data.toptracks.track.slice(0, index)];
   }
-  return lastfmApi.parseTracks(items);
+  const playcountFilter = filterOnPlaycount(opts.playcount)
+  return lastfmApi.parseTracks(items).map(track => {
+    track.status = {};
+    if (playcountFilter(track)) {
+      track.status.filtered = true;
+    }
+    return track;
+  });
 }
 
 const clearSpotifyTracks = async (access_token, tracks) => {
@@ -59,11 +66,10 @@ const searchSpotifyTrack = async (access_token, track) => {
 }
 
 // @TODO: move to ContentPage?
-const computeExclusiveTracks = async (access_token, tracksSpotify, tracksLastFm, playcount) => {
-  // filter lastfm tracks by playcount
-  let filteredLastFm = tracksLastFm.filter(filterOnPlaycount(playcount));
+const computeExclusiveTracks = async (access_token, tracksSpotify, tracksLastFm) => {
   // search for corresponding spotify ids
-  for (const track of filteredLastFm) {
+  for (const track of tracksLastFm) {
+    if (track.status && !track.status.filtered) continue;
     let results = await searchSpotifyTrack(access_token, track);
     track.id = undefined;
     for (const result of results) {
@@ -80,9 +86,9 @@ const computeExclusiveTracks = async (access_token, tracksSpotify, tracksLastFm,
     }
   }
   // cross-compare the ids of the spotify tracks with the found spotify ids of the filtered lastfm tracks
-  const onlyOnSpotify = tracksSpotify.filter(filterExclusiveId(filteredLastFm));
+  const onlyOnSpotify = tracksSpotify.filter(filterExclusiveId(tracksLastFm));
   // cross-compare the found spotify ids of the filtered lastfm tracks with with the ids of the spotify tracks
-  const onlyOnLastFm = filteredLastFm.filter(filterExclusiveId(tracksSpotify));
+  const onlyOnLastFm = tracksLastFm.filter(filterExclusiveId(tracksSpotify));
   // return results
   return {
     spotify: onlyOnSpotify,
@@ -92,22 +98,16 @@ const computeExclusiveTracks = async (access_token, tracksSpotify, tracksLastFm,
 
 function TracksList(props) {
   const tracks = props.data;
-  const target = props.target;
-  const limit = props.playcount ? props.playcount : 0;
-  const exclusive = props.exclusive;
 
-  let j = 0;
   return (
     <div style={{ width: '25rem'}} className="mr-2 ml-2">
-      <b>{target}</b>
+      <b>{props.title}</b>
       <br></br>
       <br></br>
       {tracks.map((track, i) => {
-        let class_name = ""
-        if (compareTracks(track, exclusive[j])) { j++; class_name = props.exclusiveClass}
-        if (!filterOnPlaycount(limit)(track)) class_name = "text-muted";
+        let classname = track.status && !track.status.filtered ? "text-muted" : ""
         return (
-          <p key={i} className={class_name}>
+          <p key={i} className={classname}>
             {i + 1}. {track.name}
             {track.playcount ? (" - " + track.playcount) : ""}
             <br></br>

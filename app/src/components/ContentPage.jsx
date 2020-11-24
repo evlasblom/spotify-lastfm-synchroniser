@@ -18,7 +18,7 @@ function ContentPage(props) {
   const [selection, setSelection] = useState(props.selection);
   
   const exclusiveAsync = useAsyncCallback(
-    () => props.computeExclusive(access_token, getSpotify.result, getLastFm.result, selection.playcount)
+    () => props.computeExclusive(access_token, getSpotify.result, getLastFm.result)
   );
   const clearSpotifyAsync = useAsyncCallback(
     () => props.clearSpotify(access_token, onlyOnSpotify)
@@ -30,7 +30,7 @@ function ContentPage(props) {
   const getSpotify = useAsync(
     () => props.getSpotify(access_token, optsSpotify()), [clearSpotifyAsync.result, importSpotifyAsync.result]);
   const getLastFm = useAsync(
-    () => props.getLastFm(access_key, optsLastFm()), [selection.period, selection.number]);
+    () => props.getLastFm(access_key, optsLastFm()), [selection.period, selection.number, selection.playcount]);
 
   const [onlyOnSpotify, setOnlyOnSpotify] = useState([]);
   const [onlyOnLastFm, setOnlyOnLastFm] = useState([]);
@@ -39,7 +39,7 @@ function ContentPage(props) {
     return {limit: spotifyApi.LIMIT_PER_PAGE}
   };
   const optsLastFm = () => { 
-    return {user: username, period: selection.period, number: selection.number, limit: lastfmApi.LIMIT_PER_PAGE}
+    return {user: username, limit: lastfmApi.LIMIT_PER_PAGE, ...selection}
   };
 
   useEffect(() => {
@@ -107,21 +107,15 @@ function ContentPage(props) {
 
         {!getSpotify.loading && !getSpotify.error ?
         React.cloneElement(props.list, { 
-          target: "Spotify",
-          playcount: selection.playcount,
-          data: getSpotify.result,
-          exclusive: onlyOnSpotify,
-          exclusiveClass: "text-danger"
+          title: "Spotify",
+          data: getSpotify.result
         })
         : null }
 
         {!getLastFm.loading && !getLastFm.error ?
         React.cloneElement(props.list, { 
-          target: "Last.fm",
-          playcount: selection.playcount,
-          data: getLastFm.result,
-          exclusive: onlyOnLastFm,
-          exclusiveClass: "text-success"
+          title: "Last.fm",
+          data: getLastFm.result
         })
         : null }
 
