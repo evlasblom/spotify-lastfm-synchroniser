@@ -34,7 +34,7 @@ function _getApi(access_key, params) {
     url: '?' + qs.stringify({...params, ...base}),
     baseURL: 'https://ws.audioscrobbler.com/2.0/',
     method: 'GET',
-    timeout: 6000,
+    timeout: 10000,
     json: true
   };
 
@@ -55,7 +55,7 @@ function _postApi(session_key, access_key, method_signature, params) {
     url: '',
     baseURL: 'https://ws.audioscrobbler.com/2.0/',
     method: 'GET',
-    timeout: 6000,
+    timeout: 10000,
     json: true,
     data: {...params, ...base}
   };
