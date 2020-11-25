@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage from '../components/ContentPage'
+import ContentPage, { ContentState } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
@@ -20,7 +20,7 @@ const getSpotifyAlbums = async (access_token, opts) => {
     items = [...items, ...response.data.items];
   }
   return spotifyApi.parseAlbums(items).map(album => {
-    album.status = { };
+    album.state = ContentState.FILTERED;
     return album;
   });
 }
@@ -35,9 +35,9 @@ const getLastFmAlbums = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseAlbums(items).map(album => {
-    album.status = { filtered: false };
+    album.state = ContentState.FETCHED;
     if (playcountFilter(album)) {
-      album.status.filtered = true;
+      album.state = ContentState.FILTERED;
     }
     return album;
   });
@@ -64,24 +64,24 @@ const importSpotifyAlbums = async (access_token, albums) => {
 const searchSpotifyAlbum = async (access_token, album) => {
   let query = '"' + normalizeArtistName(album.artist[0].name) + '" "' + normalizeAlbumName(album.name) + '"';
   let response = await spotifyApi.searchAlbum(access_token, { q: query});
-  if (response.status === 429) console.log(response);
+  if (response.status !== 200) console.log(response);
   return spotifyApi.parseAlbums(response.data.albums.items);
 }
 
 // @TODO: move to ContentPage?
 const matchAlbums = async (access_token, albumsSpotify, albumsLastFm) => {
   // add lastfm match status
+  // find and confirm on spotify
   let matchedLastFm = albumsLastFm;
   for (const album of matchedLastFm) {
-    if (album.status && !album.status.filtered) continue;
-    album.status.found = false;
-    album.status.matched = false;
+    if (album.state && album.state < ContentState.FILTERED) continue;
+    album.state = ContentState.SOUGHT;
     let results = await searchSpotifyAlbum(access_token, album);
     for (const result of results) {
-      album.status.found = true;
+      album.state = ContentState.FOUND;
       if (compareAlbums(album, result)) {
         album.id = result.id; // overwrite lastfm id with spotify id
-        album.status.matched = true;
+        album.state = ContentState.CONFIRMED;
         break;
       }
     }
@@ -108,12 +108,22 @@ function AlbumsList(props) {
       <br></br>
       <br></br>
       {albums.map((album, i) => {
-        let style = 
-        album.status && album.status.found === false ? 
-        {textDecorationLine: "line-through", textDecorationStyle: "solid"} :
-        album.status && album.status.matched === false ? 
-        {textDecorationLine: "underline", textDecorationStyle: "wavy"} : {};
-      let classname = album.status && album.status.filtered === false ? "text-muted" : "";
+        let style = {};
+        let classname = "";
+        switch(album.state) {
+          case ContentState.FETCHED:
+            classname = "text-muted";
+            break;
+          case ContentState.SOUGHT:
+            style = {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'};
+            break;
+          case ContentState.FOUND:
+            style = {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'};
+            break;
+          default:
+            style = {};
+            classname = "";
+        }
         return (
           <p key={i} className={classname} style={style}>
             {i + 1}. {album.name}

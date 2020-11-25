@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage from '../components/ContentPage'
+import ContentPage, { ContentState } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareTracks, normalizeArtistName, normalizeTrackName } from '../filters'
 
@@ -20,7 +20,7 @@ const getSpotifyTracks = async (access_token, opts) => {
     items = [...items, ...response.data.items];
   }
   return spotifyApi.parseTracks(items).map(track => {
-    track.status = { };
+    track.state = ContentState.FILTERED;
     return track;
   });
 }
@@ -35,9 +35,9 @@ const getLastFmTracks = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseTracks(items).map(track => {
-    track.status = { filtered: false };
+    track.state = ContentState.FETCHED;
     if (playcountFilter(track)) {
-      track.status.filtered = true;
+      track.state = ContentState.FILTERED;
     }
     return track;
   });
@@ -64,7 +64,7 @@ const importSpotifyTracks = async (access_token, tracks) => {
 const searchSpotifyTrack = async (access_token, track) => {
   let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
   let response = await spotifyApi.searchTrack(access_token, { q: query});
-  if (response.status === 429) console.log(response);
+  if (response.status !== 200) console.log(response);
   return spotifyApi.parseTracks(response.data.tracks.items);
 }
 
@@ -73,15 +73,14 @@ const matchTracks = async (access_token, tracksSpotify, tracksLastFm) => {
   // add lastfm match status
   let matchedLastFm = tracksLastFm;
   for (const track of matchedLastFm) {
-    if (track.status && !track.status.filtered) continue;
-    track.status.found = false;
-    track.status.matched = false;
+    if (track.state && track.state < ContentState.FILTERED) continue;
+    track.state = ContentState.SOUGHT;
     let results = await searchSpotifyTrack(access_token, track);
     for (const result of results) {
-      track.status.found = true;
+      track.state = ContentState.FOUND;
       if (compareTracks(track, result)) {
         track.id = result.id; // overwrite lastfm id with spotify id
-        track.status.matched = true;
+        track.state = ContentState.CONFIRMED;
         break;
       }
     }
@@ -108,12 +107,22 @@ function TracksList(props) {
       <br></br>
       <br></br>
       {tracks.map((track, i) => {
-        let style = 
-        track.status && track.status.found === false ? 
-        {textDecorationLine: "line-through", textDecorationStyle: "solid"} :
-        track.status && track.status.matched === false ? 
-        {textDecorationLine: "underline", textDecorationStyle: "wavy"} : {};
-      let classname = track.status && track.status.filtered === false ? "text-muted" : "";
+        let style = {};
+        let classname = "";
+        switch(track.state) {
+          case ContentState.FETCHED:
+            classname = "text-muted";
+            break;
+          case ContentState.SOUGHT:
+            style = {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'};
+            break;
+          case ContentState.FOUND:
+            style = {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'};
+            break;
+          default:
+            style = {};
+            classname = "";
+        }
         return (
           <p key={i} className={classname} style={style}>
             {i + 1}. {track.name}

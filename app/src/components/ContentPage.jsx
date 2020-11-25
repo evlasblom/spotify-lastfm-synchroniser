@@ -11,6 +11,15 @@ import * as constants from '../constants'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
+export const ContentState = {
+  FETCHED: 1,
+  FILTERED: 2,
+  SOUGHT: 3,
+  FOUND: 4,
+  CONFIRMED: 5,
+  MATCHED: 6
+}
+
 function ContentPage(props) {
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);

@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage from '../components/ContentPage'
+import ContentPage, { ContentState } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareArtists, normalizeArtistName } from '../filters'
 
@@ -18,7 +18,7 @@ const getSpotifyArtists = async (access_token, opts) => {
     items = [...items, ...response.data.artists.items];
   }
   return spotifyApi.parseArtists(items).map(artist => {
-    artist.status = { };
+    artist.state = ContentState.FILTERED;
     return artist;
   });
 }
@@ -33,9 +33,9 @@ const getLastFmArtists = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseArtists(items).map(artist => {
-    artist.status = { filtered: false };
+    artist.state = ContentState.FETCHED;
     if (playcountFilter(artist)) {
-      artist.status.filtered = true;
+      artist.state = ContentState.FILTERED;
     }
     return artist;
   });
@@ -62,29 +62,47 @@ const importSpotifyArtists = async (access_token, artists) => {
 const searchSpotifyArtist = async (access_token, artist) => {
   let query = '"' + normalizeArtistName(artist.name) + '"';
   let response = await spotifyApi.searchArtist(access_token, { q: query});
-  if (response.status === 429) console.log(response);
+  if (response.status !== 200) console.log(response);
   return spotifyApi.parseArtists(response.data.artists.items);
 }
 
 // @TODO: move to ContentPage?
 const matchArtists = async (access_token, artistsSpotify, artistsLastFm) => {
-  // add lastfm match status
+  // find and confirm on spotify
   let matchedLastFm = artistsLastFm;
   for (const artist of matchedLastFm) {
-    if (artist.status && !artist.status.filtered) continue;
-    artist.status.found = false;
-    artist.status.matched = false;
+    if (artist.state && artist.state < ContentState.FILTERED) continue;
+    artist.state = ContentState.SOUGHT;
     let results = await searchSpotifyArtist(access_token, artist);
     for (const result of results) {
-      artist.status.found = true;
+      artist.state = ContentState.FOUND;
       if (compareArtists(artist, result)) {
         artist.id = result.id; // overwrite lastfm id with spotify id
-        artist.status.matched = true;
+        artist.state = ContentState.CONFIRMED;
         break;
       }
     }
   };
 
+  // NEW:
+  // // add lastfm import status
+  // const exclusiveLastFmFilter = filterExclusiveId(artistsSpotify);
+  // let finalLastFm = matchedLastFm.map(artist => {
+  //   if (exclusiveLastFmFilter(artist)) {
+  //     artist.status.import = true;
+  //   }
+  //   return artist;
+  // })
+  // // add spotify clear status
+  // const exclusiveSpotifyFilter = filterExclusiveId(matchedLastFm);
+  // let finalSpotify = artistsSpotify.map(artist => {
+  //   if (exclusiveSpotifyFilter(artist)) {
+  //     artist.status.clear = true;
+  //   }
+  //   return artist;
+  // })
+
+  // OLD:
   // // cross-compare the ids of the spotify artists with the found spotify ids of the filtered lastfm artists
   // const onlyOnSpotify = artistsSpotify.filter(filterExclusiveId(artistsLastFm));
   // // cross-compare the found spotify ids of the filtered lastfm artists with with the ids of the spotify artists
@@ -106,12 +124,22 @@ export function ArtistsList(props) {
       <br></br>
       <br></br>
       {artists.map((artist, i) => {
-        let style = 
-          artist.status && artist.status.found === false ? 
-          {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'} :
-          artist.status && artist.status.matched === false ? 
-          {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'} : {};
-        let classname = artist.status && artist.status.filtered === false ? "text-muted" : "";
+        let style = {};
+        let classname = "";
+        switch(artist.state) {
+          case ContentState.FETCHED:
+            classname = "text-muted";
+            break;
+          case ContentState.SOUGHT:
+            style = {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'};
+            break;
+          case ContentState.FOUND:
+            style = {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'};
+            break;
+          default:
+            style = {};
+            classname = "";
+        }
         return (
           <p key={i} className={classname} style={style}>
             {i + 1}. {artist.name} 
