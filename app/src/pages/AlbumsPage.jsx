@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentState } from '../components/ContentPage'
+import ContentPage, { ContentState, ContentAction, setContentStyle } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
@@ -70,8 +70,7 @@ const searchSpotifyAlbum = async (access_token, album) => {
 
 // @TODO: move to ContentPage?
 const matchAlbums = async (access_token, albumsSpotify, albumsLastFm) => {
-  // add lastfm match status
-  // find and confirm on spotify
+  // find and confirm lastfm on spotify
   let matchedLastFm = albumsLastFm;
   for (const album of matchedLastFm) {
     if (album.state && album.state < ContentState.FILTERED) continue;
@@ -86,16 +85,28 @@ const matchAlbums = async (access_token, albumsSpotify, albumsLastFm) => {
       }
     }
   };
-
-  // cross-compare the ids of the spotify albums with the found spotify ids of the filtered lastfm albums
-  // const onlyOnSpotify = albumsSpotify.filter(filterExclusiveId(albumsLastFm));
-  // cross-compare the found spotify ids of the filtered lastfm albums with with the ids of the spotify albums
-  // const onlyOnLastFm = albumsLastFm.filter(filterExclusiveId(albumsSpotify));
-
+  // add lastfm action
+  const exclusiveLastFmFilter = filterExclusiveId(albumsSpotify);
+  let finalLastFm = matchedLastFm.map(album => {
+    album.action = ContentAction.NONE;
+    if (exclusiveLastFmFilter(album)) {
+      album.action = ContentAction.IMPORT;
+    }
+    return album;
+  })
+  // add spotify action
+  const exclusiveSpotifyFilter = filterExclusiveId(matchedLastFm);
+  let finalSpotify = albumsSpotify.map(album => {
+    album.action = ContentAction.NONE;
+    if (exclusiveSpotifyFilter(album)) {
+      album.action = ContentAction.CLEAR;
+    }
+    return album;
+  })
   // return results
   return {
-    spotify: albumsSpotify,
-    lastfm: matchedLastFm
+    spotify: finalSpotify,
+    lastfm: finalLastFm
   };
 }
 
@@ -108,22 +119,7 @@ function AlbumsList(props) {
       <br></br>
       <br></br>
       {albums.map((album, i) => {
-        let style = {};
-        let classname = "";
-        switch(album.state) {
-          case ContentState.FETCHED:
-            classname = "text-muted";
-            break;
-          case ContentState.SOUGHT:
-            style = {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'};
-            break;
-          case ContentState.FOUND:
-            style = {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'};
-            break;
-          default:
-            style = {};
-            classname = "";
-        }
+        const [style, classname] = setContentStyle(album);        
         return (
           <p key={i} className={classname} style={style}>
             {i + 1}. {album.name}

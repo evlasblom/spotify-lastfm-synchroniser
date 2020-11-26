@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentState } from '../components/ContentPage'
+import ContentPage, { ContentState, ContentAction, setContentStyle } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareArtists, normalizeArtistName } from '../filters'
 
@@ -68,7 +68,7 @@ const searchSpotifyArtist = async (access_token, artist) => {
 
 // @TODO: move to ContentPage?
 const matchArtists = async (access_token, artistsSpotify, artistsLastFm) => {
-  // find and confirm on spotify
+  // find and confirm lastfm on spotify
   let matchedLastFm = artistsLastFm;
   for (const artist of matchedLastFm) {
     if (artist.state && artist.state < ContentState.FILTERED) continue;
@@ -83,35 +83,28 @@ const matchArtists = async (access_token, artistsSpotify, artistsLastFm) => {
       }
     }
   };
-
-  // NEW:
-  // // add lastfm import status
-  // const exclusiveLastFmFilter = filterExclusiveId(artistsSpotify);
-  // let finalLastFm = matchedLastFm.map(artist => {
-  //   if (exclusiveLastFmFilter(artist)) {
-  //     artist.status.import = true;
-  //   }
-  //   return artist;
-  // })
-  // // add spotify clear status
-  // const exclusiveSpotifyFilter = filterExclusiveId(matchedLastFm);
-  // let finalSpotify = artistsSpotify.map(artist => {
-  //   if (exclusiveSpotifyFilter(artist)) {
-  //     artist.status.clear = true;
-  //   }
-  //   return artist;
-  // })
-
-  // OLD:
-  // // cross-compare the ids of the spotify artists with the found spotify ids of the filtered lastfm artists
-  // const onlyOnSpotify = artistsSpotify.filter(filterExclusiveId(artistsLastFm));
-  // // cross-compare the found spotify ids of the filtered lastfm artists with with the ids of the spotify artists
-  // const onlyOnLastFm = artistsLastFm.filter(filterExclusiveId(artistsSpotify));
-
+  // add lastfm action
+  const exclusiveLastFmFilter = filterExclusiveId(artistsSpotify);
+  let finalLastFm = matchedLastFm.map(artist => {
+    artist.action = ContentAction.NONE;
+    if (exclusiveLastFmFilter(artist)) {
+      artist.action = ContentAction.IMPORT;
+    }
+    return artist;
+  })
+  // add spotify action
+  const exclusiveSpotifyFilter = filterExclusiveId(matchedLastFm);
+  let finalSpotify = artistsSpotify.map(artist => {
+    artist.action = ContentAction.NONE;
+    if (exclusiveSpotifyFilter(artist)) {
+      artist.action = ContentAction.CLEAR;
+    }
+    return artist;
+  })
   // return results
   return {
-    spotify: artistsSpotify,
-    lastfm: matchedLastFm
+    spotify: finalSpotify,
+    lastfm: finalLastFm
   };
 }
 
@@ -124,22 +117,7 @@ export function ArtistsList(props) {
       <br></br>
       <br></br>
       {artists.map((artist, i) => {
-        let style = {};
-        let classname = "";
-        switch(artist.state) {
-          case ContentState.FETCHED:
-            classname = "text-muted";
-            break;
-          case ContentState.SOUGHT:
-            style = {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'};
-            break;
-          case ContentState.FOUND:
-            style = {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'};
-            break;
-          default:
-            style = {};
-            classname = "";
-        }
+        const [style, classname] = setContentStyle(artist);        
         return (
           <p key={i} className={classname} style={style}>
             {i + 1}. {artist.name} 

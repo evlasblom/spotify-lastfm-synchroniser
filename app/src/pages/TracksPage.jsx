@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentState } from '../components/ContentPage'
+import ContentPage, { ContentState, ContentAction, setContentStyle } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareTracks, normalizeArtistName, normalizeTrackName } from '../filters'
 
@@ -70,7 +70,7 @@ const searchSpotifyTrack = async (access_token, track) => {
 
 // @TODO: move to ContentPage?
 const matchTracks = async (access_token, tracksSpotify, tracksLastFm) => {
-  // add lastfm match status
+  // find and confirm lastfm on spotify
   let matchedLastFm = tracksLastFm;
   for (const track of matchedLastFm) {
     if (track.state && track.state < ContentState.FILTERED) continue;
@@ -85,16 +85,28 @@ const matchTracks = async (access_token, tracksSpotify, tracksLastFm) => {
       }
     }
   };
-
-  // cross-compare the ids of the spotify tracks with the found spotify ids of the filtered lastfm tracks
-  // const onlyOnSpotify = tracksSpotify.filter(filterExclusiveId(tracksLastFm));
-  // cross-compare the found spotify ids of the filtered lastfm tracks with with the ids of the spotify tracks
-  // const onlyOnLastFm = tracksLastFm.filter(filterExclusiveId(tracksSpotify));
-
+  // add lastfm action
+  const exclusiveLastFmFilter = filterExclusiveId(tracksSpotify);
+  let finalLastFm = matchedLastFm.map(track => {
+    track.action = ContentAction.NONE;
+    if (exclusiveLastFmFilter(track)) {
+      track.action = ContentAction.IMPORT;
+    }
+    return track;
+  })
+  // add spotify action
+  const exclusiveSpotifyFilter = filterExclusiveId(matchedLastFm);
+  let finalSpotify = tracksSpotify.map(track => {
+    track.action = ContentAction.NONE;
+    if (exclusiveSpotifyFilter(track)) {
+      track.action = ContentAction.CLEAR;
+    }
+    return track;
+  })
   // return results
   return {
-    spotify: tracksSpotify,
-    lastfm: matchedLastFm
+    spotify: finalSpotify,
+    lastfm: finalLastFm
   };
 }
 
@@ -107,22 +119,7 @@ function TracksList(props) {
       <br></br>
       <br></br>
       {tracks.map((track, i) => {
-        let style = {};
-        let classname = "";
-        switch(track.state) {
-          case ContentState.FETCHED:
-            classname = "text-muted";
-            break;
-          case ContentState.SOUGHT:
-            style = {textDecorationLine: 'line-through', textDecorationStyle: 'solid', textDecorationColor: 'gray'};
-            break;
-          case ContentState.FOUND:
-            style = {textDecorationLine: 'underline', textDecorationStyle: 'wavy', textDecorationColor: 'orange'};
-            break;
-          default:
-            style = {};
-            classname = "";
-        }
+        const [style, classname] = setContentStyle(track);        
         return (
           <p key={i} className={classname} style={style}>
             {i + 1}. {track.name}

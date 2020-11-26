@@ -11,6 +11,18 @@ import * as constants from '../constants'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
+const NOT_FOUND_STYLE = {
+  textDecorationLine: 'line-through', 
+  textDecorationStyle: 'solid', 
+  textDecorationColor: 'gray'
+};
+
+const NOT_CONFIRMED_STYLE = {
+  textDecorationLine: 'underline', 
+  textDecorationStyle: 'wavy', 
+  textDecorationColor: 'orange'
+};
+
 export const ContentState = {
   FETCHED: 1,
   FILTERED: 2,
@@ -18,6 +30,46 @@ export const ContentState = {
   FOUND: 4,
   CONFIRMED: 5,
   MATCHED: 6
+}
+
+export const ContentAction = {
+  CLEAR: -1,
+  NONE: 0,
+  IMPORT: 1
+}
+
+export function setContentStyle(content) {
+let style = {};
+let classname = "";
+if (content.state) {
+  switch(content.state) {
+    case ContentState.FETCHED:
+      classname = "text-muted";
+      break;
+    case ContentState.SOUGHT:
+      style = NOT_FOUND_STYLE;
+      break;
+    case ContentState.FOUND:
+      style = NOT_CONFIRMED_STYLE;
+      break;
+    default:
+      style = {};
+      classname = "";
+  }
+}
+if (content.action) {
+  switch(content.action) {
+    case ContentAction.IMPORT:
+      classname = "text-success"
+      break;
+    case ContentAction.CLEAR:
+      classname = "text-danger"
+      break;
+    default:
+      classname = ""
+  }
+}
+return [style, classname];
 }
 
 function ContentPage(props) {
