@@ -27,6 +27,16 @@
   to { transform: rotate(360deg); }
 }
 
-h2 {
+h1 {
   box-shadow: inset 0 -0.5em 0 rgb(230, 230, 230);
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td, th {
+  border: none;
+  padding: 0.5rem;
+  text-align: center;
 }

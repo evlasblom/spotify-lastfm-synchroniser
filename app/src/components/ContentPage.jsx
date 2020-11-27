@@ -78,27 +78,33 @@ return [style, classname];
 function ContentList(props) {
 
   return (
-    <div style={{ width: '25rem'}} className="mr-2 ml-2">
-      <b>{props.title}</b>
-      <br></br>
-      <br></br>
-      {props.data.map((content, i) => {
-        const [style, classname] = setContentStyle(content);        
-        return (
-          <p key={i} className={classname} style={style}>
-            {content.rank ? (content.rank + ". ") : ""}
-            {content.name}
-            {content.playcount ? (" - " + content.playcount) : ""}
-            {content.artist ? (
-              <>
-                <br></br>
-                <i>{content.artist[0].name}</i>
-              </>
-            ) : ""}
-          </p>
-        )
-      })}
-    </div>
+    <table style={{ width: '25rem'}} className="mr-2 ml-2">
+      <thead>
+        <tr>
+          <th>{props.title}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {props.data.map((content, i) => {
+          const [style, classname] = setContentStyle(content);        
+          return (
+            <tr key={i} className={classname} style={style}>
+              <td>
+                {content.rank ? (content.rank + ". ") : ""}
+                {content.name}
+                {content.playcount ? (" - " + content.playcount) : ""}
+                {content.artist ? (
+                  <>
+                    <br></br>
+                    <i>{content.artist[0].name}</i>
+                  </>
+                ) : ""}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
   )
 }
 
