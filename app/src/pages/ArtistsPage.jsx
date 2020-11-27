@@ -18,8 +18,7 @@ const getSpotifyArtists = async (access_token, opts) => {
     items = [...items, ...response.data.artists.items];
   }
   return spotifyApi.parseArtists(items).map(artist => {
-    artist.state = ContentState.FILTERED;
-    return artist;
+    return {...artist, state: ContentState.FILTERED};
   });
 }
 
@@ -33,15 +32,12 @@ const getLastFmArtists = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseArtists(items).map(artist => {
-    artist.state = ContentState.FETCHED;
-    if (playcountFilter(artist)) {
-      artist.state = ContentState.FILTERED;
-    }
-    return artist;
+    return {...artist, state: playcountFilter(artist) ? ContentState.FILTERED : ContentState.FETCHED};
   });
 }
 
 const clearSpotifyArtists = async (access_token, artists) => {
+  // @TODO: only those that have action === clear
   let ids = artists.map(artist => artist.id);
   while (ids.length > 0) {
     let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
@@ -51,6 +47,8 @@ const clearSpotifyArtists = async (access_token, artists) => {
 }
 
 const importSpotifyArtists = async (access_token, artists) => {
+  // @TODO: rename to importLastFmArtists everywhere?
+  // @TODO: only those that have action === import
   let ids = artists.map(artist => artist.id);
   while (ids.length > 0) {
     let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};

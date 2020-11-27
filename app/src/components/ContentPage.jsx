@@ -24,6 +24,7 @@ const NOT_CONFIRMED_STYLE = {
 };
 
 export const ContentState = {
+  NONE: 0,
   FETCHED: 1,
   FILTERED: 2,
   SOUGHT: 3,

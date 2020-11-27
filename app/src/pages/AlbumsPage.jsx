@@ -20,8 +20,7 @@ const getSpotifyAlbums = async (access_token, opts) => {
     items = [...items, ...response.data.items];
   }
   return spotifyApi.parseAlbums(items).map(album => {
-    album.state = ContentState.FILTERED;
-    return album;
+    return {...album, state: ContentState.FILTERED};
   });
 }
 
@@ -35,11 +34,7 @@ const getLastFmAlbums = async (access_key, opts) => {
   }
   const playcountFilter = filterOnPlaycount(opts.playcount)
   return lastfmApi.parseAlbums(items).map(album => {
-    album.state = ContentState.FETCHED;
-    if (playcountFilter(album)) {
-      album.state = ContentState.FILTERED;
-    }
-    return album;
+    return {...album, state: playcountFilter(album) ? ContentState.FILTERED : ContentState.FETCHED};
   });
 }
 
