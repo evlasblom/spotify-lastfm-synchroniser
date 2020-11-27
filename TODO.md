@@ -2,17 +2,14 @@
 
 ## Main
 
+Before using it myself:
+
 - Show as diff style in table.
 - Request user input for unsure results.
 - Then test large bulk updates.
-- Add changelog and set app version in app json and in app footer.
 
-## General
+Before releasing it:
 
-- Add comments to javascript functions.
-- Placeholders while loading.
-- Add `WelcomePage` with link to `AuthPage`.
-- Update the main readme with relevant info.
 - Impove structure:
   - Move all styling to css files.
   - Move common pieces from pages to separate components and functions.
@@ -20,11 +17,16 @@
   - Add totals to lists.
   - Add progress bars to buttons.
   - Extra explanation of how everything works.
-  - Add cookies to store last used selection?
+  - Add `WelcomePage` with link to `AuthPage`.
+  - Update the main readme with relevant info.
 - Spend a little time making it look better:
   - Add favicons.
-  - Remove headers on each page.
+  - Placeholders while loading.
   - Turn the lists into paginated tables with some styling
+- Versioning and release.
+  - Add comments to javascript functions.
+  - Add changelog and set app version in app json and in app footer.
+  - Add to github and add link to github in app footer.
 
 ## Authentication
 

@@ -102,7 +102,7 @@ function Step(props) {
 
   return(
     <>
-      <h2>{props.title}</h2>
+      <h3>{props.title}</h3>
       {props.subtitle ? props.subtitle : ""}
       <br></br>
       <br></br>
