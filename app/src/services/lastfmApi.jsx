@@ -187,6 +187,7 @@ export function parseArtists(artists) {
     .map(artist => {
       return {
         type: 'artist',
+        rank: artist['@attr'] && Number(artist['@attr'].rank), // optional
         id: artist.mbid,
         name: artist.name,
         playcount: artist.playcount && Number(artist.playcount), // optional
@@ -201,6 +202,7 @@ export function parseAlbums(albums) {
     .map(album => {
       return {
         type: 'album',
+        rank: album['@attr'] && Number(album['@attr'].rank), // optional
         id: album.mbid,
         name: album.name,
         artist: parseArtists([album.artist]),
@@ -216,6 +218,7 @@ export function parseTracks(tracks) {
     .map(track => {
       return {
         type: 'track',
+        rank: track['@attr'] && Number(track['@attr'].rank), // optional
         id: track.mbid,
         name: track.name,
         artist: parseArtists([track.artist]),
