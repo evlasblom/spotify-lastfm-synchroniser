@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentState, ContentAction, setContentStyle } from '../components/ContentPage'
+import ContentPage, { ContentState, ContentAction } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareArtists, normalizeArtistName } from '../filters'
 
@@ -111,27 +111,6 @@ const compareAllArtists = async (access_token, artistsSpotify, artistsLastFm) =>
   };
 }
 
-export function ArtistsList(props) {
-  const artists = props.data;
-
-  return (
-    <div style={{ width: '25rem'}} className="mr-2 ml-2">
-      <b>{props.title}</b>
-      <br></br>
-      <br></br>
-      {artists.map((artist, i) => {
-        const [style, classname] = setContentStyle(artist);        
-        return (
-          <p key={i} className={classname} style={style}>
-            {i + 1}. {artist.name} 
-            {artist.playcount ? (" - " + artist.playcount) : ""}
-          </p>
-        )
-      })}
-    </div>
-  )
-}
-
 function ArtistsPage(props) {
 
   return (
@@ -142,8 +121,7 @@ function ArtistsPage(props) {
       clearSpotify={clearSpotifyArtists}
       importSpotify={importSpotifyArtists}
       getSpotify={getSpotifyArtists}
-      getLastFm={getLastFmArtists}
-      list={<ArtistsList />} />
+      getLastFm={getLastFmArtists} />
   )
 }
 

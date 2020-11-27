@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentState, ContentAction, setContentStyle } from '../components/ContentPage'
+import ContentPage, { ContentState, ContentAction } from '../components/ContentPage'
 
 import { filterOnPlaycount, filterExclusiveId, compareTracks, normalizeArtistName, normalizeTrackName } from '../filters'
 
@@ -113,28 +113,6 @@ const compareAllTracks = async (access_token, tracksSpotify, tracksLastFm) => {
   };
 }
 
-function TracksList(props) {
-  const tracks = props.data;
-
-  return (
-    <div style={{ width: '25rem'}} className="mr-2 ml-2">
-      <b>{props.title}</b>
-      <br></br>
-      <br></br>
-      {tracks.map((track, i) => {
-        const [style, classname] = setContentStyle(track);        
-        return (
-          <p key={i} className={classname} style={style}>
-            {i + 1}. {track.name}
-            {track.playcount ? (" - " + track.playcount) : ""}
-            <br></br>
-            <i>{track.artist[0].name}</i>
-          </p>)
-      })}
-    </div>
-  )
-}
-
 function TracksPage(props) {
 
   return (
@@ -145,8 +123,7 @@ function TracksPage(props) {
       clearSpotify={clearSpotifyTracks}
       importSpotify={importSpotifyTracks}
       getSpotify={getSpotifyTracks}
-      getLastFm={getLastFmTracks}
-      list={<TracksList />} />
+      getLastFm={getLastFmTracks} />
   )
 }
 

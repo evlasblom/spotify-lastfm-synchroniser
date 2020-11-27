@@ -11,6 +11,10 @@ import * as constants from '../constants'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
+const NOT_FILTERED_STYLE = {
+  color: 'gray'
+}
+
 const NOT_FOUND_STYLE = {
   textDecorationLine: 'line-through', 
   textDecorationStyle: 'solid', 
@@ -38,16 +42,13 @@ export const ContentAction = {
   IMPORT: 1
 }
 
-export function setContentStyle(content) {
+function setContentStyle(content) {
 let style = {};
 let classname = "";
 if (content.state) {
   switch(content.state) {
     case ContentState.FETCHED:
-      classname = "text-muted";
-      break;
-    case ContentState.FILTERED:
-      classname = "text-dark";
+      style = NOT_FILTERED_STYLE;
       break;
     case ContentState.SOUGHT:
       style = NOT_FOUND_STYLE;
@@ -55,12 +56,8 @@ if (content.state) {
     case ContentState.FOUND:
       style = NOT_CONFIRMED_STYLE;
       break;
-    case ContentState.CONFIRMED:
-      classname = "text-dark";
-      break;
     default:
       style = {};
-      classname = "";
   }
 }
 if (content.action) {
@@ -76,6 +73,33 @@ if (content.action) {
   }
 }
 return [style, classname];
+}
+
+function ContentList(props) {
+
+  return (
+    <div style={{ width: '25rem'}} className="mr-2 ml-2">
+      <b>{props.title}</b>
+      <br></br>
+      <br></br>
+      {props.data.map((content, i) => {
+        const [style, classname] = setContentStyle(content);        
+        return (
+          <p key={i} className={classname} style={style}>
+            {content.rank ? (content.rank + ". ") : ""}
+            {content.name}
+            {content.playcount ? (" - " + content.playcount) : ""}
+            {content.artist ? (
+              <>
+                <br></br>
+                <i>{content.artist[0].name}</i>
+              </>
+            ) : ""}
+          </p>
+        )
+      })}
+    </div>
+  )
 }
 
 function ContentPage(props) {
@@ -157,33 +181,32 @@ function ContentPage(props) {
       <br></br>
 
       <div style={{height: "2rem"}} className="p-1">
-        {getSpotify.loading || getLastFm.loading ? "Loading data... " : ""}
-        {compareAsync.loading ? "Comparing data..." : ""}
-        {clearSpotifyAsync.loading ? "Clearing data from Spotify... " : ""}
-        {importSpotifyAsync.loading ? "Importing data into Spotify... " : ""}
+        {getSpotify.loading ? <p className="text-dark">Loading Spotify data... </p> : ""}
+        {getLastFm.loading ? <p className="text-dark">Loading Last.fm data... </p> : ""}
+        {compareAsync.loading ? <p className="text-dark">Comparing data... </p> : ""}
+        {clearSpotifyAsync.loading ? <p className="text-dark">Clearing data from Spotify... </p> : ""}
+        {importSpotifyAsync.loading ? <p className="text-dark">Importing data into Spotify... </p> : ""}
 
-        {getSpotify.error ? <span className="text-danger">{getSpotify.error.message}</span> : ""}
-        {getLastFm.error ? <span className="text-danger">{getLastFm.error.message}</span> : ""}
-        {compareAsync.error ? <span className="text-danger">{compareAsync.error.message}</span> : ""}
-        {clearSpotifyAsync.error ? <span className="text-danger">{clearSpotifyAsync.error.message}</span> : ""}
-        {importSpotifyAsync.error ? <span className="text-danger">{importSpotifyAsync.error.message}</span> : ""}
+        {getSpotify.error ? <p className="text-danger">{getSpotify.error.message}</p> : ""}
+        {getLastFm.error ? <p className="text-danger">{getLastFm.error.message}</p> : ""}
+        {compareAsync.error ? <p className="text-danger">{compareAsync.error.message}</p> : ""}
+        {clearSpotifyAsync.error ? <p className="text-danger">{clearSpotifyAsync.error.message}</p> : ""}
+        {importSpotifyAsync.error ? <p className="text-danger">{importSpotifyAsync.error.message}</p> : ""}
       </div>
       <br></br>
 
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
         {!getSpotify.loading && !getSpotify.error && !compareAsync.loading ?
-        React.cloneElement(props.list, { 
-          title: "Spotify",
-          data: updatedSpotify ? updatedSpotify : getSpotify.result
-        })
+        <ContentList  
+          title="Spotify"
+          data={updatedSpotify ? updatedSpotify : getSpotify.result} />
         : null }
 
         {!getLastFm.loading && !getLastFm.error && !compareAsync.loading ?
-        React.cloneElement(props.list, { 
-          title: "Last.fm",
-          data: updatedLastFm ? updatedLastFm : getLastFm.result
-        })
+        <ContentList  
+          title="Last.fm"
+          data={updatedLastFm ? updatedLastFm : getLastFm.result} />
         : null }
 
       </div>
