@@ -2,9 +2,10 @@
 
 ## Main
 
-- Report unfound results to user.
+- Show as diff style in table.
 - Request user input for unsure results.
 - Then test large bulk updates.
+- Add changelog and set app version in app json and in app footer.
 
 ## General
 
@@ -12,6 +13,9 @@
 - Placeholders while loading.
 - Add `WelcomePage` with link to `AuthPage`.
 - Update the main readme with relevant info.
+- Impove structure:
+  - Move all styling to css files.
+  - Move common pieces from pages to separate components and functions.
 - Improve usability:
   - Add totals to lists.
   - Add progress bars to buttons.

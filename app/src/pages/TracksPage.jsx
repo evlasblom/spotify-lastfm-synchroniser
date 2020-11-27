@@ -20,7 +20,7 @@ const getSpotifyTracks = async (access_token, opts) => {
     items = [...items, ...response.data.items];
   }
   return spotifyApi.parseTracks(items).map(track => {
-    return {...track, state: ContentState.FILTERED};
+    return {...track, state: ContentState.CONFIRMED};
   });
 }
 
@@ -39,18 +39,22 @@ const getLastFmTracks = async (access_key, opts) => {
 }
 
 const clearSpotifyTracks = async (access_token, tracks) => {
-  let ids = tracks.map(track => track.id);
+  let ids = tracks
+    .filter(album => album.action === ContentAction.CLEAR)
+    .map(album => album.id);
   while (ids.length > 0) {
-    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.removeSavedTracks(access_token, options);
   }
   return {};
 }
 
 const importSpotifyTracks = async (access_token, tracks) => {
-  let ids = tracks.map(track => track.id);
+  let ids = tracks
+    .filter(track => track.action === ContentAction.IMPORT)
+    .map(track => track.id);
   while (ids.length > 0) {
-    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.setSavedTracks(access_token, options);
   }
   return {};
@@ -64,10 +68,9 @@ const searchSpotifyTrack = async (access_token, track) => {
 }
 
 // @TODO: move to ContentPage?
-const matchTracks = async (access_token, tracksSpotify, tracksLastFm) => {
+const compareAllTracks = async (access_token, tracksSpotify, tracksLastFm) => {
   // find and confirm lastfm on spotify
-  let matchedLastFm = tracksLastFm;
-  for (const track of matchedLastFm) {
+  for (const track of tracksLastFm) {
     if (track.state && track.state < ContentState.FILTERED) continue;
     track.state = ContentState.SOUGHT;
     let results = await searchSpotifyTrack(access_token, track);
@@ -80,24 +83,29 @@ const matchTracks = async (access_token, tracksSpotify, tracksLastFm) => {
       }
     }
   };
-  // add lastfm action
-  const exclusiveLastFmFilter = filterExclusiveId(tracksSpotify);
-  let finalLastFm = matchedLastFm.map(track => {
-    track.action = ContentAction.NONE;
-    if (exclusiveLastFmFilter(track)) {
-      track.action = ContentAction.IMPORT;
-    }
-    return track;
+
+  // import if confirmed and exlusively on lastfm
+  const confirmedSpotify = tracksSpotify.filter(track => track.state === ContentState.CONFIRMED);
+  const exclusiveLastFmFilter = filterExclusiveId(confirmedSpotify);
+  let finalLastFm = tracksLastFm.map(track => {
+    const action = track.state === ContentState.CONFIRMED && exclusiveLastFmFilter(track);
+    return {
+      ...track, 
+      action: action ? ContentAction.IMPORT : ContentAction.NONE
+    };
   })
-  // add spotify action
-  const exclusiveSpotifyFilter = filterExclusiveId(matchedLastFm);
+
+  // clear if confirmed and exclusively on spotify
+  const confirmedLastFm = tracksLastFm.filter(track => track.state === ContentState.CONFIRMED);
+  const exclusiveSpotifyFilter = filterExclusiveId(confirmedLastFm);
   let finalSpotify = tracksSpotify.map(track => {
-    track.action = ContentAction.NONE;
-    if (exclusiveSpotifyFilter(track)) {
-      track.action = ContentAction.CLEAR;
-    }
-    return track;
+    const action = track.state === ContentState.CONFIRMED && exclusiveSpotifyFilter(track);
+    return {
+      ...track, 
+      action: action ? ContentAction.CLEAR : ContentAction.NONE
+    };
   })
+
   // return results
   return {
     spotify: finalSpotify,
@@ -133,7 +141,7 @@ function TracksPage(props) {
     <ContentPage 
       title="Tracks"
       selection={initial_selection} 
-      match={matchTracks}
+      compare={compareAllTracks}
       clearSpotify={clearSpotifyTracks}
       importSpotify={importSpotifyTracks}
       getSpotify={getSpotifyTracks}

@@ -25,12 +25,11 @@ const NOT_CONFIRMED_STYLE = {
 
 export const ContentState = {
   NONE: 0,
-  FETCHED: 1,
-  FILTERED: 2,
-  SOUGHT: 3,
-  FOUND: 4,
-  CONFIRMED: 5,
-  MATCHED: 6
+  FETCHED: 1,   // content fetched from server
+  FILTERED: 2,  // content passed initial filter
+  SOUGHT: 3,    // search on spotify executed
+  FOUND: 4,     // search on spotify succeeded
+  CONFIRMED: 5, // search on spotify confirmed as correct
 }
 
 export const ContentAction = {
@@ -47,11 +46,17 @@ if (content.state) {
     case ContentState.FETCHED:
       classname = "text-muted";
       break;
+    case ContentState.FILTERED:
+      classname = "text-dark";
+      break;
     case ContentState.SOUGHT:
       style = NOT_FOUND_STYLE;
       break;
     case ContentState.FOUND:
       style = NOT_CONFIRMED_STYLE;
+      break;
+    case ContentState.CONFIRMED:
+      classname = "text-dark";
       break;
     default:
       style = {};
@@ -79,8 +84,8 @@ function ContentPage(props) {
 
   const [selection, setSelection] = useState(props.selection);
   
-  const matchAsync = useAsyncCallback(
-    () => props.match(access_token, getSpotify.result, getLastFm.result)
+  const compareAsync = useAsyncCallback(
+    () => props.compare(access_token, getSpotify.result, getLastFm.result)
   );
   const clearSpotifyAsync = useAsyncCallback(
     () => props.clearSpotify(access_token, updatedSpotify)
@@ -105,19 +110,19 @@ function ContentPage(props) {
   };
 
   useEffect(() => {
-    if (matchAsync.result && !matchAsync.loading && !matchAsync.error) {
-      setUpdatedSpotify(matchAsync.result.spotify);
-      setUpdatedLastFm(matchAsync.result.lastfm);
+    if (compareAsync.result && !compareAsync.loading && !compareAsync.error) {
+      setUpdatedSpotify(compareAsync.result.spotify);
+      setUpdatedLastFm(compareAsync.result.lastfm);
     }
-  }, [matchAsync.result, matchAsync.loading, matchAsync.error])
+  }, [compareAsync.result, compareAsync.loading, compareAsync.error])
 
   useEffect(() => {
     setUpdatedSpotify(null);
-  }, [clearSpotifyAsync.result, selection.period, selection.number])
+  }, [clearSpotifyAsync.result, selection.period, selection.number, selection.playcount])
 
   useEffect(() => {
     setUpdatedLastFm(null);
-  }, [importSpotifyAsync.result, selection.period, selection.number])
+  }, [importSpotifyAsync.result, selection.period, selection.number, selection.playcount])
 
   return (
     <>
@@ -128,11 +133,11 @@ function ContentPage(props) {
       <br></br>
 
       <ActionForm 
-        text={matchAsync.loading ? "..." : "Compare"}
+        text={compareAsync.loading ? "..." : "Compare"}
         modal="This will cross-compare your Spotify and Last.fm data. Proceed?"
         variant="primary" 
         disabled={!getSpotify.result || !getLastFm.result || getSpotify.error || getLastFm.error}
-        onSubmit={matchAsync.execute} />
+        onSubmit={compareAsync.execute} />
       <br></br>
 
       <ActionForm 
@@ -153,13 +158,13 @@ function ContentPage(props) {
 
       <div style={{height: "2rem"}} className="p-1">
         {getSpotify.loading || getLastFm.loading ? "Loading data... " : ""}
-        {matchAsync.loading ? "Comparing data..." : ""}
+        {compareAsync.loading ? "Comparing data..." : ""}
         {clearSpotifyAsync.loading ? "Clearing data from Spotify... " : ""}
         {importSpotifyAsync.loading ? "Importing data into Spotify... " : ""}
 
         {getSpotify.error ? <span className="text-danger">{getSpotify.error.message}</span> : ""}
         {getLastFm.error ? <span className="text-danger">{getLastFm.error.message}</span> : ""}
-        {matchAsync.error ? <span className="text-danger">{matchAsync.error.message}</span> : ""}
+        {compareAsync.error ? <span className="text-danger">{compareAsync.error.message}</span> : ""}
         {clearSpotifyAsync.error ? <span className="text-danger">{clearSpotifyAsync.error.message}</span> : ""}
         {importSpotifyAsync.error ? <span className="text-danger">{importSpotifyAsync.error.message}</span> : ""}
       </div>
@@ -167,14 +172,14 @@ function ContentPage(props) {
 
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
-        {!getSpotify.loading && !getSpotify.error ?
+        {!getSpotify.loading && !getSpotify.error && !compareAsync.loading ?
         React.cloneElement(props.list, { 
           title: "Spotify",
           data: updatedSpotify ? updatedSpotify : getSpotify.result
         })
         : null }
 
-        {!getLastFm.loading && !getLastFm.error ?
+        {!getLastFm.loading && !getLastFm.error && !compareAsync.loading ?
         React.cloneElement(props.list, { 
           title: "Last.fm",
           data: updatedLastFm ? updatedLastFm : getLastFm.result

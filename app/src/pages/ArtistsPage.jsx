@@ -18,7 +18,7 @@ const getSpotifyArtists = async (access_token, opts) => {
     items = [...items, ...response.data.artists.items];
   }
   return spotifyApi.parseArtists(items).map(artist => {
-    return {...artist, state: ContentState.FILTERED};
+    return {...artist, state: ContentState.CONFIRMED};
   });
 }
 
@@ -37,21 +37,22 @@ const getLastFmArtists = async (access_key, opts) => {
 }
 
 const clearSpotifyArtists = async (access_token, artists) => {
-  // @TODO: only those that have action === clear
-  let ids = artists.map(artist => artist.id);
+  const ids = artists
+    .filter(artist => artist.action === ContentAction.CLEAR)
+    .map(artist => artist.id);
   while (ids.length > 0) {
-    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.removeFollowingArtists(access_token, options);
   }
   return {};
 }
 
 const importSpotifyArtists = async (access_token, artists) => {
-  // @TODO: rename to importLastFmArtists everywhere?
-  // @TODO: only those that have action === import
-  let ids = artists.map(artist => artist.id);
+  const ids = artists
+    .filter(artist => artist.action === ContentAction.IMPORT)
+    .map(artist => artist.id);
   while (ids.length > 0) {
-    let options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
+    const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.setFollowingArtists(access_token, options);
   }
   return {};
@@ -65,10 +66,9 @@ const searchSpotifyArtist = async (access_token, artist) => {
 }
 
 // @TODO: move to ContentPage?
-const matchArtists = async (access_token, artistsSpotify, artistsLastFm) => {
+const compareAllArtists = async (access_token, artistsSpotify, artistsLastFm) => {
   // find and confirm lastfm on spotify
-  let matchedLastFm = artistsLastFm;
-  for (const artist of matchedLastFm) {
+  for (const artist of artistsLastFm) {
     if (artist.state && artist.state < ContentState.FILTERED) continue;
     artist.state = ContentState.SOUGHT;
     let results = await searchSpotifyArtist(access_token, artist);
@@ -80,25 +80,30 @@ const matchArtists = async (access_token, artistsSpotify, artistsLastFm) => {
         break;
       }
     }
-  };
-  // add lastfm action
-  const exclusiveLastFmFilter = filterExclusiveId(artistsSpotify);
-  let finalLastFm = matchedLastFm.map(artist => {
-    artist.action = ContentAction.NONE;
-    if (exclusiveLastFmFilter(artist)) {
-      artist.action = ContentAction.IMPORT;
-    }
-    return artist;
+  }
+
+  // import if confirmed and exlusively on lastfm
+  const confirmedSpotify = artistsSpotify.filter(artist => artist.state === ContentState.CONFIRMED);
+  const exclusiveLastFmFilter = filterExclusiveId(confirmedSpotify);
+  let finalLastFm = artistsLastFm.map(artist => {
+    const action = artist.state === ContentState.CONFIRMED && exclusiveLastFmFilter(artist);
+    return {
+      ...artist, 
+      action: action ? ContentAction.IMPORT : ContentAction.NONE
+    };
   })
-  // add spotify action
-  const exclusiveSpotifyFilter = filterExclusiveId(matchedLastFm);
+
+  // clear if confirmed and exclusively on spotify
+  const confirmedLastFm = artistsLastFm.filter(artist => artist.state === ContentState.CONFIRMED);
+  const exclusiveSpotifyFilter = filterExclusiveId(confirmedLastFm);
   let finalSpotify = artistsSpotify.map(artist => {
-    artist.action = ContentAction.NONE;
-    if (exclusiveSpotifyFilter(artist)) {
-      artist.action = ContentAction.CLEAR;
-    }
-    return artist;
+    const action = artist.state === ContentState.CONFIRMED && exclusiveSpotifyFilter(artist);
+    return {
+      ...artist, 
+      action: action ? ContentAction.CLEAR : ContentAction.NONE
+    };
   })
+
   // return results
   return {
     spotify: finalSpotify,
@@ -133,7 +138,7 @@ function ArtistsPage(props) {
     <ContentPage 
       title="Artists"
       selection={initial_selection} 
-      match={matchArtists}
+      compare={compareAllArtists}
       clearSpotify={clearSpotifyArtists}
       importSpotify={importSpotifyArtists}
       getSpotify={getSpotifyArtists}
