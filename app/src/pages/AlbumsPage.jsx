@@ -5,7 +5,7 @@ import * as lastfmApi from '../services/lastfmApi'
 
 import ContentPage, { ContentState, ContentAction } from '../components/ContentPage'
 
-import { filterOnPlaycount, filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
+import { filterExclusiveId, compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
 const initial_selection = {period: 'overall', number: 500, playcount: 75 };
 
@@ -19,9 +19,7 @@ const getSpotifyAlbums = async (access_token, opts) => {
     offset = offset + opts.limit;
     items = [...items, ...response.data.items];
   }
-  return spotifyApi.parseAlbums(items).map(album => {
-    return {...album, state: ContentState.CONFIRMED};
-  });
+  return spotifyApi.parseAlbums(items);
 }
 
 const getLastFmAlbums = async (access_key, opts) => {
@@ -32,10 +30,7 @@ const getLastFmAlbums = async (access_key, opts) => {
     let response = await lastfmApi.getTopAlbums(access_key, {...opts, page: ++page});
     items = [...items, ...response.data.topalbums.album.slice(0, index)];
   }
-  const playcountFilter = filterOnPlaycount(opts.playcount)
-  return lastfmApi.parseAlbums(items).map(album => {
-    return {...album, state: playcountFilter(album) ? ContentState.FILTERED : ContentState.FETCHED};
-  });
+  return lastfmApi.parseAlbums(items);
 }
 
 const clearSpotifyAlbums = async (access_token, albums) => {

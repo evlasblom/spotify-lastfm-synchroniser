@@ -8,6 +8,7 @@ import * as lastfmApi from '../services/lastfmApi'
 import ActionForm from '../components/ActionForm'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
+import { filterOnPlaycount } from '../filters'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
@@ -112,23 +113,31 @@ function ContentPage(props) {
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);
 
+  // select button
   const [selection, setSelection] = useState(props.selection);
-  
+
+  // compare button
   const compareAsync = useAsyncCallback(
     () => props.compare(access_token, getSpotify.result, getLastFm.result)
   );
+
+  // clear button
   const clearSpotifyAsync = useAsyncCallback(
     () => props.clearSpotify(access_token, updatedSpotify)
   );
+
+  // import button
   const importSpotifyAsync = useAsyncCallback(
     () => props.importSpotify(access_token, updatedLastFm)
   );
 
+  // fetch raw data
   const getSpotify = useAsync(
     () => props.getSpotify(access_token, optsSpotify()), [clearSpotifyAsync.result, importSpotifyAsync.result]);
   const getLastFm = useAsync(
-    () => props.getLastFm(access_key, optsLastFm()), [selection.period, selection.number, selection.playcount]);
+    () => props.getLastFm(access_key, optsLastFm()), [selection.period, selection.number]);
 
+  // update raw data with a state
   const [updatedSpotify, setUpdatedSpotify] = useState(null);
   const [updatedLastFm, setUpdatedLastFm] = useState(null);
 
@@ -139,6 +148,21 @@ function ContentPage(props) {
     return {user: username, limit: lastfmApi.LIMIT_PER_PAGE, ...selection}
   };
 
+  // update state after fetching
+  useEffect(() => {
+    if (!getSpotify.result || getSpotify.loading || getSpotify.error) return;
+    setUpdatedSpotify(getSpotify.result.map(artist => {
+      return {...artist, state: ContentState.FILTERED};
+    }));
+  }, [getSpotify.result, getSpotify.loading, getSpotify.error])
+  useEffect(() => {
+    if (!getLastFm.result || getLastFm.loading || getLastFm.error) return;
+    const playcountFilter = filterOnPlaycount(selection.playcount)
+    setUpdatedLastFm(getLastFm.result.map(artist => {
+      return {...artist, state: playcountFilter(artist) ? ContentState.FILTERED : ContentState.FETCHED};
+    }));
+  }, [getLastFm.result, getLastFm.loading, getLastFm.error, selection.playcount])
+  
   useEffect(() => {
     if (compareAsync.result && !compareAsync.loading && !compareAsync.error) {
       setUpdatedSpotify(compareAsync.result.spotify);
@@ -148,11 +172,11 @@ function ContentPage(props) {
 
   useEffect(() => {
     setUpdatedSpotify(null);
-  }, [clearSpotifyAsync.result, selection.period, selection.number, selection.playcount])
+  }, [clearSpotifyAsync.result])
 
   useEffect(() => {
     setUpdatedLastFm(null);
-  }, [importSpotifyAsync.result, selection.period, selection.number, selection.playcount])
+  }, [importSpotifyAsync.result])
 
   return (
     <>
@@ -203,16 +227,16 @@ function ContentPage(props) {
 
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
-        {!getSpotify.loading && !getSpotify.error && !compareAsync.loading ?
+        {!getSpotify.loading && !getSpotify.error && updatedSpotify ?
         <ContentList  
           title="Spotify"
-          data={updatedSpotify ? updatedSpotify : getSpotify.result} />
+          data={updatedSpotify} />
         : null }
 
-        {!getLastFm.loading && !getLastFm.error && !compareAsync.loading ?
+        {!getLastFm.loading && !getLastFm.error && updatedLastFm ?
         <ContentList  
           title="Last.fm"
-          data={updatedLastFm ? updatedLastFm : getLastFm.result} />
+          data={updatedLastFm} />
         : null }
 
       </div>
