@@ -3,9 +3,9 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentState, ContentAction } from '../components/ContentPage'
+import ContentPage, { ContentAction } from '../components/ContentPage'
 
-import { filterExclusiveId, compareTracks, normalizeArtistName, normalizeTrackName } from '../filters'
+import { compareTracks, normalizeArtistName, normalizeTrackName } from '../filters'
 
 const initial_selection = {period: 'overall', number: 1000, playcount: 30 };
 
@@ -55,57 +55,26 @@ const importSpotifyTracks = async (access_token, tracks) => {
   return {};
 }
 
-const searchSpotifyTrack = async (access_token, track) => {
-  let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
-  let response = await spotifyApi.searchTrack(access_token, { q: query});
-  if (response.status !== 200) console.log(response);
-  return spotifyApi.parseTracks(response.data.tracks.items);
+const searchSpotifyTracks = async (access_token, tracks) => {
+  let items = [];
+  for (const track of tracks) {
+    let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
+    let response = await spotifyApi.searchTrack(access_token, { q: query });
+    if (response.status !== 200) console.log(response);
+    items.push(spotifyApi.parseTracks(response.data.tracks.items));
+  }
+  return items;
 }
 
-// @TODO: move to ContentPage?
-const compareAllTracks = async (access_token, tracksSpotify, tracksLastFm) => {
-  // find and confirm lastfm on spotify
-  for (const track of tracksLastFm) {
-    if (track.state && track.state < ContentState.FILTERED) continue;
-    track.state = ContentState.SOUGHT;
-    let results = await searchSpotifyTrack(access_token, track);
-    for (const result of results) {
-      track.state = ContentState.FOUND;
-      if (compareTracks(track, result)) {
-        track.id = result.id; // overwrite lastfm id with spotify id
-        track.state = ContentState.CONFIRMED;
-        break;
-      }
-    }
-  };
-
-  // import if confirmed and exlusively on lastfm
-  const confirmedSpotify = tracksSpotify.filter(track => track.state === ContentState.CONFIRMED);
-  const exclusiveLastFmFilter = filterExclusiveId(confirmedSpotify);
-  let finalLastFm = tracksLastFm.map(track => {
-    const action = track.state === ContentState.CONFIRMED && exclusiveLastFmFilter(track);
-    return {
-      ...track, 
-      action: action ? ContentAction.IMPORT : ContentAction.NONE
-    };
-  })
-
-  // clear if confirmed and exclusively on spotify
-  const confirmedLastFm = tracksLastFm.filter(track => track.state === ContentState.CONFIRMED);
-  const exclusiveSpotifyFilter = filterExclusiveId(confirmedLastFm);
-  let finalSpotify = tracksSpotify.map(track => {
-    const action = track.state === ContentState.CONFIRMED && exclusiveSpotifyFilter(track);
-    return {
-      ...track, 
-      action: action ? ContentAction.CLEAR : ContentAction.NONE
-    };
-  })
-
-  // return results
-  return {
-    spotify: finalSpotify,
-    lastfm: finalLastFm
-  };
+const searchLastFmTracks = async (access_token, tracks) => {
+  let items = [];
+  for (const track of tracks) {
+    let query = normalizeTrackName(track.name);
+    let response = await lastfmApi.searchTrack(access_token, { q: query, limit: 10 });
+    if (response.status !== 200) console.log(response);
+    items.push(lastfmApi.parseTracks(response.data.results.trackmatches.track));
+  }
+  return items;
 }
 
 function TracksPage(props) {
@@ -114,7 +83,9 @@ function TracksPage(props) {
     <ContentPage 
       title="Tracks"
       selection={initial_selection} 
-      compare={compareAllTracks}
+      compare={compareTracks}
+      searchSpotify={searchSpotifyTracks}
+      searchLastFm={searchLastFmTracks}
       clearSpotify={clearSpotifyTracks}
       importSpotify={importSpotifyTracks}
       getSpotify={getSpotifyTracks}
