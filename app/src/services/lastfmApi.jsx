@@ -6,7 +6,9 @@ import { ApiException } from '../exceptions'
 
 // ---------- CONSTANTS -------------------------------------------------- 
 
-export const ALLOWED_METHODS = ['user.getinfo', 'user.getTopArtists', 'user.getTopAlbums', 'user.getTopTracks'];
+export const ALLOWED_METHODS = ['user.getinfo', 
+                                'user.getTopArtists', 'user.getTopAlbums', 'user.getTopTracks', 
+                                'artist.search', 'album.search', 'track.search'];
 export const ALLOWED_PERIODS = ['overall', '7day', '1month', '3month', '6month', '12month'];
 
 export const LIMIT_PER_PAGE = 1000;
@@ -157,6 +159,34 @@ export function deleteTopTrack(session_key, access_key, method_signature, opts) 
   }
 
   return _postApi(session_key, access_key, method_signature, params);
+}
+
+export function search(access_token, opts) {
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (!opts.type) throw new ApiException("Missing required option: type");
+  if (!opts.q) throw new ApiException("Missing required option: q");
+  if (opts.limit && opts.limit.length > LIMIT_PER_PAGE) throw new ApiException("Option exceeds max size: limit");
+
+  const params = {
+    method: opts.type + '.search',
+    [opts.type]: opts.q,
+    limit: opts.limit,
+    page: opts.page
+  }
+
+  return _getApi(access_token, params)
+}
+
+export function searchArtist(access_token, opts) {
+  return search(access_token, {...opts, type: 'artist'})
+}
+
+export function searchAlbum(access_token, opts) {
+  return search(access_token, {...opts, type: 'album'})
+}
+
+export function searchTrack(access_token, opts) {
+  return search(access_token, {...opts, type: 'track'})
 }
 
 // ---------- PARSERS -------------------------------------------------- 
