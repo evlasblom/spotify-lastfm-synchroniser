@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentAction } from '../components/ContentPage'
+import ContentPage from '../components/ContentPage'
 
 import { compareArtists, normalizeArtistName } from '../filters'
 
@@ -32,9 +32,7 @@ const getLastFmArtists = async (access_key, opts) => {
 }
 
 const clearSpotifyArtists = async (access_token, artists) => {
-  const ids = artists
-    .filter(artist => artist.action === ContentAction.CLEAR)
-    .map(artist => artist.id);
+  const ids = artists.map(artist => artist.id);
   while (ids.length > 0) {
     const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.removeFollowingArtists(access_token, options);
@@ -43,9 +41,7 @@ const clearSpotifyArtists = async (access_token, artists) => {
 }
 
 const importSpotifyArtists = async (access_token, artists) => {
-  const ids = artists
-    .filter(artist => artist.action === ContentAction.IMPORT)
-    .map(artist => artist.id);
+  const ids = artists.map(artist => artist.id);
   while (ids.length > 0) {
     const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.setFollowingArtists(access_token, options);

@@ -3,7 +3,7 @@ import React from 'react';
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ContentPage, { ContentAction } from '../components/ContentPage'
+import ContentPage from '../components/ContentPage'
 
 import { compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
@@ -34,9 +34,7 @@ const getLastFmAlbums = async (access_key, opts) => {
 }
 
 const clearSpotifyAlbums = async (access_token, albums) => {
-  let ids = albums
-    .filter(album => album.action === ContentAction.CLEAR)
-    .map(album => album.id);
+  let ids = albums.map(album => album.id);
   while (ids.length > 0) {
     const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.removeSavedAlbums(access_token, options);
@@ -45,9 +43,7 @@ const clearSpotifyAlbums = async (access_token, albums) => {
 }
 
 const importSpotifyAlbums = async (access_token, albums) => {
-  let ids = albums
-    .filter(album => album.action === ContentAction.IMPORT)
-    .map(album => album.id);
+  let ids = albums.map(album => album.id);
   while (ids.length > 0) {
     const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.setSavedAlbums(access_token, options);

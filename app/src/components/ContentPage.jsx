@@ -30,7 +30,7 @@ const NOT_CONFIRMED_STYLE = {
 
 const CONFIRMED_STYLE = { color: 'purple' };
 
-const MARKED_STYLE = { color: 'pink' };
+const MARKED_STYLE = color => { return { color: color }; };
 
 const RESOLVED_STYLE = { color: 'black' };
 
@@ -45,13 +45,7 @@ export const ContentStatus = {
   RESOLVED: 7   //< content is resolved, nothing more to do
 }
 
-export const ContentAction = {
-  CLEAR: -1,
-  NONE: 0,
-  IMPORT: 1
-}
-
-function setContentStyle(content) {
+function setContentStyle(content, mark = "pink") {
   let style = {};
   if (content.status) {
     switch(content.status) {
@@ -71,7 +65,7 @@ function setContentStyle(content) {
         style = CONFIRMED_STYLE;
         break;
       case ContentStatus.MARKED:
-        style = MARKED_STYLE;
+        style = MARKED_STYLE(mark);
         break;
       case ContentStatus.RESOLVED:
         style = RESOLVED_STYLE;
@@ -93,8 +87,11 @@ function ContentList(props) {
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><i>({props.data.length} items)</i></td>
+        </tr>
         {props.data.map((content, i) => {
-          const style = setContentStyle(content);        
+          const style = setContentStyle(content, props.mark);        
           return (
             <tr key={i} style={style}>
               <td>
@@ -127,55 +124,58 @@ const reducer = (state, action) => {
 
     // set content after fetching, set the content status
     case 'SET_CONTENT':
-      return action.payload
-        .map(content => {
-          return {...content, status: ContentStatus.FETCHED};
-        });
+      return action.payload.map(content => {
+        return {...content, status: ContentStatus.FETCHED};
+      });
 
     // apply filter after fetching, update the content status
     case 'APPLY_FILTER':
-      return state
-        .map(content => {
-          return {...content, status: action.function(content) ? ContentStatus.FILTERED : ContentStatus.FETCHED};
-        });
+      return state.map(content => {
+        return {...content, status: action.function(content) ? ContentStatus.FILTERED : ContentStatus.FETCHED};
+      });
 
     // confirm all content, update the content status
     case 'CONFIRM_CONTENT':
-      return state
-        .map(content => {
-          return {...content, status: ContentStatus.CONFIRMED};
-        })
+      return state.map(content => {
+        return {...content, status: ContentStatus.CONFIRMED};
+      })
     
     // confirm search results, update the content status
     case 'CONFIRM_SEARCH':
-      return state
-        .map((content, index) => {
-          // search results only apply to filtered content (don't filter, we want to keep the rest!)
-          if (content.status !== ContentStatus.FILTERED) return content;
-          content.status = ContentStatus.SOUGHT;
-          content.results = action.payload[index];
-          for (let result of content.results) {
-            content.status = ContentStatus.FOUND;
-            if (action.function(content, result)) {
-              content.status = ContentStatus.CONFIRMED;
-              content.match = index;
-              content.id = result.id; // overwrite id for now
-              break;
-            }
+      return state.map((content, index) => {
+        // search results only apply to filtered content (don't filter, we want to keep the rest!)
+        if (content.status !== ContentStatus.FILTERED) return content;
+        content.status = ContentStatus.SOUGHT;
+        content.results = action.payload[index];
+        for (let result of content.results) {
+          content.status = ContentStatus.FOUND;
+          if (action.function(content, result)) {
+            content.status = ContentStatus.CONFIRMED;
+            content.match = index;
+            content.id = result.id; // overwrite id for now
+            break;
           }
-          return content;
-        });
+        }
+        return content;
+      });
     
     // cross-compare content, update the content status
     case 'CROSS_COMPARE':
       const otherContent = action.payload.filter(content => content.status === ContentStatus.CONFIRMED);
       const exclusiveFilter = filterExclusiveId(otherContent);
-      return state
-        .map(content => {
-          // cross compare only confirmed content (don't filter, we want to keep the rest!)
-          if (content.status !== ContentStatus.CONFIRMED) return content;
-          return {...content, status: exclusiveFilter(content) ? ContentStatus.MARKED : ContentStatus.RESOLVED};
-        })
+      return state.map(content => {
+        // cross compare only confirmed content (don't filter, we want to keep the rest!)
+        if (content.status !== ContentStatus.CONFIRMED) return content;
+        return {...content, status: exclusiveFilter(content) ? ContentStatus.MARKED : ContentStatus.RESOLVED};
+      })
+    
+    // resolve status
+    case 'RESOLVE':
+      return state.map(content => {
+        // reset only marked content
+        if (content.status !== ContentStatus.MARKED) return content;
+        return {...content, status: ContentStatus.RESOLVED};
+      })
 
     default:
       return state;
@@ -193,7 +193,7 @@ function ContentPage(props) {
   const [contentLastFm, dispatchLastFm] = useReducer(reducer, initial);
 
   // state
-  const [readyForAction, setReadyForAction] = useState(false);
+  const [readyForAction, setReadyForAction] = useState({clear: false, import: false});
 
   // props
   const { compare } = props;
@@ -212,12 +212,12 @@ function ContentPage(props) {
 
   // clear button
   const clearSpotifyAsync = useAsyncCallback(
-    () => props.clearSpotify(access_token, contentSpotify)
+    () => props.clearSpotify(access_token, contentSpotify.filter(c => c.status === ContentStatus.MARKED))
   );
 
   // import button
   const importSpotifyAsync = useAsyncCallback(
-    () => props.importSpotify(access_token, contentLastFm)
+    () => props.importSpotify(access_token, contentLastFm.filter(c => c.status === ContentStatus.MARKED))
   );
 
   // fetch raw data
@@ -272,18 +272,20 @@ function ContentPage(props) {
     if (!contentSpotify.some(precondition) || !contentLastFm.some(precondition)) return;
     dispatchSpotify({type: "CROSS_COMPARE", payload: contentLastFm});
     dispatchLastFm({type: "CROSS_COMPARE", payload: contentSpotify});
-    setReadyForAction(true);
+    setReadyForAction({clear: true, import: true});
   }, [contentSpotify, contentLastFm])
 
   // reset when restarting
   useEffect(() => {
-    dispatchSpotify({type: "RESET_CONTENT"});
-    setReadyForAction(false);
+    if (!clearSpotifyAsync.result) return;
+    dispatchSpotify({type: "RESOLVE"});
+    setReadyForAction(previous => { return {...previous, clear: false}});
   }, [clearSpotifyAsync.result])
 
   useEffect(() => {
-    dispatchLastFm({type: "RESET_CONTENT"});
-    setReadyForAction(false);
+    if (!importSpotifyAsync.result) return;
+    dispatchLastFm({type: "RESOLVE"});
+    setReadyForAction(previous => { return {...previous, import: false}});
   }, [importSpotifyAsync.result])
 
   return (
@@ -306,7 +308,7 @@ function ContentPage(props) {
         text={clearSpotifyAsync.loading ? "..." : "Clear"}
         modal="This will clear all data from Spotify that are not in your current selection on Last.fm. Are you sure?"
         variant="danger" 
-        disabled={!contentSpotify || !readyForAction}
+        disabled={!contentSpotify || !readyForAction.clear}
         onSubmit={clearSpotifyAsync.execute} />
       <br></br>
 
@@ -314,7 +316,7 @@ function ContentPage(props) {
         text={importSpotifyAsync.loading ? "..." : "Import"}
         modal="This will import all data into Spotify that are in your current selection on Last.fm. Are you sure?"
         variant="success" 
-        disabled={!contentLastFm || !readyForAction}
+        disabled={!contentLastFm || !readyForAction.import}
         onSubmit={importSpotifyAsync.execute} />
       <br></br>
 
@@ -340,13 +342,15 @@ function ContentPage(props) {
         {!getSpotify.loading && !getSpotify.error && contentSpotify ?
         <ContentList  
           title="Spotify"
-          data={contentSpotify} />
+          data={contentSpotify}
+          mark="red" />
         : null }
 
         {!getLastFm.loading && !getLastFm.error && contentLastFm ?
         <ContentList  
           title="Last.fm"
-          data={contentLastFm} />
+          data={contentLastFm}
+          mark="green" />
         : null }
 
       </div>
