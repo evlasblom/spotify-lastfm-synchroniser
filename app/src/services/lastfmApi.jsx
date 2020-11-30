@@ -161,7 +161,7 @@ export function deleteTopTrack(session_key, access_key, method_signature, opts) 
   return _postApi(session_key, access_key, method_signature, params);
 }
 
-export function search(access_token, opts) {
+export function search(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
   if (!opts.type) throw new ApiException("Missing required option: type");
   if (!opts.q) throw new ApiException("Missing required option: q");
@@ -174,19 +174,19 @@ export function search(access_token, opts) {
     page: opts.page
   }
 
-  return _getApi(access_token, params)
+  return _getApi(access_key, params)
 }
 
-export function searchArtist(access_token, opts) {
-  return search(access_token, {...opts, type: 'artist'})
+export function searchArtist(access_key, opts) {
+  return search(access_key, {...opts, type: 'artist'})
 }
 
-export function searchAlbum(access_token, opts) {
-  return search(access_token, {...opts, type: 'album'})
+export function searchAlbum(access_key, opts) {
+  return search(access_key, {...opts, type: 'album'})
 }
 
-export function searchTrack(access_token, opts) {
-  return search(access_token, {...opts, type: 'track'})
+export function searchTrack(access_key, opts) {
+  return search(access_key, {...opts, type: 'track'})
 }
 
 // ---------- PARSERS -------------------------------------------------- 
