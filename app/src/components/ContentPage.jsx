@@ -8,7 +8,7 @@ import * as lastfmApi from '../services/lastfmApi'
 import ActionForm from '../components/ActionForm'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
-import { filterOnPlaycount, filterExclusiveId } from '../filters'
+import { filterOnPlaycount, filterExclusiveMatchedId } from '../filters'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
@@ -142,17 +142,16 @@ const reducer = (state, action) => {
     
     // confirm search results, update the content status
     case 'CONFIRM_SEARCH':
-      return state.map((content, index) => {
+      return state.map((content, i) => {
         // search results only apply to filtered content (don't filter, we want to keep the rest!)
         if (content.status !== ContentStatus.FILTERED) return content;
         content.status = ContentStatus.SOUGHT;
-        content.results = action.payload[index];
-        for (let result of content.results) {
+        content.results = action.payload[i];
+        for (let j = 0; j < content.results.length; j++) {
           content.status = ContentStatus.FOUND;
-          if (action.function(content, result)) {
+          if (action.function(content, content.results[j])) {
             content.status = ContentStatus.CONFIRMED;
-            content.match = index;
-            content.id = result.id; // overwrite id for now
+            content.match = j;
             break;
           }
         }
@@ -162,7 +161,7 @@ const reducer = (state, action) => {
     // cross-compare content, update the content status
     case 'CROSS_COMPARE':
       const otherContent = action.payload.filter(content => content.status === ContentStatus.CONFIRMED);
-      const exclusiveFilter = filterExclusiveId(otherContent);
+      const exclusiveFilter = filterExclusiveMatchedId(otherContent);
       return state.map(content => {
         // cross compare only confirmed content (don't filter, we want to keep the rest!)
         if (content.status !== ContentStatus.CONFIRMED) return content;
@@ -172,7 +171,7 @@ const reducer = (state, action) => {
     // resolve status
     case 'RESOLVE':
       return state.map(content => {
-        // reset only marked content
+        // reset only marked content (don't filter, we want to keep the rest!)
         if (content.status !== ContentStatus.MARKED) return content;
         return {...content, status: ContentStatus.RESOLVED};
       })
@@ -301,7 +300,7 @@ function ContentPage(props) {
         modal="This will perform an thorough Spotify search in order to compare your Spotify and Last.fm data. Proceed?"
         variant="primary" 
         disabled={!contentSpotify || !contentLastFm || getSpotify.error || getLastFm.error}
-        onSubmit={searchSpotifyAsync.execute} />
+        onSubmit={searchSpotifyAsync.execute} /> {/* <-- we use the spotify search here */}
       <br></br>
 
       <ActionForm 

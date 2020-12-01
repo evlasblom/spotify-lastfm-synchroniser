@@ -1,7 +1,7 @@
 import * as ss from 'string-similarity'
 
 // filter factories
-function createExclusiveFilter(compareFunction) {
+export function createExclusiveFilter1(compareFunction) {
   return function(otherArray) {
     return function(currentElement) {
       return otherArray.filter(function(otherElement) {
@@ -11,8 +11,22 @@ function createExclusiveFilter(compareFunction) {
   }
 }
 
+export function createExclusiveFilter2(compareFunction) {
+  return function(otherArray) {
+    return function(currentElement) {
+      return otherArray.findIndex(function(otherElement) {
+        return compareFunction(otherElement, currentElement)
+      }) === -1;
+    }
+  }
+}
+
+const createExclusiveFilter = createExclusiveFilter2; // version two should be faster
+
 // filter functions
 export const filterExclusiveId = createExclusiveFilter(compareId);
+
+export const filterExclusiveMatchedId = createExclusiveFilter(compareMatchedId);
 
 export const filterExclusiveArtists = createExclusiveFilter(compareArtists);
 
@@ -30,6 +44,14 @@ export function filterOnPlaycount(limit) {
 // use a similarity function to somewhat account for different spellings
 export function compareId(one, two) {
   return one && two && one.id === two.id;
+}
+
+export function compareMatchedId(one, two) {
+  return one && two && (
+    (one.match >= 0 && one.results && one.results[one.match].id === two.id)
+      ||
+    (two.match >= 0 && two.results && two.results[two.match].id === one.id)
+  )
 }
 
 export function compareArtists(one, two) {
