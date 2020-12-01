@@ -35,42 +35,40 @@ function SelectionForm(props) {
   }
 
   return (
-    <div>
-      <Form onSubmit={onSubmit} inline className="justify-content-end bg-light rounded">
-        <Form.Label className="m-2">Period</Form.Label>
-        <Form.Control 
-            as="select" 
-            defaultValue={0} 
-            onChange={(e) => dispatch({type: "PERIOD", payload: e.currentTarget.value})}
-            className="m-2" >
-          {
-            periods.map((period) => {
-              return <option key={period} value={period}>{period}</option>
-            })
-          }
-        </Form.Control>
+    <Form onSubmit={onSubmit} inline className="justify-content-end bg-light rounded">
+      <Form.Label className="m-2">Period</Form.Label>
+      <Form.Control 
+          as="select" 
+          defaultValue={0} 
+          onChange={(e) => dispatch({type: "PERIOD", payload: e.currentTarget.value})}
+          className="m-2" >
+        {
+          periods.map((period) => {
+            return <option key={period} value={period}>{period}</option>
+          })
+        }
+      </Form.Control>
 
-        <Form.Label className="m-2">Number</Form.Label>
-        <Form.Control 
-          type="text" 
-          placeholder="number" 
-          value={state.number} 
-          onChange={(e) => dispatch({type: "NUMBER", payload: e.currentTarget.value})}
-          className="m-2" />
+      <Form.Label className="m-2">Number</Form.Label>
+      <Form.Control 
+        type="text" 
+        placeholder="number" 
+        value={state.number} 
+        onChange={(e) => dispatch({type: "NUMBER", payload: e.currentTarget.value})}
+        className="m-2" />
 
-        <Form.Label className="m-2">Playcount</Form.Label>
-        <Form.Control 
-          type="text" 
-          placeholder="playcount" 
-          value={state.playcount} 
-          onChange={(e) => dispatch({type: "PLAYCOUNT", payload: e.currentTarget.value})}
-          className="m-2" />
+      <Form.Label className="m-2">Playcount</Form.Label>
+      <Form.Control 
+        type="text" 
+        placeholder="playcount" 
+        value={state.playcount} 
+        onChange={(e) => dispatch({type: "PLAYCOUNT", payload: e.currentTarget.value})}
+        className="m-2" />
 
-        <Button variant="secondary" type="submit" style={{width: "8rem"}} className="m-2">
-          Select
-        </Button>
-      </Form>
-    </div>
+      <Button variant="secondary" type="submit" style={{width: "8rem"}} className="m-2">
+        Select
+      </Button>
+    </Form>
   )
 }
 
