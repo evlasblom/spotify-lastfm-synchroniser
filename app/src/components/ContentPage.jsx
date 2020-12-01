@@ -12,28 +12,6 @@ import { filterOnPlaycount, findIndexOfMatchedId } from '../filters'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
-const NOT_FILTERED_STYLE = { color: 'gray' }
-
-const FILTERED_STYLE = { color: 'black' }
-
-const NOT_FOUND_STYLE = {
-  textDecorationLine: 'line-through', 
-  textDecorationStyle: 'solid', 
-  textDecorationColor: 'gray'
-};
-
-const NOT_CONFIRMED_STYLE = {
-  textDecorationLine: 'underline', 
-  textDecorationStyle: 'wavy', 
-  textDecorationColor: 'orange'
-};
-
-const CONFIRMED_STYLE = { color: 'purple' };
-
-const MARKED_STYLE = color => { return { color: color }; };
-
-const RESOLVED_STYLE = { color: 'black' };
-
 export const ContentStatus = {
   NONE: 0,
   FETCHED: 1,   //< content fetched from server
@@ -45,42 +23,75 @@ export const ContentStatus = {
   RESOLVED: 7   //< content is resolved, nothing more to do
 }
 
-function setContentStyle(content, mark = "pink") {
-  let style = {};
+export const ContentAction = {
+  CLEAR: -1,    //< clear content
+  NONE: 0,      //< do nothing
+  IMPORT: 1     //< import content
+}
+
+function getContentClass(content) {
   if (content.status) {
     switch(content.status) {
       case ContentStatus.FETCHED:
-        style = NOT_FILTERED_STYLE;
-        break;
+        return "not-filtered";
       case ContentStatus.FILTERED:
-        style = FILTERED_STYLE;
-        break;
+        return "filtered";
       case ContentStatus.SOUGHT:
-        style = NOT_FOUND_STYLE;
-        break;
+        return "not-found";
       case ContentStatus.FOUND:
-        style = NOT_CONFIRMED_STYLE;
-        break;
+        return "not-confirmed";
       case ContentStatus.CONFIRMED:
-        style = CONFIRMED_STYLE;
-        break;
+        return "confirmed";
       case ContentStatus.MARKED:
-        style = MARKED_STYLE(mark);
-        break;
+        if (content.action === ContentAction.CLEAR) return "clear";
+        if (content.action === ContentAction.IMPORT) return "import";
+        return undefined;
       case ContentStatus.RESOLVED:
-        style = RESOLVED_STYLE;
-        break;
+        return "resolved";
       default:
-        style = {};
+        return undefined;
+    }
     }
   }
-  return style;
+
+function ContentItem(props) {
+  const content = props.content;
+
+  if (!content) return null;
+
+  return (
+    <>
+      {content.rank ? (content.rank + ". ") : ""}
+      {content.name}
+      {content.playcount ? (" - " + content.playcount) : ""}
+      {content.artist ? (
+        <>
+          <br></br>
+          <i>{content.artist[0].name}</i>
+        </>
+      ) : ""}
+    </>
+  )
+}
+
+function ContentIcon(props) {
+  const content = props.content;
+
+  if (!content) return null;
+
+  return (
+    <>
+      {content.action === ContentAction.IMPORT ? "←" : ""}
+      {content.action === ContentAction.CLEAR ? "→" : ""}
+      {content.status === ContentStatus.FOUND ? "?" : ""}
+    </>
+  )
 }
 
 function ContentList(props) {
 
   return (
-    <table style={{ width: '25rem'}} className="mr-2 ml-2">
+    <table className="content" style={{width: '25rem'}}>
       <thead>
         <tr>
           <th>{props.title}</th>
@@ -91,23 +102,102 @@ function ContentList(props) {
           <td><i>({props.data.length} items)</i></td>
         </tr>
         {props.data.map((content, i) => {
-          const style = setContentStyle(content, props.mark);        
+          const classname = getContentClass(content);  
           return (
-            <tr key={i} style={style}>
-              <td>
-                {content.rank ? (content.rank + ". ") : ""}
-                {content.name}
-                {content.playcount ? (" - " + content.playcount) : ""}
-                {content.artist ? (
-                  <>
-                    <br></br>
-                    <i>{content.artist[0].name}</i>
-                  </>
-                ) : ""}
+            <tr key={i}>
+              <td className={classname}>
+                <ContentItem content={content} />
               </td>
             </tr>
           )
         })}
+      </tbody>
+    </table>
+  )
+}
+
+function ContentDiff(props) {
+  const [titleLeft, titleRight] = props.titles;
+  const [dataLeft, dataRight] = props.data;
+
+  const getCorrespondingContent = content => {
+    if (content.status === ContentStatus.RESOLVED) {
+      // if resolved, show the corresponding item of the other list
+      return dataLeft[content.index];
+    }
+    else if (content.status === ContentStatus.MARKED) {
+      // if marked, show how it will be imported in the other list
+      return content.results[content.match];
+    }
+    else if (content.status === ContentStatus.CONFIRMED) {
+      // if confirmed, show how it will be imported in the other list
+      // (confirmed should be either marked or resolved, but just in case)
+      return content.results[content.match];
+    }
+    else if (content.status === ContentStatus.FOUND) {
+      // if found but not confirmed, show the top search result
+      // (match should be automatically set to the first result in this case)
+      return content.results[content.match];
+    }
+    else {
+      // else, nothing to show
+      return null;
+    }
+  }
+
+  return (
+    <table className="content" >
+      <thead>
+        <tr>
+          <th style={{width: '25rem'}}>{titleLeft}</th>
+          <th></th>
+          <th style={{width: '25rem'}}>{titleRight}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><i>({dataLeft.length} items)</i></td>
+          <td></td>
+          <td><i>({dataRight.length} items)</i></td>
+        </tr>
+        {dataRight
+          .filter(c => c.status > ContentStatus.FETCHED)
+          .map((content, i) => {
+            const classname = getContentClass(content);  
+            return (
+              <tr key={i}>
+                <td className={classname}>
+                  <ContentItem content={getCorrespondingContent(content)} />
+                </td>
+                <td className={classname}>
+                  <ContentIcon content={content} />
+                </td>
+                <td className={classname}>
+                  <ContentItem content={content} />
+                </td>
+              </tr>
+            )
+          })
+        }
+        {dataLeft
+          .filter(c => c.status === ContentStatus.MARKED)
+          .map((content, i) => {
+            const classname = getContentClass(content);  
+            return (
+              <tr key={i}>
+                <td className={classname}>
+                  <ContentItem content={content} />
+                </td>
+                <td className={classname}>
+                  <ContentIcon content={content} />
+                </td>
+                <td className={classname}>
+                  {null}
+                </td>
+              </tr>
+            )
+          })
+        }
       </tbody>
     </table>
   )
@@ -150,6 +240,7 @@ const contentReducer = (state, action) => {
         content.results = action.payload[i];
         for (let j = 0; j < content.results.length; j++) {
           content.status = ContentStatus.FOUND;
+          content.match = 0;
           if (action.function(content, content.results[j])) {
             content.status = ContentStatus.CONFIRMED;
             content.match = j;
@@ -161,15 +252,15 @@ const contentReducer = (state, action) => {
     
     // cross-compare content, update the content status
     case 'CROSS_COMPARE':
-      const otherContent = action.payload.filter(c => c.status === ContentStatus.CONFIRMED);
+      const otherContent = action.payload.filter(c => c.status >= ContentStatus.FOUND);
       const findId = findIndexOfMatchedId(otherContent);
       return state.map(content => {
         // cross compare only confirmed content
         if (content.status !== ContentStatus.CONFIRMED) return content;
-        // mark for action if not found, otherwise resolve
+        // mark for action if index is not found, otherwise resolve
         const index = findId(content);
-        if (index < 0) return {...content, status: ContentStatus.MARKED}
-        else return {...content, status: ContentStatus.RESOLVED, index: index}
+        if (index < 0) return {...content, status: ContentStatus.MARKED, action: action.marker};
+        else return {...content, status: ContentStatus.RESOLVED, index: index};
       })
     
     // resolve status
@@ -273,8 +364,8 @@ function ContentPage(props) {
     if (!contentSpotify || !contentLastFm) return;
     const precondition = content => content.status === ContentStatus.CONFIRMED;
     if (!contentSpotify.some(precondition) || !contentLastFm.some(precondition)) return;
-    dispatchSpotify({type: "CROSS_COMPARE", payload: contentLastFm});
-    dispatchLastFm({type: "CROSS_COMPARE", payload: contentSpotify});
+    dispatchSpotify({type: "CROSS_COMPARE", payload: contentLastFm, marker: ContentAction.CLEAR});
+    dispatchLastFm({type: "CROSS_COMPARE", payload: contentSpotify, marker: ContentAction.IMPORT});
     setReadyForAction({clear: true, import: true});
   }, [contentSpotify, contentLastFm])
 
@@ -342,18 +433,22 @@ function ContentPage(props) {
 
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
-        {!getSpotify.loading && !getSpotify.error && contentSpotify ?
+        {contentSpotify && !readyForAction.clear && !readyForAction.import ?
         <ContentList  
           title="Spotify"
-          data={contentSpotify}
-          mark="red" />
+          data={contentSpotify} />
         : null }
 
-        {!getLastFm.loading && !getLastFm.error && contentLastFm ?
+        {contentLastFm && !readyForAction.clear && !readyForAction.import ?
         <ContentList  
           title="Last.fm"
-          data={contentLastFm}
-          mark="green" />
+          data={contentLastFm} />
+        : null }
+
+        {readyForAction.clear && readyForAction.import ?
+        <ContentDiff 
+          titles={["Spotify", "Last.fm"]}
+          data={[contentSpotify, contentLastFm]} />
         : null }
 
       </div>
