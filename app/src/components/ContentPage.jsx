@@ -8,7 +8,7 @@ import * as lastfmApi from '../services/lastfmApi'
 import ActionForm from '../components/ActionForm'
 import SelectionForm from '../components/SelectionForm'
 import * as constants from '../constants'
-import { filterOnPlaycount, filterExclusiveMatchedId } from '../filters'
+import { filterOnPlaycount, findIndexOfMatchedId } from '../filters'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
@@ -115,7 +115,7 @@ function ContentList(props) {
 
 const initial = null;
 
-const reducer = (state, action) => {
+const contentReducer = (state, action) => {
   switch(action.type) {
 
     // reset content to initial values
@@ -143,8 +143,9 @@ const reducer = (state, action) => {
     // confirm search results, update the content status
     case 'CONFIRM_SEARCH':
       return state.map((content, i) => {
-        // search results only apply to filtered content (don't filter, we want to keep the rest!)
+        // confirm only filtered content
         if (content.status !== ContentStatus.FILTERED) return content;
+        // set as found if the search yielded results, and confirm if the results make sense
         content.status = ContentStatus.SOUGHT;
         content.results = action.payload[i];
         for (let j = 0; j < content.results.length; j++) {
@@ -160,18 +161,21 @@ const reducer = (state, action) => {
     
     // cross-compare content, update the content status
     case 'CROSS_COMPARE':
-      const otherContent = action.payload.filter(content => content.status === ContentStatus.CONFIRMED);
-      const exclusiveFilter = filterExclusiveMatchedId(otherContent);
+      const otherContent = action.payload.filter(c => c.status === ContentStatus.CONFIRMED);
+      const findId = findIndexOfMatchedId(otherContent);
       return state.map(content => {
-        // cross compare only confirmed content (don't filter, we want to keep the rest!)
+        // cross compare only confirmed content
         if (content.status !== ContentStatus.CONFIRMED) return content;
-        return {...content, status: exclusiveFilter(content) ? ContentStatus.MARKED : ContentStatus.RESOLVED};
+        // mark for action if not found, otherwise resolve
+        const index = findId(content);
+        if (index < 0) return {...content, status: ContentStatus.MARKED}
+        else return {...content, status: ContentStatus.RESOLVED, index: index}
       })
     
     // resolve status
     case 'RESOLVE':
       return state.map(content => {
-        // reset only marked content (don't filter, we want to keep the rest!)
+        // resolve only marked content
         if (content.status !== ContentStatus.MARKED) return content;
         return {...content, status: ContentStatus.RESOLVED};
       })
@@ -188,8 +192,8 @@ function ContentPage(props) {
   const [username, ] = useLocalStorage(constants.user_key, null);
 
   // content
-  const [contentSpotify, dispatchSpotify] = useReducer(reducer, initial);
-  const [contentLastFm, dispatchLastFm] = useReducer(reducer, initial);
+  const [contentSpotify, dispatchSpotify] = useReducer(contentReducer, initial);
+  const [contentLastFm, dispatchLastFm] = useReducer(contentReducer, initial);
 
   // state
   const [readyForAction, setReadyForAction] = useState({clear: false, import: false});

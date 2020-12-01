@@ -1,38 +1,52 @@
 import * as ss from 'string-similarity'
 
 // filter factories
-export function createExclusiveFilter1(compareFunction) {
+export function createExclusiveFilter1(comparisonFunction) {
   return function(otherArray) {
     return function(currentElement) {
       return otherArray.filter(function(otherElement) {
-        return compareFunction(otherElement, currentElement)
+        return comparisonFunction(otherElement, currentElement)
       }).length === 0;
     }
   }
 }
 
-export function createExclusiveFilter2(compareFunction) {
+export function createExclusiveFilter2(comparisonFunction) {
   return function(otherArray) {
     return function(currentElement) {
       return otherArray.findIndex(function(otherElement) {
-        return compareFunction(otherElement, currentElement)
+        return comparisonFunction(otherElement, currentElement)
       }) === -1;
     }
   }
 }
 
-const createExclusiveFilter = createExclusiveFilter2; // version two should be faster
+export const createExclusiveFilter = createExclusiveFilter2; // version two should be slightly faster
+
+export function createFindIndex(comparisonFunction) {
+  return function(otherArray) {
+    return function(currentElement) {
+      return otherArray.findIndex(function(otherElement) {
+        if (otherElement && currentElement && otherElement.name === "Opeth" && currentElement.name === "Opeth") {
+        }
+        return comparisonFunction(otherElement, currentElement);
+      })
+    }
+  }
+}
 
 // filter functions
-export const filterExclusiveId = createExclusiveFilter(compareId);
-
-export const filterExclusiveMatchedId = createExclusiveFilter(compareMatchedId);
-
+export const filterExclusiveIds = createExclusiveFilter(compareIds);
+export const filterExclusiveMatchedIds = createExclusiveFilter(compareMatchedIds);
 export const filterExclusiveArtists = createExclusiveFilter(compareArtists);
-
 export const filterExclusiveAlbums = createExclusiveFilter(compareAlbums);
-
 export const filterExclusiveTracks = createExclusiveFilter(compareTracks);
+
+export const findIndexOfId = createFindIndex(compareIds);
+export const findIndexOfMatchedId = createFindIndex(compareMatchedIds);
+export const findIndexOfArtist = createFindIndex(compareArtists);
+export const findIndexOfAlbum = createFindIndex(compareAlbums);
+export const findIndexOfTrack = createFindIndex(compareTracks);
 
 export function filterOnPlaycount(limit) {
   return function(input) {
@@ -42,11 +56,11 @@ export function filterOnPlaycount(limit) {
 
 // comparison functions
 // use a similarity function to somewhat account for different spellings
-export function compareId(one, two) {
+export function compareIds(one, two) {
   return one && two && one.id === two.id;
 }
 
-export function compareMatchedId(one, two) {
+export function compareMatchedIds(one, two) {
   return one && two && (
     (one.match >= 0 && one.results && one.results[one.match].id === two.id)
       ||
