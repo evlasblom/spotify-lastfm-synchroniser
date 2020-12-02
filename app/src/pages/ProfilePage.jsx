@@ -44,6 +44,15 @@ function ProfileCard(props) {
   )
 }
 
+function ProfileCardPlaceholder(props) {
+
+  return (
+    <Card style={{ width: '18rem', height: '30rem'}} className="m-2">
+    </Card>
+  )
+}
+
+
 function ProfilePage(props) {
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);
@@ -55,14 +64,11 @@ function ProfilePage(props) {
 
   return (
     <>
-      {/* <h2>User</h2> */}
-      {/* <br></br> */}
-      
       <div style={{height: "2rem"}} className="p-1">
         {profileSpotify.loading || profileLastFm.loading ? "Loading data... " : ""}
 
-        {profileSpotify.error ? <span className="text-danger">{profileSpotify.error.message}</span> : ""}
-        {profileLastFm.error ? <span className="text-danger">{profileLastFm.error.message}</span> : ""}
+        {profileSpotify.error ? <span className="text-danger">Spotify load error: {profileSpotify.error.message.toLowerCase()}</span> : ""}
+        {profileLastFm.error ? <span className="text-danger">Last.fm load error: {profileLastFm.error.message.toLowerCase()}</span> : ""}
       </div>
       <br></br>
 
@@ -72,13 +78,17 @@ function ProfilePage(props) {
         <ProfileCard 
           target="Spotify"
           data={profileSpotify.result} />
-        : null}
+        : 
+        <ProfileCardPlaceholder />
+        }
         
         {!profileLastFm.loading && !profileLastFm.error ? 
         <ProfileCard 
           target="Last.fm"
           data={profileLastFm.result} />
-        : null}
+        : 
+        <ProfileCardPlaceholder />
+        }
 
       </div>
     </>

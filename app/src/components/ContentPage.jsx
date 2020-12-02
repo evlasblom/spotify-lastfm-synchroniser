@@ -12,6 +12,8 @@ import { filterOnPlaycount, findIndexOfMatchedId } from '../filters'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
+const DEBUG_CONTENT = true;
+
 export const ContentStatus = {
   NONE: 0,
   FETCHED: 1,   //< content fetched from server
@@ -58,9 +60,12 @@ function ContentItem(props) {
   const content = props.content;
 
   if (!content) return null;
+  
+  let debug = {};
+  if (DEBUG_CONTENT) debug = {role: "button", onClick: () => console.log(content)}
 
   return (
-    <>
+    <div className="d-block" {...debug}>
       {content.rank ? (content.rank + ". ") : ""}
       {content.name}
       {content.playcount ? (" - " + content.playcount) : ""}
@@ -70,7 +75,7 @@ function ContentItem(props) {
           <i>{content.artist[0].name}</i>
         </>
       ) : ""}
-    </>
+    </div>
   )
 }
 
@@ -80,12 +85,12 @@ function ContentIcon(props) {
   if (!content) return null;
 
   return (
-    <>
+    <div className="d-block">
       {content.status === ContentStatus.SOUGHT ? "?" : ""}
       {content.status === ContentStatus.FOUND ? "?" : ""}
-      {content.action === ContentAction.IMPORT ? "✓" : ""}
-      {content.action === ContentAction.CLEAR ? "×" : ""}
-    </>
+      {content.status === ContentStatus.MARKED && content.action === ContentAction.IMPORT ? "✓" : ""}
+      {content.status === ContentStatus.MARKED && content.action === ContentAction.CLEAR ? "×" : ""}
+    </div>
   )
 }
 
@@ -119,6 +124,15 @@ function ContentList(props) {
         })}
       </tbody>
     </table>
+  )
+}
+
+function ContentListPlaceholder(props) {
+
+  return (
+    <div className="content">
+      ...
+    </div>
   )
 }
 
@@ -318,9 +332,6 @@ function ContentPage(props) {
 
   return (
     <>
-      {/* <h2>{props.title}</h2> */}
-      {/* <br></br> */}
-
       <SelectionForm onSubmit={setSelection} initial={props.selection} />
       <br></br>
 
@@ -367,17 +378,23 @@ function ContentPage(props) {
 
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
-        {contentSpotify && contentLastFm ?
+        {!getSpotify.loading && !getSpotify.error && contentSpotify ?
         <ContentList  
           title="Spotify"
           data={contentSpotify} />
-        : null }
+        : 
+        <ContentListPlaceholder
+          title="Spotify" />
+        }
 
-        {contentSpotify && contentLastFm ?
+        {!getLastFm.loading && !getLastFm.error && contentLastFm ?
         <ContentList  
           title="Last.fm"
           data={contentLastFm} />
-        : null }
+        : 
+        <ContentListPlaceholder
+          title="Last.fm" />
+        }
 
       </div>
     </>
