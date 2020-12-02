@@ -56,7 +56,6 @@ const searchSpotifyTracks = async (access_token, tracks) => {
   for (const track of tracks) {
     let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
     let response = await spotifyApi.searchTrack(access_token, { q: query });
-    if (response.status !== 200) console.log(response);
     items.push(spotifyApi.parseTracks(response.data.tracks.items));
   }
   return items;
@@ -67,7 +66,6 @@ const searchLastFmTracks = async (access_token, tracks) => {
   for (const track of tracks) {
     let query = normalizeTrackName(track.name);
     let response = await lastfmApi.searchTrack(access_token, { q: query, limit: 10 });
-    if (response.status !== 200) console.log(response);
     items.push(lastfmApi.parseTracks(response.data.results.trackmatches.track));
   }
   return items;

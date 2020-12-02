@@ -56,7 +56,6 @@ const searchSpotifyAlbums = async (access_token, albums) => {
   for (const album of albums) {
     let query = '"' + normalizeArtistName(album.artist[0].name) + '" "' + normalizeAlbumName(album.name) + '"';
     let response = await spotifyApi.searchAlbum(access_token, { q: query });
-    if (response.status !== 200) console.log(response);
     items.push(spotifyApi.parseAlbums(response.data.albums.items));
   }
   return items;
@@ -67,7 +66,6 @@ const searchLastFmAlbums = async (access_token, albums) => {
   for (const album of albums) {
     let query = normalizeAlbumName(album.name);
     let response = await lastfmApi.searchAlbum(access_token, { q: query, limit: 10 });
-    if (response.status !== 200) console.log(response);
     items.push(lastfmApi.parseAlbums(response.data.results.albummatches.album));
   }
   return items;
