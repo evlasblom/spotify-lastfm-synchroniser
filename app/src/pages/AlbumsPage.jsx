@@ -43,7 +43,7 @@ const clearSpotifyAlbums = async (access_token, albums) => {
 }
 
 const importSpotifyAlbums = async (access_token, albums) => {
-  let ids = albums.map(album => album.id);
+  const ids = albums.map(album => album.results[album.match].id);
   while (ids.length > 0) {
     const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.setSavedAlbums(access_token, options);

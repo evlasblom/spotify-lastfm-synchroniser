@@ -95,34 +95,6 @@ function ContentList(props) {
     <table className="content">
       <thead>
         <tr>
-          <th>{props.title}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><i>({props.data.length} items)</i></td>
-        </tr>
-        {props.data.map((content, i) => {
-          const classname = getContentClass(content);  
-          return (
-            <tr key={i}>
-              <td className={classname}>
-                <ContentItem content={content} />
-              </td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
-  )
-}
-
-function ContentDiffList(props) {
-
-  return (
-    <table className="content">
-      <thead>
-        <tr>
           <th style={{width: '5%'}}></th>
           <th style={{width: '95%'}}>{props.title}</th>
         </tr>
@@ -182,19 +154,20 @@ const contentReducer = (state, action) => {
       return state.map((content, i) => {
         // confirm only filtered content
         if (content.status !== ContentStatus.FILTERED) return content;
-        // set as found if the search yielded results, and confirm if the results make sense
-        content.status = ContentStatus.SOUGHT;
-        content.results = action.payload[i];
-        for (let j = 0; j < content.results.length; j++) {
-          content.status = ContentStatus.FOUND;
-          content.match = 0;
-          if (action.function(content, content.results[j])) {
-            content.status = ContentStatus.CONFIRMED;
-            content.match = j;
-            break;
+        const results = action.payload[i];
+        if (!results || results.length === 0) {
+          // if there are no search results, keep status as sought
+          return {...content, status: ContentStatus.SOUGHT}
           }
+        const j = results.findIndex(result => action.function(content, result));
+        if (j < 0) {
+          // if we are not sure if the search results are correct, keep status as found
+          return {...content, status: ContentStatus.FOUND, results: results, match: 0}
         }
-        return content;
+        else {
+          // if we confirmed the search results to be correct, set status to confirmed and save the correct one
+          return {...content, status: ContentStatus.CONFIRMED, results: results, match: j}
+        }
       });
     
     // cross-compare content, update the content status
@@ -204,10 +177,19 @@ const contentReducer = (state, action) => {
       return state.map(content => {
         // cross compare only confirmed content
         if (content.status !== ContentStatus.CONFIRMED) return content;
-        // mark for action if index is not found, otherwise resolve
         const index = findId(content);
-        if (index < 0) return {...content, status: ContentStatus.MARKED, action: action.marker};
-        else return {...content, status: ContentStatus.RESOLVED, index: index};
+        if (index < 0) {
+          // if it does not exist in the other content, mark for action
+          return {...content, status: ContentStatus.MARKED, action: action.marker};
+        }
+        else if (otherContent[index].status === ContentStatus.FOUND) {
+          // if it exists in the other content, but we are not sure if it is correct, set as found
+          return {...content, status: ContentStatus.FOUND, index: index};
+        }
+        else {
+          // otherwise, nothing needs to be done, resolve
+          return {...content, status: ContentStatus.RESOLVED, index: index};
+        }
       })
     
     // resolve status
@@ -215,7 +197,7 @@ const contentReducer = (state, action) => {
       return state.map(content => {
         // resolve only marked content
         if (content.status !== ContentStatus.MARKED) return content;
-        return {...content, status: ContentStatus.RESOLVED};
+        return {...content, status: ContentStatus.RESOLVED, action: ContentAction.NONE};
       })
 
     default:
@@ -278,6 +260,11 @@ function ContentPage(props) {
     return {user: username, limit: lastfmApi.LIMIT_PER_PAGE, ...selection} 
   };
 
+  // disallow actions when changing selection
+  useEffect(() => {
+    setReadyForAction({clear: false, import: false});
+  }, [selection.period, selection.number, selection.playcount])
+
   // filter content after fetching
   useEffect(() => {
     if (!getSpotify.result || getSpotify.loading || getSpotify.error) return;
@@ -316,7 +303,7 @@ function ContentPage(props) {
     setReadyForAction({clear: true, import: true});
   }, [contentSpotify, contentLastFm])
 
-  // reset when restarting
+  // resolve when finished
   useEffect(() => {
     if (!clearSpotifyAsync.result) return;
     dispatchSpotify({type: "RESOLVE"});
@@ -365,41 +352,29 @@ function ContentPage(props) {
         {getSpotify.loading ? <p className="text-dark">Loading Spotify data... </p> : ""}
         {getLastFm.loading ? <p className="text-dark">Loading Last.fm data... </p> : ""}
         {searchSpotifyAsync.loading ? <p className="text-dark">Searching Spotify... </p> : ""}
-        {searchLastFmAsync.loading ? <p className="text-dark">Comparing Last.fm... </p> : ""}
+        {searchLastFmAsync.loading ? <p className="text-dark">Searching Last.fm... </p> : ""}
         {clearSpotifyAsync.loading ? <p className="text-dark">Clearing data from Spotify... </p> : ""}
         {importSpotifyAsync.loading ? <p className="text-dark">Importing data into Spotify... </p> : ""}
 
-        {getSpotify.error ? <p className="text-danger">{getSpotify.error.message}</p> : ""}
-        {getLastFm.error ? <p className="text-danger">{getLastFm.error.message}</p> : ""}
-        {searchSpotifyAsync.error ? <p className="text-danger">{searchSpotifyAsync.error.message}</p> : ""}
-        {searchLastFmAsync.error ? <p className="text-danger">{searchLastFmAsync.error.message}</p> : ""}
-        {clearSpotifyAsync.error ? <p className="text-danger">{clearSpotifyAsync.error.message}</p> : ""}
-        {importSpotifyAsync.error ? <p className="text-danger">{importSpotifyAsync.error.message}</p> : ""}
+        {getSpotify.error ? <p className="text-danger">Spotify load error: {getSpotify.error.message.toLowerCase()}</p> : ""}
+        {getLastFm.error ? <p className="text-danger">Last.fm load error: {getLastFm.error.message.toLowerCase()}</p> : ""}
+        {searchSpotifyAsync.error ? <p className="text-danger">Spotify search error: {searchSpotifyAsync.error.message.toLowerCase()}</p> : ""}
+        {searchLastFmAsync.error ? <p className="text-danger">Last.fm search error: {searchLastFmAsync.error.message.toLowerCase()}</p> : ""}
+        {clearSpotifyAsync.error ? <p className="text-danger">Clear error: {clearSpotifyAsync.error.message.toLowerCase()}</p> : ""}
+        {importSpotifyAsync.error ? <p className="text-danger">Import error: {importSpotifyAsync.error.message.toLowerCase()}</p> : ""}
       </div>
       <br></br>
 
       <div className="d-flex flex-row flex-wrap justify-content-center">
 
-        {contentSpotify && !readyForAction.clear && !readyForAction.import ?
+        {contentSpotify && contentLastFm ?
         <ContentList  
           title="Spotify"
           data={contentSpotify} />
         : null }
 
-        {contentLastFm && !readyForAction.clear && !readyForAction.import ?
+        {contentSpotify && contentLastFm ?
         <ContentList  
-          title="Last.fm"
-          data={contentLastFm} />
-        : null }
-
-        {readyForAction.import ?
-        <ContentDiffList  
-          title="Spotify"
-          data={contentSpotify} />
-        : null }
-
-        {readyForAction.import ?
-        <ContentDiffList  
           title="Last.fm"
           data={contentLastFm} />
         : null }

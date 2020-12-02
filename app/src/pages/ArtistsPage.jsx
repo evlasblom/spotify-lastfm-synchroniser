@@ -41,7 +41,7 @@ const clearSpotifyArtists = async (access_token, artists) => {
 }
 
 const importSpotifyArtists = async (access_token, artists) => {
-  const ids = artists.map(artist => artist.id);
+  const ids = artists.map(artist => artist.results[artist.match].id);
   while (ids.length > 0) {
     const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.setFollowingArtists(access_token, options);

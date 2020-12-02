@@ -43,7 +43,7 @@ const clearSpotifyTracks = async (access_token, tracks) => {
 }
 
 const importSpotifyTracks = async (access_token, tracks) => {
-  let ids = tracks.map(track => track.id);
+  const ids = tracks.map(track => track.results[track.match].id);
   while (ids.length > 0) {
     const options = {ids: ids.splice(0, spotifyApi.LIMIT_PER_PAGE)};
     await spotifyApi.setSavedTracks(access_token, options);
