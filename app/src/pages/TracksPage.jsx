@@ -51,22 +51,26 @@ const importSpotifyTracks = async (access_token, tracks) => {
   return {};
 }
 
-const searchSpotifyTracks = async (access_token, tracks) => {
+const searchSpotifyTracks = async (access_token, tracks, setProgress = () => {}) => {
+  let num = 0;
   let items = [];
   for (const track of tracks) {
     let query = '"' + normalizeArtistName(track.artist[0].name) + '" "' + normalizeTrackName(track.name) + '"';
     let response = await spotifyApi.searchTrack(access_token, { q: query });
     items.push(spotifyApi.parseTracks(response.data.tracks.items));
+    setProgress(Math.ceil(++num/tracks.length*100));
   }
   return items;
 }
 
-const searchLastFmTracks = async (access_token, tracks) => {
+const searchLastFmTracks = async (access_token, tracks, setProgress = () => {}) => {
+  let num = 0;
   let items = [];
   for (const track of tracks) {
     let query = normalizeTrackName(track.name);
     let response = await lastfmApi.searchTrack(access_token, { q: query, limit: 10 });
     items.push(lastfmApi.parseTracks(response.data.results.trackmatches.track));
+    setProgress(Math.ceil(++num/tracks.length*100));
   }
   return items;
 }

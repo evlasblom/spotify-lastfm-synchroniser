@@ -155,7 +155,7 @@ function ContentListPlaceholder(props) {
 
   return (
     <div className="content">
-      ...
+      
     </div>
   )
 }
@@ -255,6 +255,7 @@ function ContentPage(props) {
 
   // state
   const [readyForAction, setReadyForAction] = useState({clear: false, import: false});
+  const [currentProgress, setCurrentProgress] = useState(0);
 
   // props
   const { compare } = props;
@@ -264,11 +265,11 @@ function ContentPage(props) {
 
   // compare button
   const searchSpotifyAsync = useAsyncCallback(
-    () => props.searchSpotify(access_token, contentLastFm.filter(c => c.status === ContentStatus.FILTERED))
+    () => props.searchSpotify(access_token, contentLastFm.filter(c => c.status === ContentStatus.FILTERED), setCurrentProgress)
   );
   
   const searchLastFmAsync = useAsyncCallback(
-    () => props.searchLastFm(access_key, contentSpotify.filter(c => c.status === ContentStatus.FILTERED))
+    () => props.searchLastFm(access_key, contentSpotify.filter(c => c.status === ContentStatus.FILTERED), setCurrentProgress)
   );
 
   // clear button
@@ -308,13 +309,13 @@ function ContentPage(props) {
     if (!getSpotify.result || getSpotify.loading || getSpotify.error) return;
     dispatchSpotify({type: "SET_CONTENT", payload: getSpotify.result});
     dispatchSpotify({type: "APPLY_FILTER", function: () => true}); // no filter
-  }, [getSpotify.result, getSpotify.loading, getSpotify.error])
+  }, [getSpotify.result, getSpotify.loading, getSpotify.error, selection.period, selection.number, selection.playcount]);
 
   useEffect(() => {
     if (!getLastFm.result || getLastFm.loading || getLastFm.error) return;
     dispatchLastFm({type: "SET_CONTENT", payload: getLastFm.result});
     dispatchLastFm({type: "APPLY_FILTER", function: filterOnPlaycount(selection.playcount)}); // playcount filter
-  }, [getLastFm.result, getLastFm.loading, getLastFm.error, selection.playcount])
+  }, [getLastFm.result, getLastFm.loading, getLastFm.error, selection.period, selection.number, selection.playcount]);
   
   // confirm content after searching
   // note: only one of these effects is needed, the other is there for testing
@@ -323,12 +324,14 @@ function ContentPage(props) {
     if (!searchSpotifyAsync.result || searchSpotifyAsync.loading || searchSpotifyAsync.error) return;
     dispatchSpotify({type: "CONFIRM_CONTENT"}); // auto-confirm all
     dispatchLastFm({type: "CONFIRM_SEARCH", payload: searchSpotifyAsync.result, function: compare})
+    setCurrentProgress(0);
   }, [searchSpotifyAsync.result, searchSpotifyAsync.loading, searchSpotifyAsync.error, compare])
 
   useEffect(() => {
     if (!searchLastFmAsync.result || searchLastFmAsync.loading || searchLastFmAsync.error) return;
     dispatchSpotify({type: "CONFIRM_SEARCH", payload: searchLastFmAsync.result, function: compare})
     dispatchLastFm({type: "CONFIRM_CONTENT"}); // auto-confirm all
+    setCurrentProgress(0);
   }, [searchLastFmAsync.result, searchLastFmAsync.loading, searchLastFmAsync.error, compare])
 
   // compare content after searching
@@ -364,7 +367,7 @@ function ContentPage(props) {
         modal="This will perform an thorough Spotify search in order to compare your Spotify and Last.fm data. Proceed?"
         variant="primary" 
         disabled={!contentSpotify || !contentLastFm || getSpotify.error || getLastFm.error}
-        onSubmit={searchSpotifyAsync.execute} /> {/* <-- we use the spotify search here */}
+        onSubmit={searchSpotifyAsync.execute} /> {/* <-- we use just the spotify search here */}
       <br></br>
 
       <ActionForm 
@@ -383,11 +386,11 @@ function ContentPage(props) {
         onSubmit={importSpotifyAsync.execute} />
       <br></br>
 
-      <div style={{height: "2rem"}} className="p-1">
+      <div style={{height: "3rem"}} className="p-1">
         {getSpotify.loading ? <p className="text-dark">Loading Spotify data... </p> : ""}
         {getLastFm.loading ? <p className="text-dark">Loading Last.fm data... </p> : ""}
-        {searchSpotifyAsync.loading ? <p className="text-dark">Searching Spotify... </p> : ""}
-        {searchLastFmAsync.loading ? <p className="text-dark">Searching Last.fm... </p> : ""}
+        {searchSpotifyAsync.loading ? <p className="text-dark">Searching Spotify... ({currentProgress}%) </p> : ""}
+        {searchLastFmAsync.loading ? <p className="text-dark">Searching Last.fm... ({currentProgress}%) </p> : ""}
         {clearSpotifyAsync.loading ? <p className="text-dark">Clearing data from Spotify... </p> : ""}
         {importSpotifyAsync.loading ? <p className="text-dark">Importing data into Spotify... </p> : ""}
 

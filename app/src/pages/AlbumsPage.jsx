@@ -51,22 +51,26 @@ const importSpotifyAlbums = async (access_token, albums) => {
   return {};
 }
 
-const searchSpotifyAlbums = async (access_token, albums) => {
+const searchSpotifyAlbums = async (access_token, albums, setProgress = () => {}) => {
+  let num = 0;
   let items = [];
   for (const album of albums) {
     let query = '"' + normalizeArtistName(album.artist[0].name) + '" "' + normalizeAlbumName(album.name) + '"';
     let response = await spotifyApi.searchAlbum(access_token, { q: query });
     items.push(spotifyApi.parseAlbums(response.data.albums.items));
+    setProgress(Math.ceil(++num/albums.length*100));
   }
   return items;
 }
 
-const searchLastFmAlbums = async (access_token, albums) => {
+const searchLastFmAlbums = async (access_token, albums, setProgress = () => {}) => {
+  let num = 0;
   let items = [];
   for (const album of albums) {
     let query = normalizeAlbumName(album.name);
     let response = await lastfmApi.searchAlbum(access_token, { q: query, limit: 10 });
     items.push(lastfmApi.parseAlbums(response.data.results.albummatches.album));
+    setProgress(Math.ceil(++num/albums.length*100));
   }
   return items;
 }

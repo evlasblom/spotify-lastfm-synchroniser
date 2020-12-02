@@ -49,22 +49,26 @@ const importSpotifyArtists = async (access_token, artists) => {
   return {};
 }
 
-const searchSpotifyArtists = async (access_token, artists) => {
+const searchSpotifyArtists = async (access_token, artists, setProgress = () => {}) => {
+  let num = 0;
   let items = [];
   for (const artist of artists) {
     let query = '"' + normalizeArtistName(artist.name) + '"';
     let response = await spotifyApi.searchArtist(access_token, { q: query });
     items.push(spotifyApi.parseArtists(response.data.artists.items));
+    setProgress(Math.ceil(++num/artists.length*100));
   }
   return items;
 }
 
-const searchLastFmArtists = async (access_token, artists) => {
+const searchLastFmArtists = async (access_token, artists, setProgress = () => {}) => {
+  let num = 0;
   let items = [];
   for (const artist of artists) {
     let query = normalizeArtistName(artist.name);
     let response = await lastfmApi.searchArtist(access_token, { q: query, limit: 10 });
     items.push(lastfmApi.parseArtists(response.data.results.artistmatches.artist));
+    setProgress(Math.ceil(++num/artists.length*100));
   }
   return items;
 }
