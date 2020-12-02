@@ -92,7 +92,7 @@ function ContentIcon(props) {
 function ContentList(props) {
 
   return (
-    <table className="content" style={{width: '25rem'}}>
+    <table className="content">
       <thead>
         <tr>
           <th>{props.title}</th>
@@ -120,7 +120,7 @@ function ContentList(props) {
 function ContentDiffList(props) {
 
   return (
-    <table className="content" style={{width: '25rem'}}>
+    <table className="content">
       <thead>
         <tr>
           <th style={{width: '5%'}}></th>
