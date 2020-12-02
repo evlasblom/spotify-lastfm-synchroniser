@@ -7,7 +7,7 @@ import ContentPage from '../components/ContentPage'
 
 import { compareArtists, normalizeArtistName } from '../filters'
 
-const initial_selection = {period: 'overall', number: 500, playcount: 100 };
+const initial_selection = {period: 'overall', number: 250, playcount: 100 };
 
 const getSpotifyArtists = async (access_token, opts) => {
   let items = [];
