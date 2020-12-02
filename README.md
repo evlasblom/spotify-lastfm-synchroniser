@@ -1,18 +1,30 @@
-# Spotify Last.fm Synchroniser
+# Lastify Synchroniser
 
-Automatically import your most-listened artist, albums and tracks from Last.fm into your Spotify library.
+This is a simple web application that lets users synchronise their [Spotify](https://spotify.com) library with their [Last.fm](https://last.fm) charts.
 
-| Spotify API |   |
-| ------------| - |
-| Application name	| Last.fm Synchroniser |
-| Client id | daf70329e80b41089e0df7393e933c67 |
-| Client secret | 08f606d3b09e462bb55c17483c45d9f1 |
+Moreover, this repository contains basic JavaScript interfaces for both APIs.
 
-| Last.fm API |   |
-| ------------| - |
-| Application name	| Spotify Synchroniser |
-| API key	        | 9c3bd3c82e7c595a4015e09ffb66378c |
-| Shared secret	    | 2dc8400b8cfb566b2930e6ab1d63aae7 |
-| Registered to	    | metaalerik |
+## Getting started
 
-Note: you need to get the Spotify artist id first by performing a search query, see [this](https://stackoverflow.com/questions/41566971/how-to-get-spotify-artist-id-for-the-spotify-endpoint-url) answer.
+To get started running the app locally, use the following commands.
+
+```bash
+# install dependencies
+npm install
+
+# start development server
+npm start
+```
+
+Your app should now be running on http://localhost:3000.
+
+## Environment setup
+
+Note that the APIs will not work until you provide the right access information. You can create an account on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/login), accept the terms and create your application. You can create a [Last.fm API account](https://www.last.fm/api/account/create) as well. Once that's done, create the following _.env_ file in the _app_ directory and replace _xxx_ with the correct values.
+
+```bash
+REACT_APP_SPOTIFY_CLIENT_ID=xxx
+REACT_APP_LASTFM_ACCESS_KEY=xxx
+```
+
+Restart the development server. The app should now be fully functional.
