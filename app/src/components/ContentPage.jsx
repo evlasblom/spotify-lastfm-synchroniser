@@ -81,9 +81,10 @@ function ContentIcon(props) {
 
   return (
     <>
-      {content.action === ContentAction.IMPORT ? "←" : ""}
-      {content.action === ContentAction.CLEAR ? "→" : ""}
+      {content.status === ContentStatus.SOUGHT ? "?" : ""}
       {content.status === ContentStatus.FOUND ? "?" : ""}
+      {content.action === ContentAction.IMPORT ? "✓" : ""}
+      {content.action === ContentAction.CLEAR ? "×" : ""}
     </>
   )
 }
@@ -116,88 +117,34 @@ function ContentList(props) {
   )
 }
 
-function ContentDiff(props) {
-  const [titleLeft, titleRight] = props.titles;
-  const [dataLeft, dataRight] = props.data;
-
-  const getCorrespondingContent = content => {
-    if (content.status === ContentStatus.RESOLVED) {
-      // if resolved, show the corresponding item of the other list
-      return dataLeft[content.index];
-    }
-    else if (content.status === ContentStatus.MARKED) {
-      // if marked, show how it will be imported in the other list
-      return content.results[content.match];
-    }
-    else if (content.status === ContentStatus.CONFIRMED) {
-      // if confirmed, show how it will be imported in the other list
-      // (confirmed should be either marked or resolved, but just in case)
-      return content.results[content.match];
-    }
-    else if (content.status === ContentStatus.FOUND) {
-      // if found but not confirmed, show the top search result
-      // (match should be automatically set to the first result in this case)
-      return content.results[content.match];
-    }
-    else {
-      // else, nothing to show
-      return null;
-    }
-  }
+function ContentDiffList(props) {
 
   return (
-    <table className="content" >
+    <table className="content" style={{width: '25rem'}}>
       <thead>
         <tr>
-          <th style={{width: '25rem'}}>{titleLeft}</th>
-          <th></th>
-          <th style={{width: '25rem'}}>{titleRight}</th>
+          <th style={{width: '5%'}}></th>
+          <th style={{width: '95%'}}>{props.title}</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><i>({dataLeft.length} items)</i></td>
           <td></td>
-          <td><i>({dataRight.length} items)</i></td>
+          <td><i>({props.data.length} items)</i></td>
         </tr>
-        {dataRight
-          .filter(c => c.status > ContentStatus.FETCHED)
-          .map((content, i) => {
-            const classname = getContentClass(content);  
-            return (
-              <tr key={i}>
-                <td className={classname}>
-                  <ContentItem content={getCorrespondingContent(content)} />
-                </td>
-                <td className={classname}>
-                  <ContentIcon content={content} />
-                </td>
-                <td className={classname}>
-                  <ContentItem content={content} />
-                </td>
-              </tr>
-            )
-          })
-        }
-        {dataLeft
-          .filter(c => c.status === ContentStatus.MARKED)
-          .map((content, i) => {
-            const classname = getContentClass(content);  
-            return (
-              <tr key={i}>
-                <td className={classname}>
-                  <ContentItem content={content} />
-                </td>
-                <td className={classname}>
-                  <ContentIcon content={content} />
-                </td>
-                <td className={classname}>
-                  {null}
-                </td>
-              </tr>
-            )
-          })
-        }
+        {props.data.map((content, i) => {
+          const classname = getContentClass(content);  
+          return (
+            <tr key={i}>
+              <td className={classname}>
+                <ContentIcon content={content} />
+              </td>
+              <td className={classname}>
+                <ContentItem content={content} />
+              </td>
+            </tr>
+          )
+        })}
       </tbody>
     </table>
   )
@@ -445,10 +392,16 @@ function ContentPage(props) {
           data={contentLastFm} />
         : null }
 
-        {readyForAction.clear && readyForAction.import ?
-        <ContentDiff 
-          titles={["Spotify", "Last.fm"]}
-          data={[contentSpotify, contentLastFm]} />
+        {readyForAction.import ?
+        <ContentDiffList  
+          title="Spotify"
+          data={contentSpotify} />
+        : null }
+
+        {readyForAction.import ?
+        <ContentDiffList  
+          title="Last.fm"
+          data={contentLastFm} />
         : null }
 
       </div>

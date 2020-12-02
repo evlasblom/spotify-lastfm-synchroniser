@@ -58,33 +58,36 @@ td:last-child {
 }
 
 .not-found {
-  text-decoration-line: line-through;
-  text-decoration-style: solid;
-  text-decoration-color: gray;
+  color: gray;
   background-color: rgb(240, 240, 240);
 }
 
+.not-found:last-child {
+  text-decoration-line: line-through;
+  text-decoration-style: solid;
+  text-decoration-color: gray;
+}
+
 .not-confirmed {
+  color: orange;
+  background-color: rgb(255, 236, 200);
+}
+
+.not-confirmed:last-child {
   text-decoration-line: underline;
   text-decoration-style: wavy;
   text-decoration-color: orange;
-  background-color: rgb(255, 236, 200);
 }
 
 .clear {
   color: red;
-  background-color: rgb(255, 155, 155);
-}
-
-.clear:first-child {
   font-weight: bold;
+  background-color: rgb(255, 155, 155);
 }
 
 .import {
   color: green;
+  font-weight: bold;
   background-color: rgb(155, 255, 155);
 }
 
-.import:last-child {
-  font-weight: bold;
-}
