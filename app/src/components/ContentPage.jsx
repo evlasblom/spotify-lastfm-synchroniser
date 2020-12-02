@@ -12,7 +12,7 @@ import { filterOnPlaycount, findIndexOfMatchedId } from '../filters'
 
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
-const DEBUG_CONTENT = true;
+const DEBUG_CONTENT = false;
 
 export const ContentStatus = {
   NONE: 0,
@@ -94,6 +94,28 @@ function ContentIcon(props) {
   )
 }
 
+function ContentTotals(props) {
+  const num_total = props.data.filter(c => c.status > ContentStatus.FETCHED).length;
+  const num_clear = props.data.filter(c => c.action === ContentAction.CLEAR).length;
+  const num_import = props.data.filter(c => c.action === ContentAction.IMPORT).length;
+  const num_unfound = props.data.filter(c => c.status === ContentStatus.SOUGHT).length;
+  const num_unconfirmed = props.data.filter(c => c.status === ContentStatus.FOUND).length;
+  const num_resolved = props.data.filter(c => c.status === ContentStatus.RESOLVED).length;
+
+  return (
+    <div className="d-block">
+      {num_total > 0 ? <p className="filtered">{num_total} total</p> : ""}
+      {num_clear > 0 ? <p className="clear">{num_clear} to be cleared</p> : ""}
+      {num_import > 0 ? <p className="import">{num_import} to be imported</p> : ""}
+      {num_unfound > 0 ? <p className="not-found">{num_unfound} not found</p> : ""}
+      {num_unconfirmed > 0 ? <p className="not-confirmed">{num_unconfirmed} not confirmed</p> : ""}
+      {num_resolved > 0 ? <p className="resolved">{num_resolved} resolved</p> : ""}
+      <hr color="black" />
+    </div>
+  )
+
+}
+
 function ContentList(props) {
 
   return (
@@ -101,13 +123,15 @@ function ContentList(props) {
       <thead>
         <tr>
           <th style={{width: '5%'}}></th>
-          <th style={{width: '95%'}}>{props.title}</th>
+          <th style={{width: '95%'}}><h3>{props.title}</h3></th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td></td>
-          <td><i>({props.data.length} items)</i></td>
+          <td>
+            <ContentTotals data={props.data} />
+          </td>
         </tr>
         {props.data.map((content, i) => {
           const classname = getContentClass(content);  
