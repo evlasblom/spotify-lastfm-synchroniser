@@ -216,14 +216,15 @@ export function parseProfile(profile) {
 }
 
 // Input: response.data.artists.items
-export function parseArtists(artists) {
-  return artists
-    .map(artist => {
+export function parseArtists(items) {
+  return items
+    .filter(item => !!item)
+    .map(item => {
       return {
-        type: 'artist', // === artist.type
-        id: artist.id,
-        name: artist.name,
-        url: artist.external_urls.spotify
+        type: 'artist', // === item.type
+        id: item.id,
+        name: item.name,
+        url: item.external_urls.spotify
       }
     })
 }
@@ -231,6 +232,7 @@ export function parseArtists(artists) {
 // Input: response.data.items
 export function parseAlbums(items) {
   return items
+    .filter(item => !!item)
     .map(item => {
       let album;
       if (item.album) album = item.album; // in library requests the album is nested
@@ -248,6 +250,7 @@ export function parseAlbums(items) {
 // Input: response.data.items
 export function parseTracks(items) {
   return items
+    .filter(item => !!item)
     .map(item => {
       let track;
       if (item.track) track = item.track; // in library requests the track is nested

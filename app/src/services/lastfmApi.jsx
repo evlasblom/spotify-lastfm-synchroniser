@@ -214,6 +214,7 @@ export function parseProfile(profile) {
 // Input: response.data.topartists.artist
 export function parseArtists(artists) {
   return artists
+    .filter(artist => !!artist)
     .map(artist => {
       return {
         type: 'artist',
@@ -229,6 +230,7 @@ export function parseArtists(artists) {
 // Input: response.data.topalbums.album
 export function parseAlbums(albums) {
   return albums
+    .filter(album => !!album)
     .map(album => {
       return {
         type: 'album',
@@ -245,6 +247,7 @@ export function parseAlbums(albums) {
 // Input: response.data.toptracks.track
 export function parseTracks(tracks) {
   return tracks
+    .filter(track => !!track)
     .map(track => {
       return {
         type: 'track',
