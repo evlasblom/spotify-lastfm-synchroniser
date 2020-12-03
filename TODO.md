@@ -3,8 +3,6 @@
 Last details:
 
 - Improve usability:
-  - Extra explanation of how everything works.
-  - Add `WelcomePage` with link to `AuthPage`.
   - Redirect to authorization when token has expired.
 - Versioning and release.
   - Add comments to javascript functions.
@@ -18,6 +16,10 @@ Last details:
   - Turn the lists into paginated tables?
   - Improve overall styling?
 
+## Styling
+
+- Add header animations (grow and shrink). _[work in progress]_
+
 ## Usability
 
 - Add option to sort content on name?
@@ -28,7 +30,7 @@ Last details:
 ## Authentication
 
 - Display timer when authentication expires?
-- Move authentication data from local storage to React context?
+- Move authentication data from local storage to React context? _[work in progress]_
 - Also authenticate with Last.fm to love and unlove tracks?
 
 ## Selection
