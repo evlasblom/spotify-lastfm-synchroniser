@@ -149,7 +149,7 @@ function AuthPage(props) {
   // show login if not authenticated
   if (!username) {
     return (
-      <Step title="Authenticate via Last.fm" subtitle="No password needed.">
+      <Step title="Provide username on Last.fm" subtitle="No password needed.">
         <LoginLastfm onSubmit={setUsername}/>
       </Step>
     )

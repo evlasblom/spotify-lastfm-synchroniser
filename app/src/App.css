@@ -3,7 +3,7 @@
 }
 
 .App-logo {
-  animation: App-logo-spin infinite 20s linear;
+  /* animation: App-logo-spin infinite 20s linear; */
   height: 80px;
   padding: 5px;
   transition: 0.5s;
@@ -21,16 +21,22 @@
 }
 
 .App-content {
+  padding-top: 40px;
+  font-size: large;
+}
+
+.Home-content {
+  position: absolute;
+  top: 200px;
+  bottom: 0px;
+  width: 100%;
+  padding-top: 40px;
   font-size: large;
 }
 
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-h1 {
-  box-shadow: inset 0 -0.5em 0 rgb(230, 230, 230);
 }
 
 .content-list { 

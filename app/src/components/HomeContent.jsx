@@ -2,10 +2,10 @@ import React from 'react'
 
 import Container from 'react-bootstrap/Container';
 
-function AppContent(props) {
+function HomeContent(props) {
 
   return (
-    <div className="App-content">
+    <div className="Home-content">
       <Container>
         {props.children}
       </Container>
@@ -13,4 +13,4 @@ function AppContent(props) {
   )
 }
 
-export default AppContent;
+export default HomeContent;
