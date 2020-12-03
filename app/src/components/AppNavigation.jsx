@@ -10,7 +10,7 @@ function AppNavigation(props) {
   const auth = true
   
   return (
-    <Navbar bg="dark" variant="dark" className="App-navigation mb-2">
+    <Navbar bg="dark" variant="dark" className="App-navigation">
       <Nav activeKey={location.pathname} className="mr-auto ml-auto">
         <Nav.Item>
           <Nav.Link href="/user" disabled={!auth} >User</Nav.Link>

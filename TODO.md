@@ -5,10 +5,7 @@ Last details:
 - Improve usability:
   - Extra explanation of how everything works.
   - Add `WelcomePage` with link to `AuthPage`.
-- Spend a little time making it look better:
-  - Add favicons.
-  - Turn the lists into paginated tables?
-  - Improve overall styling?
+  - Redirect to authorization when token has expired.
 - Versioning and release.
   - Add comments to javascript functions.
   - Add changelog and set app version in app json and in app footer.
@@ -16,11 +13,16 @@ Last details:
 - Completeness:
   - Linting?
   - Unit tests?
+- Spend a little time making it look better:
+  - Add favicons.
+  - Turn the lists into paginated tables?
+  - Improve overall styling?
 
 ## Usability
 
 - Add option to sort content on name?
 - Add option to filter content on status?
+- Remember the user's selection from last time?
 - Add links to Spotify and Last.fm, in particular for unfound and uncofirmed content.
 
 ## Authentication

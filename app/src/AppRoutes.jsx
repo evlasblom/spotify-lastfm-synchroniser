@@ -6,8 +6,7 @@ import {
     Redirect
   } from "react-router-dom";
 
-import Container from 'react-bootstrap/Container';
-
+import AppContent from './components/AppContent'
 import AuthPage from './pages/AuthPage'
 import ProfilePage from './pages/ProfilePage'
 import ArtistsPage from './pages/ArtistsPage'
@@ -17,7 +16,7 @@ import TracksPage from './pages/TracksPage'
 function AppRoutes(props) {
 
   return (
-    <Container className="App-content">
+    <AppContent>
       <Router>
         <Switch>
 
@@ -47,7 +46,7 @@ function AppRoutes(props) {
 
         </Switch>
       </Router>
-    </Container>
+    </AppContent>
   )
 }
 

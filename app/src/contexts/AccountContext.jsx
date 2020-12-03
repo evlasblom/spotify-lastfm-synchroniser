@@ -6,8 +6,6 @@ import * as lastfmApi from '../services/lastfmApi'
 
 // NOTE: this file is not (yet) used!
 
-// ========== FUNCTIONS ==================================================
-
 const getProfileSpotify = async (access_token) => {
   let response = await spotifyApi.getProfile(access_token, {});
   let profile = spotifyApi.parseProfile(response.data);
@@ -29,8 +27,6 @@ const getProfileLastFm = async (access_key, id) => {
     } 
   };
 }
-
-// ========== STATE ==================================================
 
 const initial_state = {
   spotify: {
@@ -94,8 +90,6 @@ const reducer = (state, action) => {
       return state;
   }
 }
-
-// ========== CONTEXT ==================================================
 
 const initial_context = {
   ...initial_state,

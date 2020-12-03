@@ -5,8 +5,8 @@ import useLocalStorage from '../hooks/useLocalStorage'
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-import ActionForm from '../components/ActionForm'
-import SelectionForm from '../components/SelectionForm'
+import ActionForm from './forms/ActionForm'
+import SelectionForm from './forms/SelectionForm'
 import * as constants from '../constants'
 import { filterOnPlaycount, findIndexOfMatchedId } from '../filters'
 
@@ -119,7 +119,7 @@ function ContentTotals(props) {
 function ContentList(props) {
 
   return (
-    <table className="content">
+    <table className="content-list">
       <thead>
         <tr>
           <th style={{width: '5%'}}></th>
@@ -154,7 +154,7 @@ function ContentList(props) {
 function ContentListPlaceholder(props) {
 
   return (
-    <div className="content">
+    <div className="content-list">
       
     </div>
   )
