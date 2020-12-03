@@ -5,6 +5,11 @@ import useLocalStorage from '../hooks/useLocalStorage'
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons'
+import Tooltip from 'react-bootstrap/Tooltip'
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
+
 import ActionForm from './forms/ActionForm'
 import SelectionForm from './forms/SelectionForm'
 import * as constants from '../constants'
@@ -102,18 +107,68 @@ function ContentTotals(props) {
   const num_unconfirmed = props.data.filter(c => c.status === ContentStatus.FOUND).length;
   const num_resolved = props.data.filter(c => c.status === ContentStatus.RESOLVED).length;
 
+  const text_total = "All of your " + props.what + " in your " + props.from;
+  const text_clear = "These " + props.what + " will be removed from Spotify";
+  const text_import = "These " + props.what + " will be imported into Spotify";
+  const text_unfound = "These " + props.what + " from your Last.fm selection could not be found on Spotify so may be removed."
+  const text_unconfirmed = "These " + props.what + " from your Last.fm selection were found on Spotify, but could not be confirmed and will be ignored."
+  const text_resolved = "These " + props.what + " already exist on both Spotify and in your Last.fm selection.";
+
   return (
     <div className="d-block">
-      {num_total > 0 ? <p className="filtered">{num_total} total</p> : ""}
-      {num_clear > 0 ? <p className="clear">{num_clear} to be cleared</p> : ""}
-      {num_import > 0 ? <p className="import">{num_import} to be imported</p> : ""}
-      {num_unfound > 0 ? <p className="not-found">{num_unfound} not found</p> : ""}
-      {num_unconfirmed > 0 ? <p className="not-confirmed">{num_unconfirmed} not confirmed</p> : ""}
-      {num_resolved > 0 ? <p className="resolved">{num_resolved} resolved</p> : ""}
+      {num_total > 0 ? 
+        <p className="filtered">
+          <b>{num_total} total</b> <FontAwesomeIconWithTooltip icon={faQuestionCircle} text={text_total} />
+        </p> 
+      : ""}
+      {num_clear > 0 ? 
+        <p className="clear">
+          {num_clear} to be cleared <FontAwesomeIconWithTooltip icon={faQuestionCircle} text={text_clear} />
+        </p> 
+      : ""}
+      {num_import > 0 ? 
+        <p className="import">
+          {num_import} to be imported <FontAwesomeIconWithTooltip icon={faQuestionCircle} text={text_import} />
+        </p> 
+      : ""}
+      {num_unfound > 0 ? 
+        <p className="not-found">
+          {num_unfound} not found <FontAwesomeIconWithTooltip icon={faQuestionCircle} text={text_unfound} />
+        </p> 
+      : ""}
+      {num_unconfirmed > 0 ? 
+        <p className="not-confirmed">
+          {num_unconfirmed} not confirmed <FontAwesomeIconWithTooltip icon={faQuestionCircle} text={text_unconfirmed} />
+        </p> 
+      : ""}
+      {num_resolved > 0 ? 
+        <p className="resolved">
+          {num_resolved} resolved <FontAwesomeIconWithTooltip icon={faQuestionCircle} text={text_resolved} />
+        </p> 
+      : ""}
       <hr color="black" />
     </div>
   )
+}
 
+function FontAwesomeIconWithTooltip(props) {
+  const text = props.text;
+
+  const renderTooltip = (props) => (
+    <Tooltip id="button-tooltip" {...props}>
+      {text}
+    </Tooltip>
+  );
+
+  return (
+    <OverlayTrigger
+        placement="right"
+        delay={{ show: 250, hide: 400 }}
+        overlay={renderTooltip}
+        text={props.text}>
+      <FontAwesomeIcon icon={props.icon} />
+    </OverlayTrigger>
+  )
 }
 
 function ContentList(props) {
@@ -123,14 +178,14 @@ function ContentList(props) {
       <thead>
         <tr>
           <th style={{width: '5%'}}></th>
-          <th style={{width: '95%'}}><h3>{props.title}</h3></th>
+          <th style={{width: '95%'}}><h3>{props.from}</h3></th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td></td>
           <td>
-            <ContentTotals data={props.data} />
+            <ContentTotals data={props.data} what={props.what} from={props.from}/>
           </td>
         </tr>
         {props.data.map((content, i) => {
@@ -364,7 +419,7 @@ function ContentPage(props) {
 
       <ActionForm 
         text={searchSpotifyAsync.loading ? "..." : "Compare"}
-        modal="This will perform an thorough Spotify search in order to compare your Spotify and Last.fm data. Proceed?"
+        modal="This will perform a thorough Spotify search in order to compare your Spotify and Last.fm data. Proceed?"
         variant="primary" 
         disabled={!contentSpotify || !contentLastFm || getSpotify.error || getLastFm.error}
         onSubmit={searchSpotifyAsync.execute} /> {/* <-- we use just the spotify search here */}
@@ -407,20 +462,20 @@ function ContentPage(props) {
 
         {!getSpotify.loading && !getSpotify.error && contentSpotify ?
         <ContentList  
-          title="Spotify"
+          from="Spotify library"
+          what={props.what}
           data={contentSpotify} />
         : 
-        <ContentListPlaceholder
-          title="Spotify" />
+        <ContentListPlaceholder />
         }
 
         {!getLastFm.loading && !getLastFm.error && contentLastFm ?
         <ContentList  
-          title="Last.fm"
+          from="Last.fm selection"
+          what={props.what}
           data={contentLastFm} />
         : 
-        <ContentListPlaceholder
-          title="Last.fm" />
+        <ContentListPlaceholder />
         }
 
       </div>

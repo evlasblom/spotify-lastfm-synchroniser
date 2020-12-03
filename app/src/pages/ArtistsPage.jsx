@@ -77,7 +77,7 @@ function ArtistsPage(props) {
 
   return (
     <ContentPage 
-      title="Artists"
+      what="artists"
       selection={initial_selection} 
       compare={compareArtists}
       searchSpotify={searchSpotifyArtists}

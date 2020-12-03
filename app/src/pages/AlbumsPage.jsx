@@ -79,7 +79,7 @@ function AlbumsPage(props) {
 
   return (
     <ContentPage 
-      title="Albums"
+      what="albums"
       selection={initial_selection} 
       compare={compareAlbums}
       searchSpotify={searchSpotifyAlbums}

@@ -79,7 +79,7 @@ function TracksPage(props) {
 
   return (
     <ContentPage 
-      title="Tracks"
+      what="tracks"
       selection={initial_selection} 
       compare={compareTracks}
       searchSpotify={searchSpotifyTracks}
