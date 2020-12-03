@@ -1,3 +1,7 @@
+/**
+ * An API exception object to be used from API interfaces.
+ * @param {String} message Human-readable message with details about the exception.
+ */
 export function ApiException(message) {
   this.message = message;
   // Use V8's native method if available, otherwise fallback
