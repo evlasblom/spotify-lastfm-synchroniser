@@ -1,26 +1,25 @@
 import axios from 'axios';
 import qs from 'qs';
+
 import { ApiException } from '../exceptions'
 
 // ---------- CONSTANTS -------------------------------------------------- 
 
-export const ALLOWED_METHODS = ['user.getinfo', 
-                                'user.getTopArtists', 'user.getTopAlbums', 'user.getTopTracks', 
-                                'artist.search', 'album.search', 'track.search'];
+export const ALLOWED_METHODS = [
+  'user.getinfo', 
+  'user.getTopArtists', 'user.getTopAlbums', 'user.getTopTracks', 
+   'artist.search', 'album.search', 'track.search'
+];
+
 export const ALLOWED_PERIODS = ['overall', '7day', '1month', '3month', '6month', '12month'];
 
 export const LIMIT_PER_PAGE = 1000;
 
-const IMAGE_SORT_WEIGHTS = {
-  '': 1, // missing size is ranked last
-  small: 2,
-  medium: 3,
-  large: 4,
-  extralarge: 5,
-  mega: 6
-}
+const IMAGE_SORT_WEIGHTS = {'': 1, small: 2, medium: 3, large: 4, extralarge: 5, mega: 6}
 
 // ---------- BASE -------------------------------------------------- 
+
+// Base API methods used internally.
 
 function _getApi(access_key, params) {
   if (!ALLOWED_METHODS.includes(params.method)) throw new ApiException("Invalid option selected: method");
@@ -41,7 +40,6 @@ function _getApi(access_key, params) {
   return axios(config);
 }
 
-// Note: untested
 function _postApi(session_key, access_key, method_signature, params) {
   if (!ALLOWED_METHODS.includes(params.method)) throw new ApiException("Invalid option selected: method");
   
@@ -65,6 +63,10 @@ function _postApi(session_key, access_key, method_signature, params) {
 
 
 // ---------- API -------------------------------------------------- 
+
+// Main API methods as used in this application, implemented using the base methods.
+// These functions should speak for themselves. For details, please refer to
+// the Last.fm API documentation: https://www.last.fm/api
 
 export function getProfile(access_key, opts) {
   if (!opts) throw new ApiException("Missing required argument: opts");
@@ -188,6 +190,9 @@ export function searchTrack(access_key, opts) {
 }
 
 // ---------- PARSERS -------------------------------------------------- 
+
+// Parsers for common response types. By using these we can ensure consistent 
+// data formats for both Last.fm and Spotify API calls.
 
 function _parseImages(images) {
   return images

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import qs from 'qs';
+
 import { ApiException } from '../exceptions'
 
 // ---------- CONSTANTS -------------------------------------------------- 
@@ -10,13 +11,15 @@ export const LIMIT_PER_PAGE = 50;
 
 // ---------- BASE -------------------------------------------------- 
 
-function _baseApi(access_token, restMethod, apiMethod, params) {
-  if (!ALLOWED_METHODS.includes(apiMethod)) throw new ApiException("Invalid argument selected: method");
+// Base API methods used internally.
+
+function _baseApi(access_token, rest_method, api_method, params) {
+  if (!ALLOWED_METHODS.includes(api_method)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
     url: apiMethod + '?' + qs.stringify(params),
     baseURL: 'https://api.spotify.com/v1/',
-    method: restMethod,
+    method: rest_method,
     timeout: 4000,
     json: true,
     headers: {
@@ -33,7 +36,6 @@ function _getApi(access_token, method, params) {
 
 function _putApi(access_token, method, params) {
   return _baseApi(access_token, 'PUT', method, params)
-
 }
 
 function _deleteApi(access_token, method, params) {
@@ -41,6 +43,10 @@ function _deleteApi(access_token, method, params) {
 }
 
 // ---------- API -------------------------------------------------- 
+
+// Main API methods as used in this application, implemented using the base methods.
+// These functions should speak for themselves. For details, please refer to
+// the Spotify API reference: https://developer.spotify.com/documentation/web-api/reference/
 
 export function getProfile(access_token, opts) {
   return _getApi(access_token, 'me', {})
@@ -195,6 +201,9 @@ export function searchTrack(access_token, opts) {
 }
 
 // ---------- PARSERS -------------------------------------------------- 
+
+// Parsers for common response types. By using these we can ensure consistent 
+// data formats for both Spotify and Last.fm API calls.
 
 function _parseImages(images) {
   return images
