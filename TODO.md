@@ -4,21 +4,18 @@ Last details:
 
 - Improve usability:
   - Redirect to authorization when token has expired.
+- Completeness:
+  - Linting?
+  - Add favicons?
 - Versioning and release.
   - Add comments to javascript functions.
   - Add changelog and set app version in app json and in app footer.
   - Add to github and add link to github in app footer.
-- Completeness:
-  - Linting?
-  - Unit tests?
-- Spend a little time making it look better:
-  - Add favicons.
-  - Turn the lists into paginated tables?
-  - Improve overall styling?
 
 ## Styling
 
 - Add header animations (grow and shrink). _[work in progress]_
+- Turn these long lists into paginated tables?
 
 ## Usability
 

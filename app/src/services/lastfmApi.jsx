@@ -2,8 +2,6 @@ import axios from 'axios';
 import qs from 'qs';
 import { ApiException } from '../exceptions'
 
-// Partly based on: https://github.com/feross/last-fm
-
 // ---------- CONSTANTS -------------------------------------------------- 
 
 export const ALLOWED_METHODS = ['user.getinfo', 
