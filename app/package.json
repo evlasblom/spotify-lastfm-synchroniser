@@ -20,7 +20,8 @@
     "string-similarity": "^4.0.3"
   },
   "devDependencies": {
-    "firebase-tools": "^8.16.2"
+    "firebase-tools": "^8.16.2",
+    "jsdoc": "^3.6.6"
   },
   "scripts": {
     "start": "react-scripts start node -r dotenv/config src/index.js",

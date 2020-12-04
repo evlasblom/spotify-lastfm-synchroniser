@@ -107,7 +107,7 @@ function ContentTotals(props) {
   const num_unconfirmed = props.data.filter(c => c.status === ContentStatus.FOUND).length;
   const num_resolved = props.data.filter(c => c.status === ContentStatus.RESOLVED).length;
 
-  const text_total = "All of your " + props.what + " in your " + props.from;
+  const text_total = "All " + props.what + " in your " + props.from;
   const text_clear = "These " + props.what + " will be removed from Spotify";
   const text_import = "These " + props.what + " will be imported into Spotify";
   const text_unfound = "These " + props.what + " from your Last.fm selection could not be found on Spotify so may be removed."
@@ -155,7 +155,7 @@ function FontAwesomeIconWithTooltip(props) {
   const text = props.text;
 
   const renderTooltip = (props) => (
-    <Tooltip id="button-tooltip" {...props}>
+    <Tooltip {...props}>
       {text}
     </Tooltip>
   );

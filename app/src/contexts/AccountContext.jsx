@@ -4,7 +4,7 @@ import { useAsync } from 'react-async-hook'
 import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 
-// NOTE: this file is not (yet) used!
+// NOTE: this file is still work in progress and not (yet) used!
 
 const getProfileSpotify = async (access_token) => {
   let response = await spotifyApi.getProfile(access_token, {});
@@ -117,6 +117,7 @@ export const AccountProvider = ({ children }) => {
   )
 
   // Side effect if async calls succeeded, to finalize the whole context
+  // @TODO: should there not be different dispatchers for when we are loading or get an error?
   useEffect(() => {
     if (!profileSpotify.result || !profileLastFm.result) return;
     dispatch({action: 'FINALIZE', payload: {
