@@ -17,7 +17,11 @@ import ArtistsPage from './pages/ArtistsPage'
 import AlbumsPage from './pages/AlbumsPage'
 import TracksPage from './pages/TracksPage'
 
-function AppRoutes(props) {
+/**
+ * The application routes.
+ * Shows different layouts and pages based on the current route.
+ */
+function AppRoutes() {
 
   return (
     <Router>
@@ -52,6 +56,7 @@ function AppRoutes(props) {
   )
 }
 
+// Layout of the home page.
 function HomeLayout(props) {
 
   return (
@@ -64,6 +69,7 @@ function HomeLayout(props) {
   )
 }
 
+// Layout of the auth page.
 function AuthLayout(props) {
 
   return (
@@ -76,6 +82,7 @@ function AuthLayout(props) {
   )
 }
 
+// Layout of the main application pages.
 function MainLayout(props) {
 
   return (
