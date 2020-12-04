@@ -64,11 +64,11 @@ function ProfilePage(props) {
 
   return (
     <>
-      <div style={{height: "2rem"}} className="p-1">
+      <div style={{height: "3rem"}} className="p-1">
         {profileSpotify.loading || profileLastFm.loading ? "Loading data... " : ""}
 
-        {profileSpotify.error ? <span className="text-danger">Spotify load error: {profileSpotify.error.message.toLowerCase()}</span> : ""}
-        {profileLastFm.error ? <span className="text-danger">Last.fm load error: {profileLastFm.error.message.toLowerCase()}</span> : ""}
+        {profileSpotify.error ? <p className="text-danger">Spotify load error: {profileSpotify.error.message.toLowerCase()}</p> : ""}
+        {profileLastFm.error ? <p className="text-danger">Last.fm load error: {profileLastFm.error.message.toLowerCase()}</p> : ""}
       </div>
       <br></br>
 
