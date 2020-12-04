@@ -17,7 +17,7 @@ function _baseApi(access_token, rest_method, api_method, params) {
   if (!ALLOWED_METHODS.includes(api_method)) throw new ApiException("Invalid argument selected: method");
 
   const config = {
-    url: apiMethod + '?' + qs.stringify(params),
+    url: api_method + '?' + qs.stringify(params),
     baseURL: 'https://api.spotify.com/v1/',
     method: rest_method,
     timeout: 4000,
