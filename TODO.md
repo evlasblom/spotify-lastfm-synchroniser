@@ -6,14 +6,18 @@ Last details:
   - Redirect to authorization when token has expired.
 - Completeness:
   - Linting?
-  - Add favicons?
 - Versioning and release.
   - Add comments to javascript functions.
   - Add changelog and set app version in app json and in app footer.
   - Add to github and add link to github in app footer.
 
+## Bugs
+
+- The bootstrap tooltips result in an error which should be fixed.
+
 ## Styling
 
+- Add favicons.
 - Add header animations (grow and shrink). _[work in progress]_
 - Turn these long lists into paginated tables?
 
