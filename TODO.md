@@ -2,8 +2,6 @@
 
 Last details:
 
-- Improve usability:
-  - Redirect to authorization when token has expired.
 - Completeness:
   - Linting?
 - Versioning and release.

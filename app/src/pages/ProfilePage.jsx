@@ -5,8 +5,7 @@ import * as spotifyApi from '../services/spotifyApi'
 import * as lastfmApi from '../services/lastfmApi'
 import useLocalStorage from '../hooks/useLocalStorage'
 
-import Button from 'react-bootstrap/Button';
-import Card from 'react-bootstrap/Card'
+import ProfileCard, { ProfileCardPlaceholder } from '../components/ProfileCard'
 
 import * as constants from '../constants'
 
@@ -25,36 +24,12 @@ const getProfileLastFm = async (access_key, opts) => {
   return lastfmApi.parseProfile(response.data.user);
 }
 
-// A profile card component
-function ProfileCard(props) {
-  const profile = props.data;
-  const target = props.target;
-
-  return (
-    <Card style={{ width: '18rem', height: '30rem'}} className="m-2">
-      <Card.Img variant="top" src={profile.image} />
-      <Card.Body>
-        <Card.Title>{profile.name}</Card.Title>
-        <Card.Subtitle className="mb-2 text-muted">ID: {profile.id}</Card.Subtitle>
-        <Card.Text>
-          A {profile.product} {profile.type}.
-        </Card.Text>
-        <Button className
-          variant="success" 
-          href={profile.url}
-          target="_blank">View on {target}</Button>
-      </Card.Body>
-    </Card>
-  )
-}
-
-// A profile card placeholder component when loading...
-function ProfileCardPlaceholder(props) {
-
-  return (
-    <Card style={{ width: '18rem', height: '30rem'}} className="m-2">
-    </Card>
-  )
+// Parse common errors
+function parseErrors(error) {
+  const text = error.toLowerCase();
+  if (text.includes("401")) return "authentication expired, please restart from the home page.";
+  if (text.includes("429")) return "too many requests, please try again later."
+  return text;
 }
 
 // Profile page component
@@ -72,8 +47,8 @@ function ProfilePage(props) {
       <div style={{height: "3rem"}} className="p-1">
         {profileSpotify.loading || profileLastFm.loading ? "Loading data... " : ""}
 
-        {profileSpotify.error ? <p className="text-danger">Spotify load error: {profileSpotify.error.message.toLowerCase()}</p> : ""}
-        {profileLastFm.error ? <p className="text-danger">Last.fm load error: {profileLastFm.error.message.toLowerCase()}</p> : ""}
+        {profileSpotify.error ? <p className="text-danger">Spotify load error: {parseErrors(profileSpotify.error.message)}</p> : ""}
+        {profileLastFm.error ? <p className="text-danger">Last.fm load error: {parseErrors(profileLastFm.error.message)}</p> : ""}
       </div>
       <br></br>
 

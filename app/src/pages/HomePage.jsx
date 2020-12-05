@@ -1,6 +1,7 @@
 import React from 'react';
 
 // A very simple home page component
+// @TODO: make this a bit more fancy...
 function HomePage(props) {
 
   return (

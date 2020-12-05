@@ -66,39 +66,39 @@ td:last-child {
   border-top-right-radius: 10px; 
 }
 
-td.not-filtered {
+td.status-fetched {
   color:gray;
 }
 
-td.not-found {
+td.status-sought {
   color: gray;
   background-color: rgb(240, 240, 240);
 }
 
-td.not-found:last-child {
+td.status-sought:last-child {
   text-decoration-line: line-through;
   text-decoration-style: solid;
   text-decoration-color: gray;
 }
 
-td.not-confirmed {
+td.status-found {
   color: orange;
   background-color: rgb(255, 236, 200);
 }
 
-td.not-confirmed:last-child {
+td.status-found:last-child {
   text-decoration-line: underline;
   text-decoration-style: wavy;
   text-decoration-color: orange;
 }
 
-td.clear {
+td.action-clear {
   color: red;
   font-weight: bold;
   background-color: rgb(255, 155, 155);
 }
 
-td.import {
+td.action-import {
   color: green;
   font-weight: bold;
   background-color: rgb(155, 255, 155);
