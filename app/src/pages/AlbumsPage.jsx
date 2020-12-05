@@ -7,8 +7,10 @@ import ContentPage from '../components/ContentPage'
 
 import { compareAlbums, normalizeArtistName, normalizeAlbumName } from '../filters'
 
+// Initial albums selection state
 const initial_selection = {period: 'overall', number: 500, playcount: 75 };
 
+// Fetches and parses all albums in the Spotify library
 const getSpotifyAlbums = async (access_token, opts) => {
   let items = [];
   let offset = 0;
@@ -22,6 +24,7 @@ const getSpotifyAlbums = async (access_token, opts) => {
   return spotifyApi.parseAlbums(items);
 }
 
+// Fetches and parses the provided number of Last.fm albums
 const getLastFmAlbums = async (access_key, opts) => {
   let items = [];
   let page = 0;
@@ -33,6 +36,7 @@ const getLastFmAlbums = async (access_key, opts) => {
   return lastfmApi.parseAlbums(items);
 }
 
+// Adds all of the provided albums to the Spotify library
 const clearSpotifyAlbums = async (access_token, albums) => {
   let ids = albums.map(album => album.id);
   while (ids.length > 0) {
@@ -42,6 +46,7 @@ const clearSpotifyAlbums = async (access_token, albums) => {
   return {};
 }
 
+// Removes all of the provided albums from the Spotify library
 const importSpotifyAlbums = async (access_token, albums) => {
   const ids = albums.map(album => album.results[album.match].id);
   while (ids.length > 0) {
@@ -51,6 +56,7 @@ const importSpotifyAlbums = async (access_token, albums) => {
   return {};
 }
 
+// Searches Spotify for the given albums, and sets the search progress
 const searchSpotifyAlbums = async (access_token, albums, setProgress = () => {}) => {
   let num = 0;
   let items = [];
@@ -63,6 +69,7 @@ const searchSpotifyAlbums = async (access_token, albums, setProgress = () => {})
   return items;
 }
 
+// Searches Last.fm for the given albums, and sets the search progress
 const searchLastFmAlbums = async (access_token, albums, setProgress = () => {}) => {
   let num = 0;
   let items = [];
@@ -75,6 +82,7 @@ const searchLastFmAlbums = async (access_token, albums, setProgress = () => {}) 
   return items;
 }
 
+// Albums page component, using the generalized content page
 function AlbumsPage(props) {
 
   return (

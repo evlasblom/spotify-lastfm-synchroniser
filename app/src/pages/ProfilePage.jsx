@@ -13,27 +13,19 @@ import * as constants from '../constants'
 // Get the Last.fm access key from the environment variables
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
 
-/**
- * Fetches and parses the Spotify profile.
- * @param {String} access_token Spotify access token.
- * @param {Object} opts Spotify api options.
- */
+// Fetches and parses the Spotify profile
 const getProfileSpotify = async (access_token, opts) => {
   let response = await spotifyApi.getProfile(access_token, opts);
   return spotifyApi.parseProfile(response.data);
 }
 
-/**
- * Fetches and perses the Last.fm profile.
- * @param {String} access_key The last.fm access key.
- * @param {Object} opts The Last.fm api options.
- */
+// Fetches and parses the Last.fm profile
 const getProfileLastFm = async (access_key, opts) => {
   let response = await lastfmApi.getProfile(access_key, opts);
   return lastfmApi.parseProfile(response.data.user);
 }
 
-// A profile card component.
+// A profile card component
 function ProfileCard(props) {
   const profile = props.data;
   const target = props.target;
@@ -65,7 +57,7 @@ function ProfileCardPlaceholder(props) {
   )
 }
 
-// Profile page component.
+// Profile page component
 function ProfilePage(props) {
   const [access_token, ] = useLocalStorage(constants.token_key, null);
   const [username, ] = useLocalStorage(constants.user_key, null);

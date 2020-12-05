@@ -7,8 +7,10 @@ import ContentPage from '../components/ContentPage'
 
 import { compareTracks, normalizeArtistName, normalizeTrackName } from '../filters'
 
+// Initial tracks selection state
 const initial_selection = {period: 'overall', number: 1000, playcount: 50 };
 
+// Fetches and parses all tracks in the Spotify library
 const getSpotifyTracks = async (access_token, opts) => {
   let items = [];
   let offset = 0;
@@ -22,6 +24,7 @@ const getSpotifyTracks = async (access_token, opts) => {
   return spotifyApi.parseTracks(items);
 }
 
+// Fetches and parses the provided number of Last.fm tracks
 const getLastFmTracks = async (access_key, opts) => {
   let items = [];
   let page = 0;
@@ -33,6 +36,7 @@ const getLastFmTracks = async (access_key, opts) => {
   return lastfmApi.parseTracks(items);
 }
 
+// Adds all of the provided tracks to the Spotify library
 const clearSpotifyTracks = async (access_token, tracks) => {
   let ids = tracks.map(album => album.id);
   while (ids.length > 0) {
@@ -42,6 +46,7 @@ const clearSpotifyTracks = async (access_token, tracks) => {
   return {};
 }
 
+// Removes all of the provided tracks from the Spotify library
 const importSpotifyTracks = async (access_token, tracks) => {
   const ids = tracks.map(track => track.results[track.match].id);
   while (ids.length > 0) {
@@ -51,6 +56,7 @@ const importSpotifyTracks = async (access_token, tracks) => {
   return {};
 }
 
+// Searches Spotify for the given tracks, and sets the search progress
 const searchSpotifyTracks = async (access_token, tracks, setProgress = () => {}) => {
   let num = 0;
   let items = [];
@@ -63,6 +69,7 @@ const searchSpotifyTracks = async (access_token, tracks, setProgress = () => {})
   return items;
 }
 
+// Searches Last.fm for the given tracks, and sets the search progress
 const searchLastFmTracks = async (access_token, tracks, setProgress = () => {}) => {
   let num = 0;
   let items = [];
@@ -75,6 +82,7 @@ const searchLastFmTracks = async (access_token, tracks, setProgress = () => {}) 
   return items;
 }
 
+// Tracks page component, using the generalized content page
 function TracksPage(props) {
 
   return (

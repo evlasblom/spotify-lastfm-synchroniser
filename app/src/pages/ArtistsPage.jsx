@@ -7,8 +7,10 @@ import ContentPage from '../components/ContentPage'
 
 import { compareArtists, normalizeArtistName } from '../filters'
 
+// Initial artists selection state
 const initial_selection = {period: 'overall', number: 250, playcount: 100 };
 
+// Fetches and parses all artists in the Spotify library
 const getSpotifyArtists = async (access_token, opts) => {
   let items = [];
   let after = undefined;
@@ -20,6 +22,7 @@ const getSpotifyArtists = async (access_token, opts) => {
   return spotifyApi.parseArtists(items);
 }
 
+// Fetches and parses the provided number of Last.fm artists
 const getLastFmArtists = async (access_key, opts) => {
   let items = [];
   let page = 0;
@@ -31,6 +34,7 @@ const getLastFmArtists = async (access_key, opts) => {
   return lastfmApi.parseArtists(items);
 }
 
+// Unfollows all of the provided artists on Spotify
 const clearSpotifyArtists = async (access_token, artists) => {
   const ids = artists.map(artist => artist.id);
   while (ids.length > 0) {
@@ -40,6 +44,7 @@ const clearSpotifyArtists = async (access_token, artists) => {
   return {};
 }
 
+// Follows all of the provided artists on Spotify
 const importSpotifyArtists = async (access_token, artists) => {
   const ids = artists.map(artist => artist.results[artist.match].id);
   while (ids.length > 0) {
@@ -49,6 +54,7 @@ const importSpotifyArtists = async (access_token, artists) => {
   return {};
 }
 
+// Searches Spotify for the given artists, and sets the search progress
 const searchSpotifyArtists = async (access_token, artists, setProgress = () => {}) => {
   let num = 0;
   let items = [];
@@ -61,6 +67,7 @@ const searchSpotifyArtists = async (access_token, artists, setProgress = () => {
   return items;
 }
 
+// Searches Last.fm for the given artists, and sets the search progress
 const searchLastFmArtists = async (access_token, artists, setProgress = () => {}) => {
   let num = 0;
   let items = [];
@@ -73,6 +80,7 @@ const searchLastFmArtists = async (access_token, artists, setProgress = () => {}
   return items;
 }
 
+// Artists page component, using the generalized content page
 function ArtistsPage(props) {
 
   return (
