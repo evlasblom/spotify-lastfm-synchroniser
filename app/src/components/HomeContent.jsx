@@ -2,6 +2,7 @@ import React from 'react'
 
 import Container from 'react-bootstrap/Container';
 
+// The home content component
 function HomeContent(props) {
 
   return (

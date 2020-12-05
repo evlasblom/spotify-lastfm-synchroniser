@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 
+// The action form component: just a simple button and modal dialog for confirmation
 function ActionForm(props) {
   const [show, setShow] = useState(false);
 

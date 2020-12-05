@@ -5,8 +5,11 @@ import useLocation from '../hooks/useLocation'
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 
+// The application navigation component
 function AppNavigation(props) {  
   const location = useLocation();
+  
+  // @TODO: get the variable below from the account context once that is finished
   const auth = true
   
   return (

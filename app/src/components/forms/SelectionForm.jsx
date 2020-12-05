@@ -3,6 +3,7 @@ import React, { useReducer } from 'react';
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 
+// The selection reducer
 const formReducer = (state, action) => {
   switch(action.type) {
     case 'PERIOD':
@@ -25,6 +26,7 @@ const formReducer = (state, action) => {
   }
 }
 
+// The selection form component: a few inputs and a button
 function SelectionForm(props) {
   const [state, dispatch] = useReducer(formReducer, props.initial);
   const periods = ['overall', '7day', '1month', '3month', '6month', '12month'];

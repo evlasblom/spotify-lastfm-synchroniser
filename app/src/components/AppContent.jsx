@@ -2,6 +2,7 @@ import React from 'react'
 
 import Container from 'react-bootstrap/Container';
 
+// The application content component
 function AppContent(props) {
 
   return (

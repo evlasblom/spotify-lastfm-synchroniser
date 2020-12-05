@@ -8,6 +8,8 @@ import Container from 'react-bootstrap/Container';
 import logo_lastfm from '../assets/logo_lastfm.svg';
 import logo_spotify from '../assets/logo_spotify.svg';
 
+// Various sizes of the header and the logos so we can add animations upon scrolling, for example.
+
 const smallLogoStyle = {
   height: "60px",
   padding: "5px"
@@ -41,6 +43,7 @@ const largeHeaderStyle = {
   backgroundColor: "#222",
 };
 
+// The application header component
 function AppHeader(props) {
   const scroll = useScroll();
 

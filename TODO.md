@@ -7,7 +7,6 @@ Last details:
 - Completeness:
   - Linting?
 - Versioning and release.
-  - Add comments to javascript functions.
   - Add changelog and set app version in app json and in app footer.
   - Add to github and add link to github in app footer.
 
