@@ -6,6 +6,7 @@ import * as lastfmApi from '../services/lastfmApi'
 
 // NOTE: this file is still work in progress and not (yet) used!
 
+// Fetches and parses the Spotify profile
 const getProfileSpotify = async (access_token) => {
   let response = await spotifyApi.getProfile(access_token, {});
   let profile = spotifyApi.parseProfile(response.data);
@@ -17,6 +18,7 @@ const getProfileSpotify = async (access_token) => {
   };
 }
 
+// Fetches and parses the Last.fm profile
 const getProfileLastFm = async (access_key, id) => {
   let response = await lastfmApi.getProfile(access_key, {user: id });
   let profile = lastfmApi.parseProfile(response.data.user);
@@ -28,7 +30,8 @@ const getProfileLastFm = async (access_key, id) => {
   };
 }
 
-const initial_state = {
+// The account initial value
+const initial = {
   spotify: {
     user: {
       name: null,
@@ -49,7 +52,8 @@ const initial_state = {
   }
 }
 
-const reducer = (state, action) => {
+// The account reducer
+const accountReducer = (state, action) => {
   switch(action.type) {
     case 'SPOTIFY_AUTH':
       return {
@@ -91,18 +95,21 @@ const reducer = (state, action) => {
   }
 }
 
+// The initial account context
 const initial_context = {
   ...initial_state,
   setSpotifyAccessToken: () => {},
   setLastmFmUsername: () => {},
 }
 
+// The account context
 export const AccountContext = React.createContext(initial_context)
 
+// The account context provider component
 export const AccountProvider = ({ children }) => {
   const [expiresSpotify, setExpiresSpotify] = useState(-1);
   const [expiresLastFm, setExpiresLastFm] = useState(-1);
-  const [state, dispatch] = useReducer(reducer, initial_state);
+  const [state, dispatch] = useReducer(accountReducer, initial);
 
   // @TODO: initialize auth from local storage if available
   // const [_spotifyAuth, _setSpotifyAuth] = useLocalStorage(constants.spotify_key, null)
@@ -182,4 +189,5 @@ export const AccountProvider = ({ children }) => {
   )
 }
 
+// The account context consumer component
 export const AccountConsumer = AccountContext.Consumer
