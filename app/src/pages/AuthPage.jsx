@@ -44,6 +44,7 @@ function temporaryUserAuthorization(opts) {
   return baseUrl + url;
 }
 
+// Form that does the Spotify authentication
 function LoginSpotify(props) {
   const location = useLocation();
 
@@ -75,6 +76,7 @@ function LoginSpotify(props) {
   )
 }
 
+// Form that does the Last.fm authentication
 function LoginLastfm(props) {
   const [username, setUsername] = useState("")
 
@@ -111,6 +113,7 @@ function Step(props) {
   )
 }
 
+// Authorization page component
 function AuthPage(props) {
   const [_state, _setState] = useLocalStorage(constants.state_key, null)
   const [_access_token, _setAccessToken] = useLocalStorage(constants.token_key, null)
