@@ -18,8 +18,6 @@ npm start
 
 Your app should now be running on http://localhost:3000.
 
-## Environment setup
-
 Note that the APIs will not work until you provide the right access information. You can create an account on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/login), accept the terms and create your application. You can create a [Last.fm API account](https://www.last.fm/api/account/create) as well. Once that's done, create the following _.env_ file in the _app_ directory and replace _xxx_ with the correct values.
 
 ```bash
