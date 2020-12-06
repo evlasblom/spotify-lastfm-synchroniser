@@ -23,7 +23,8 @@
   },
   "devDependencies": {
     "firebase-tools": "^8.16.2",
-    "jsdoc": "^3.6.6"
+    "jsdoc": "^3.6.6",
+    "prettier": "2.2.1"
   },
   "scripts": {
     "start": "react-scripts start node -r dotenv/config src/index.js",
