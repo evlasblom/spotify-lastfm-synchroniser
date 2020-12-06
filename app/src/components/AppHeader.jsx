@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import useScroll from '../hooks/useScroll'
 
 import Container from 'react-bootstrap/Container';
+import GithubCorner from 'react-github-corner';
 
 import logo_lastfm from '../assets/logo_lastfm.svg';
 import logo_spotify from '../assets/logo_spotify.svg';
@@ -89,6 +90,7 @@ function AppHeader(props) {
     <Container fluid className="App-header" style={header}>
       <Link to="/"><img src={logo_spotify} className="App-logo" style={logo} alt="Spotify" /></Link>
       <Link to="/"><img src={logo_lastfm} className="App-logo" style={logo} alt="Last.fm" /></Link>
+      <GithubCorner href="https://github.com/evlasblom/spotify-lastfm-synchroniser" octoColor="#222" bannerColor="#555" />
     </Container>
   )
 }

@@ -15,6 +15,7 @@
     "react-async-hook": "^3.6.2",
     "react-bootstrap": "^1.4.0",
     "react-dom": "^17.0.1",
+    "react-github-corner": "^2.5.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
     "serve": "^11.3.2",
