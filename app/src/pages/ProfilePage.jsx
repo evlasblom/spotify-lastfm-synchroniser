@@ -29,6 +29,7 @@ function parseErrors(error) {
   const text = error.toLowerCase();
   if (text.includes("401")) return "authentication expired, please restart from the home page.";
   if (text.includes("429")) return "too many requests, please try again later."
+  if (text.includes("500")) return "remote server experienced an internal error, please try again."
   return text;
 }
 
