@@ -1,12 +1,5 @@
 # Todo
 
-Last details:
-
-- Completeness:
-  - Linting?
-- Versioning and release.
-  - Add to github and add link to github in app footer.
-
 ## Bugs
 
 - The bootstrap tooltips result in an error (in StrictMode, so it does not appear in the build version).
