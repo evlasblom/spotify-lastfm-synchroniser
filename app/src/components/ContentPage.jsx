@@ -13,7 +13,7 @@ import { ContentStatus, ContentAction, ContentSource } from '../enums'
 import { filterOnPlaycount, findIndexOfMatchedId } from '../filters'
 
 /**
- * Spotify and Last.fm synchornisation procedure.
+ * Spotify and Last.fm synchronisation procedure.
  * 
  * --> SELECT:
  * 
@@ -42,6 +42,9 @@ import { filterOnPlaycount, findIndexOfMatchedId } from '../filters'
 
  // Get the Last.fm access key from the environment variables
 const access_key = process.env.REACT_APP_LASTFM_ACCESS_KEY;
+
+// Select the search engine for cross-comparing the content
+const search_on = ContentSource.SPOTIFY;
 
 // The content initial value
 const initial = null;
@@ -125,7 +128,7 @@ const contentReducer = (state, action) => {
       })
     
     // resolve status
-    case 'RESOLVE':
+    case 'RESOLVE_CONTENT':
       return state.map(content => {
         // resolve only marked content
         if (content.status !== ContentStatus.MARKED) return content;
@@ -149,7 +152,9 @@ function ContentPage(props) {
   const [contentLastFm, dispatchLastFm] = useReducer(contentReducer, initial);
 
   // state
-  const [readyForAction, setReadyForAction] = useState({clear: false, import: false});
+  const [gotSearchResults, setGotSearchResults] = useState(false);
+  const [didCrossComparison, setDidCrossComparison] = useState(false);
+  const [finishedAction, setFinishedAction] = useState({clear: false, import: false});
   const [currentProgress, setCurrentProgress] = useState(0);
 
   // props
@@ -194,9 +199,11 @@ function ContentPage(props) {
     return {user: username, limit: lastfmApi.LIMIT_PER_PAGE, ...selection} 
   };
 
-  // disallow actions when changing selection
+  // reset state when changing selection
   useEffect(() => {
-    setReadyForAction({clear: false, import: false});
+    setGotSearchResults(false);
+    setDidCrossComparison(false);
+    setFinishedAction({clear: false, import: false});
   }, [selection.period, selection.number, selection.playcount])
 
   // filter content after fetching
@@ -212,64 +219,98 @@ function ContentPage(props) {
     dispatchLastFm({type: "APPLY_FILTER", function: filterOnPlaycount(selection.playcount)}); // playcount filter
   }, [getLastFm.result, getLastFm.loading, getLastFm.error, selection.period, selection.number, selection.playcount]);
   
+  // -----------------------------
+  
   // confirm content after searching
   // note: only one of these effects is needed, the other is there for testing
   // since searching lastfm content via spotify is faster, that corresponding effect will be used
   useEffect(() => {
+    if (search_on === ContentSource.LASTFM) return;
     if (!searchSpotifyAsync.result || searchSpotifyAsync.loading || searchSpotifyAsync.error) return;
-    dispatchSpotify({type: "CONFIRM_CONTENT"}); // auto-confirm all
     dispatchLastFm({type: "CONFIRM_SEARCH", payload: searchSpotifyAsync.result, function: compare})
     setCurrentProgress(0);
+    setGotSearchResults(true);
   }, [searchSpotifyAsync.result, searchSpotifyAsync.loading, searchSpotifyAsync.error, compare])
 
   useEffect(() => {
+    if (search_on === ContentSource.LASTFM) return;
+    const areConfirmedAtLeast = (content) => content.status >= ContentStatus.CONFIRMED;
+    if (!contentSpotify || contentSpotify.some(areConfirmedAtLeast)) return;
+    dispatchSpotify({type: "CONFIRM_CONTENT"}); // auto-confirm all filtered content
+  }, [contentSpotify])
+
+  useEffect(() => {
+    if (search_on === ContentSource.SPOTIFY) return;
     if (!searchLastFmAsync.result || searchLastFmAsync.loading || searchLastFmAsync.error) return;
     dispatchSpotify({type: "CONFIRM_SEARCH", payload: searchLastFmAsync.result, function: compare})
-    dispatchLastFm({type: "CONFIRM_CONTENT"}); // auto-confirm all
     setCurrentProgress(0);
+    setGotSearchResults(true);
   }, [searchLastFmAsync.result, searchLastFmAsync.loading, searchLastFmAsync.error, compare])
+
+  useEffect(() => {
+    if (search_on === ContentSource.SPOTIFY) return;
+    const areConfirmedAtLeast = (content) => content.status >= ContentStatus.CONFIRMED;
+    if (!contentLastFm || contentLastFm.some(areConfirmedAtLeast)) return;
+    dispatchLastFm({type: "CONFIRM_CONTENT"}); // auto-confirm all filtered content
+  }, [contentLastFm])
 
   // compare content after searching
   useEffect(() => {
+    if (!gotSearchResults) return;
     if (!contentSpotify || !contentLastFm) return;
-    const precondition = content => content.status === ContentStatus.CONFIRMED;
-    if (!contentSpotify.some(precondition) || !contentLastFm.some(precondition)) return;
+    const areMarkedAtLeast = (content) => content.status >= ContentStatus.MARKED;
+    if (contentSpotify.some(areMarkedAtLeast) && contentLastFm.some(areMarkedAtLeast)) return;
     dispatchSpotify({type: "CROSS_COMPARE", payload: contentLastFm, marker: ContentAction.CLEAR});
     dispatchLastFm({type: "CROSS_COMPARE", payload: contentSpotify, marker: ContentAction.IMPORT});
-    setReadyForAction({clear: true, import: true});
-  }, [contentSpotify, contentLastFm])
+    setDidCrossComparison(true);
+  }, [contentSpotify, contentLastFm, gotSearchResults])
+
+  // -----------------------------
 
   // resolve when finished
   useEffect(() => {
-    if (!clearSpotifyAsync.result) return;
-    dispatchSpotify({type: "RESOLVE"});
-    setReadyForAction(previous => { return {...previous, clear: false}});
-  }, [clearSpotifyAsync.result])
+    if (!clearSpotifyAsync.result || clearSpotifyAsync.loading || clearSpotifyAsync.error) return;
+    dispatchSpotify({type: "RESOLVE_CONTENT"}); // resolve all marked content on success
+    setFinishedAction(previous => { return {...previous, clear: true}});
+  }, [clearSpotifyAsync.result, clearSpotifyAsync.loading, clearSpotifyAsync.error])
 
   useEffect(() => {
-    if (!importSpotifyAsync.result) return;
-    dispatchLastFm({type: "RESOLVE"});
-    setReadyForAction(previous => { return {...previous, import: false}});
-  }, [importSpotifyAsync.result])
+    if (!importSpotifyAsync.result || importSpotifyAsync.loading || importSpotifyAsync.error) return;
+    dispatchLastFm({type: "RESOLVE_CONTENT"}); // resolve all marked content on success
+    setFinishedAction(previous => { return {...previous, import: true}});
+  }, [importSpotifyAsync.result, importSpotifyAsync.loading, importSpotifyAsync.error])
 
   return (
     <>
-      <SelectionForm onSubmit={setSelection} initial={props.selection} />
+      <SelectionForm 
+        onSubmit={setSelection} 
+        initial={props.selection} />
       <br></br>
 
       <ActionForm 
-        text={searchSpotifyAsync.loading ? "..." : "Compare"}
+        text={searchSpotifyAsync.loading ? "..." : "Search"}
         modal="This will perform a thorough Spotify search in order to compare your Spotify and Last.fm data. Proceed?"
         variant="primary" 
-        disabled={!contentSpotify || !contentLastFm || getSpotify.error || getLastFm.error}
-        onSubmit={searchSpotifyAsync.execute} /> {/* <-- we use just the spotify search here */}
+        disabled={!contentSpotify || !contentLastFm || getSpotify.error || getLastFm.error || gotSearchResults}
+        onSubmit={() => {
+          switch (search_on) {
+            case ContentSource.SPOTIFY:
+              searchSpotifyAsync.execute();
+              break;
+            case ContentSource.LASTFM:
+              searchLastFmAsync.execute();
+              break;
+            default:
+              break;
+          }
+        }} />
       <br></br>
 
       <ActionForm 
         text={clearSpotifyAsync.loading ? "..." : "Clear"}
         modal="This will clear all data from Spotify that are not in your current selection on Last.fm. Are you sure?"
         variant="danger" 
-        disabled={!contentSpotify || !readyForAction.clear}
+        disabled={!contentSpotify || !didCrossComparison || finishedAction.clear}
         onSubmit={clearSpotifyAsync.execute} />
       <br></br>
 
@@ -277,7 +318,7 @@ function ContentPage(props) {
         text={importSpotifyAsync.loading ? "..." : "Import"}
         modal="This will import all data into Spotify that are in your current selection on Last.fm. Are you sure?"
         variant="success" 
-        disabled={!contentLastFm || !readyForAction.import}
+        disabled={!contentLastFm || !didCrossComparison || finishedAction.import}
         onSubmit={importSpotifyAsync.execute} />
       <br></br>
 
@@ -295,6 +336,8 @@ function ContentPage(props) {
         {searchLastFmAsync.error ? <p className="text-danger">Last.fm search error: {parseErrors(searchLastFmAsync.error.message)}</p> : ""}
         {clearSpotifyAsync.error ? <p className="text-danger">Clear error: {parseErrors(clearSpotifyAsync.error.message)}</p> : ""}
         {importSpotifyAsync.error ? <p className="text-danger">Import error: {parseErrors(importSpotifyAsync.error.message)}</p> : ""}
+
+        {finishedAction.clear && finishedAction.import && !getSpotify.loading && !getLastFm.loading ? <p className="text-success">Synchronisation finished!</p> : ""}
       </div>
       <br></br>
 
@@ -305,7 +348,7 @@ function ContentPage(props) {
           from={ContentSource.SPOTIFY}
           what={props.what}
           data={contentSpotify}
-          readyForAction={readyForAction.clear || readyForAction.import} />
+          readyForAction={didCrossComparison} />
         : 
         <ContentListPlaceholder />
         }
@@ -315,7 +358,7 @@ function ContentPage(props) {
           from={ContentSource.LASTFM}
           what={props.what}
           data={contentLastFm}
-          readyForAction={readyForAction.clear || readyForAction.import} />
+          readyForAction={didCrossComparison} />
         : 
         <ContentListPlaceholder />
         }

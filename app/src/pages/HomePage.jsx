@@ -17,7 +17,7 @@ function HomePage(props) {
           <li>Verify your Spotify and Last.fm profiles.</li>
           <li>Choose <i>artists</i>, <i>albums</i> or <i>tracks</i> from the menu.</li>
           <li>Select a time <i>period</i>, maximum <i>number</i> and minimum <i>playcount</i> to get your Last.fm charts.</li>
-          <li>Compare your Last.fm charts with your current Spotify library.</li>
+          <li>Search Spotify for your Last.fm charts.</li>
           <li>Choose to clear content from Spotify that does not appear in your Last.fm charts.</li>
           <li>Choose to import content into Spotify that does appear in your Last.fm charts.</li>
         </ul>

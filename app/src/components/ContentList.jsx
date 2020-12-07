@@ -62,13 +62,13 @@ function ContentIcon(props) {
       <FontAwesomeIconWithTooltip 
         placement="left"
         icon={faExclamation} 
-        text={"This could not be found."} />
+        text={"This could not be found so may be removed."} />
       : ""}
       {content.status === ContentStatus.FOUND ? 
       <FontAwesomeIconWithTooltip 
         placement="left"
         icon={faExclamation} 
-        text={"This could not be confirmed."} />
+        text={"This could not be confirmed and will be ignored."} />
       : ""}
       {content.status === ContentStatus.MARKED && content.action === ContentAction.IMPORT ? 
       <FontAwesomeIconWithTooltip 
