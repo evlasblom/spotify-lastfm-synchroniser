@@ -36,7 +36,7 @@ function ContentItem(props) {
   if (constants.DEBUG) debug = {role: "button", onClick: () => console.log(content)}
 
   return (
-    <div className="d-block" {...debug}>
+    <div className="content-list-content" {...debug}>
       {content.rank ? (content.rank + ". ") : ""}
       {content.name}
       {content.playcount ? (" - " + content.playcount) : ""}
@@ -57,7 +57,7 @@ function ContentIcon(props) {
   if (!content) return null;
 
   return (
-    <div className="d-block">
+    <div className="content-list-icon">
       {content.status === ContentStatus.SOUGHT ? 
       <FontAwesomeIconWithTooltip 
         placement="left"
@@ -96,7 +96,7 @@ function ContentTotals(props) {
   const num_resolved = props.data.filter(c => c.status === ContentStatus.RESOLVED).length;
 
   return (
-    <div className="d-block">
+    <div>
       <>
         <p className="status-filtered">
           <b>Total: {num_total}</b> &nbsp;
@@ -156,8 +156,8 @@ function ContentList(props) {
     <table className="content-list">
       <thead>
         <tr>
-          <th style={{width: '5%'}}></th>
-          <th style={{width: '95%'}}><h3>{getTitle(props.from)}</h3></th>
+          <th></th>
+          <th><h3>{getTitle(props.from)}</h3></th>
         </tr>
       </thead>
       <tbody>

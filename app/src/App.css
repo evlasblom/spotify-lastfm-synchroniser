@@ -51,6 +51,14 @@
   width: 25rem;
 }
 
+.content-list-icon {
+  width: 1rem;
+}
+
+.content-list-content {
+  width: 24rem;
+}
+
 td {
   border: none;
   padding: 10px;
