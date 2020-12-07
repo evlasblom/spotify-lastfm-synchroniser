@@ -10,6 +10,7 @@
     "@fortawesome/react-fontawesome": "^0.1.12",
     "axios": "^0.21.0",
     "bootstrap": "^4.5.3",
+    "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "react": "^17.0.1",
     "react-async-hook": "^3.6.2",
@@ -18,10 +19,10 @@
     "react-github-corner": "^2.5.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.3",
-    "serve": "^11.3.2",
     "string-similarity": "^4.0.3"
   },
   "devDependencies": {
+    "serve": "^11.3.2",
     "firebase-tools": "^8.16.2",
     "jsdoc": "^3.6.6",
     "prettier": "2.2.1"
