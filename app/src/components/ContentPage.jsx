@@ -337,7 +337,7 @@ function ContentPage(props) {
         {clearSpotifyAsync.error ? <p className="text-danger">Clear error: {parseErrors(clearSpotifyAsync.error.message)}</p> : ""}
         {importSpotifyAsync.error ? <p className="text-danger">Import error: {parseErrors(importSpotifyAsync.error.message)}</p> : ""}
 
-        {finishedAction.clear && finishedAction.import && !getSpotify.loading && !getLastFm.loading ? <p className="text-success">Synchronisation finished!</p> : ""}
+        {finishedAction.clear && finishedAction.import && !getSpotify.loading && !getLastFm.loading ? <p className="text-success">Done! Restart Spotify for these changes to appear.</p> : ""}
       </div>
       <br></br>
 

@@ -20,6 +20,7 @@ function HomePage(props) {
           <li>Search Spotify for your Last.fm charts.</li>
           <li>Choose to clear content from Spotify that does not appear in your Last.fm charts.</li>
           <li>Choose to import content into Spotify that does appear in your Last.fm charts.</li>
+          <li>Restart Spotify for these changes to appear.</li>
         </ul>
       </div>
 
