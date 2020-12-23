@@ -2,14 +2,19 @@
 
 _The format is based on [Keep a Changelog](https://https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/)._
 
-## Unreleased
+## 1.1.0
 
 Date: 2020-12-23
 Authors: Erik Vlasblom
 Added:
 
-- Spotify API
+- Spotify API.
   - Get the top artists and tracks.
+
+Changed:
+
+- Home page.
+  - Additional information.
 
 ## 1.0.0
 

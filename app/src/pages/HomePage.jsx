@@ -33,7 +33,8 @@ function HomePage(props) {
           <li>I want to save my favourite 10 tracks from the last 90 days.</li>
         </ul>
       <p>Note that this application is mostly intended for users who want to <i>completely</i> automate organizing their Spotify libraries.</p>
-      <p>Users that already have large curated libraries should be careful not to accidentally clear them. The app does ask for confirmation at every step along the way.</p>
+      <p>Users that already have large curated libraries should be careful not to accidentally clear them. </p>
+      <p>The app does ask for confirmation at every step along the way.</p>
       <a href="/auth">Yes I understand, let's get started!</a>
       </div>
     </>
