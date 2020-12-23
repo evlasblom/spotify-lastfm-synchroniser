@@ -5,7 +5,17 @@ import { ApiException } from '../exceptions'
 
 // ---------- CONSTANTS -------------------------------------------------- 
 
-export const ALLOWED_METHODS = ['me', 'me/following', 'me/albums', 'me/tracks', 'search'];
+export const ALLOWED_METHODS = [
+  'me', 
+  'me/following', 
+  'me/albums', 
+  'me/tracks', 
+  'me/top/artists', 
+  'me/top/tracks', 
+  'search'
+];
+
+export const ALLOWED_RANGES = ['long_term', 'medium_term', 'short_term'];
 
 export const LIMIT_PER_PAGE = 50;
 
@@ -93,6 +103,34 @@ export function getSavedTracks(access_token, opts) {
   }
 
   return _getApi(access_token, 'me/tracks', params)
+}
+
+export function getTopArtists(access_token, opts) { 
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (opts.limit && opts.limit.length > LIMIT_PER_PAGE) throw new ApiException("Option exceeds max size: limit");
+  if (opts.time_range && !ALLOWED_RANGES.includes(opts.time_range)) throw new ApiException("Invalid option selected: time_range");
+
+  const params = {
+    offset: opts.offset,
+    limit: opts.limit, // min 1 max 50 default 20
+    time_range: opts.time_range
+  }
+
+  return _getApi(access_token, 'me/top/artists', params)
+}
+
+export function getTopTracks(access_token, opts) {
+  if (!opts) throw new ApiException("Missing required argument: opts");
+  if (opts.limit && opts.limit.length > LIMIT_PER_PAGE) throw new ApiException("Option exceeds max size: limit");
+  if (opts.time_range && !ALLOWED_RANGES.includes(opts.time_range)) throw new ApiException("Invalid option selected: time_range");
+
+  const params = {
+    offset: opts.offset,
+    limit: opts.limit, // min 1 max 50 default 20
+    time_range: opts.time_range
+  }
+
+  return _getApi(access_token, 'me/top/tracks', params)
 }
 
 export function setFollowingArtists(access_token, opts) { 

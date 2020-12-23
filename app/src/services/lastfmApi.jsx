@@ -7,8 +7,12 @@ import { ApiException } from '../exceptions'
 
 export const ALLOWED_METHODS = [
   'user.getinfo', 
-  'user.getTopArtists', 'user.getTopAlbums', 'user.getTopTracks', 
-   'artist.search', 'album.search', 'track.search'
+  'user.getTopArtists', 
+  'user.getTopAlbums', 
+  'user.getTopTracks', 
+  'artist.search', 
+  'album.search', 
+  'track.search'
 ];
 
 export const ALLOWED_PERIODS = ['overall', '7day', '1month', '3month', '6month', '12month'];

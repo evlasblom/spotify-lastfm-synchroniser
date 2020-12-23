@@ -1,5 +1,10 @@
 # Todo
 
+## API
+
+- Complete the Last.fm and Spotify APIs.
+- Place the Last.fm and Spotify APIs in separate repositories?
+
 ## Bugs
 
 - The bootstrap tooltips result in an error (in StrictMode, so it does not appear in the build version).
